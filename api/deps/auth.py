@@ -1,6 +1,11 @@
 from dataclasses import dataclass
 
-from fastapi import Header
+from fastapi import Depends, Header, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from api.deps.db import get_db_session
+from app.project import repository
+
 
 @dataclass
 class UserInfo:

@@ -8,7 +8,7 @@ from app.project.exceptions import (
 )
 from app.project.models import Project
 from app.project import repository
-from core.id_generator import generate_project_id
+from core.id_generator import generate_sonyflake_id
 
 PROJECT_LIMIT = 3
 
@@ -25,7 +25,7 @@ async def create_project(
     if await repository.exists_by_name(session, user_id, request.name):
         raise ProjectNameAlreadyExists()
 
-    project_id = generate_project_id()
+    project_id = generate_sonyflake_id()
     project_row = Project(
         id=project_id,
         user_id=user_id,
@@ -58,4 +58,17 @@ async def update_project_name(
 
     project.update_name(request.name)
     await session.flush()
+    return project
+
+
+async def delete_project(
+    project_id: str,
+    user_id: str,
+    session: AsyncSession,
+) -> Project:
+    project = await repository.get_by_id_for_user(session, project_id, user_id)
+    if project is None:
+        raise ProjectNotFound()
+
+    await repository.delete(session, project)
     return project

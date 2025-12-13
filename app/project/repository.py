@@ -41,3 +41,8 @@ async def insert(session: AsyncSession, project: Project) -> Project:
     session.add(project)
     await session.flush()
     return project
+
+
+async def delete(session: AsyncSession, project: Project) -> None:
+    await session.delete(project)
+    await session.flush()
