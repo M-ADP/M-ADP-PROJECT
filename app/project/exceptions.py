@@ -14,3 +14,12 @@ class ProjectNameAlreadyExists(AppException):
             "프로젝트 이름은 고유해야 합니다.",
             code="PROJECT_NAME_EXISTS",
         )
+
+
+class ProjectNotFound(AppException):
+    def __init__(self) -> None:
+        super().__init__(
+            "프로젝트를 찾을 수 없습니다.",
+            code="PROJECT_NOT_FOUND",
+            status_code=404,
+        )

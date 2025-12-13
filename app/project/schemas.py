@@ -39,3 +39,11 @@ class ProjectResponse(BaseModel):
     max_cpu: float
     max_memory: float
     max_disk: float
+
+
+class ProjectNameUpdate(BaseModel):
+    name: constr(strip_whitespace=True, min_length=1) = Field(
+        ...,
+        description="변경할 프로젝트 이름",
+        examples=["windeath44"],
+    )

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
-from app.project.schemas import ProjectCreate, ProjectResponse
-from app.project.service import create_project
+from app.project.schemas import ProjectCreate, ProjectNameUpdate, ProjectResponse
+from app.project.service import create_project, update_project_name
 from api.deps.auth import UserInfo, get_user_info
 from api.deps.db import get_db_session
 from core.schemas import SuccessResponse
@@ -16,8 +16,33 @@ async def create_project_endpoint(
     user: UserInfo = Depends(get_user_info),
     session: AsyncSession = Depends(get_db_session),
 ) -> SuccessResponse[ProjectResponse]:
-    project = await create_project(payload, user_id=user.user_id, session=session)
+    async with session.begin():
+        project = await create_project(payload, user_id=user.user_id, session=session)
     return SuccessResponse(
         message="프로젝트가 생성되었습니다.",
+        data=ProjectResponse.model_validate(project),
+    )
+
+
+@router.patch(
+    "/{project_id}/name",
+    response_model=SuccessResponse[ProjectResponse],
+    status_code=200,
+)
+async def update_project_name_endpoint(
+    project_id: str,
+    payload: ProjectNameUpdate,
+    user: UserInfo = Depends(get_user_info),
+    session: AsyncSession = Depends(get_db_session),
+) -> SuccessResponse[ProjectResponse]:
+    async with session.begin():
+        project = await update_project_name(
+            project_id,
+            payload,
+            user_id=user.user_id,
+            session=session,
+        )
+    return SuccessResponse(
+        message="프로젝트 이름이 변경되었습니다.",
         data=ProjectResponse.model_validate(project),
     )

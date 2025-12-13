@@ -29,4 +29,3 @@ _generator = Sonyflake(
 
 def generate_sonyflake_id() -> str:
     return str(_generator.next_id())
-

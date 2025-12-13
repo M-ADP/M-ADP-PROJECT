@@ -2,7 +2,6 @@ from dataclasses import dataclass
 
 from fastapi import Header
 
-
 @dataclass
 class UserInfo:
     user_id: str

@@ -16,3 +16,6 @@ class Project(BaseEntity):
     max_cpu: Mapped[float] = mapped_column(Double, nullable=False)
     max_memory: Mapped[float] = mapped_column(Double, nullable=False)
     max_disk: Mapped[float] = mapped_column(Double, nullable=False)
+
+    def update_name(self, name):
+        self.name = name
