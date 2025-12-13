@@ -4,6 +4,8 @@ from fastapi import FastAPI, status
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
+from core.schemas import ErrorResponse
+
 
 class AppException(Exception):
     def __init__(
@@ -20,25 +22,23 @@ class AppException(Exception):
         self.code = code
         self.details = details
 
-    def to_response(self) -> dict[str, Any]:
-        return {
-            "message": self.message,
-            "code": self.code,
-            "details": self.details,
-        }
+    def to_response(self) -> ErrorResponse:
+        return ErrorResponse(message=self.message)
 
 
 def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(AppException)
     async def handle_app_exception(_: Request, exc: AppException) -> JSONResponse:
+        error_response = exc.to_response()
         return JSONResponse(
             status_code=exc.status_code,
-            content=exc.to_response(),
+            content=error_response.model_dump(),
         )
 
     @app.exception_handler(Exception)
     async def handle_unexpected_exception(_: Request, exc: Exception) -> JSONResponse:
+        error = ErrorResponse(message=str(exc))
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"message": str(exc)},
+            content=error.model_dump(),
         )
