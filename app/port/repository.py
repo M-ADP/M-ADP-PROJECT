@@ -22,3 +22,23 @@ async def insert(session: AsyncSession, port: Port) -> Port:
     session.add(port)
     await session.flush()
     return port
+
+
+async def list_by_project(
+    session: AsyncSession,
+    project_id: str,
+    limit: int,
+    cursor: str | None = None,
+) -> list[Port]:
+    conditions = [Port.project_id == project_id]
+    if cursor:
+        conditions.append(Port.id > cursor)
+
+    stmt = (
+        select(Port)
+        .where(*conditions)
+        .order_by(Port.id)
+        .limit(limit)
+    )
+    result = await session.execute(stmt)
+    return list(result.scalars().all())

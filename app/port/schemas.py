@@ -39,8 +39,3 @@ class PortResponse(BaseModel):
     from_port: int
     port_number: int
     protocol: str
-
-
-class PortListResponse(BaseModel):
-    items: list[PortResponse]
-    next_cursor: str | None = None
