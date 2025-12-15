@@ -12,3 +12,8 @@ class SuccessResponse(BaseModel, Generic[T]):
 
 class ErrorResponse(BaseModel):
     message: str
+
+
+class CursorPage(BaseModel, Generic[T]):
+    items: list[T]
+    has_next: bool
