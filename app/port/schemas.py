@@ -30,6 +30,10 @@ class PortCreate(BaseModel):
     )
 
 
+class PortUpdate(PortCreate):
+    pass
+
+
 class PortResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

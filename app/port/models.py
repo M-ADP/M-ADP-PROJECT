@@ -25,3 +25,9 @@ class Port(BaseEntity):
     from_port: Mapped[int] = mapped_column(BigInteger, nullable=False)
     port_number: Mapped[int] = mapped_column(Integer, nullable=False)
     protocol: Mapped[str] = mapped_column(String(16), nullable=False)
+
+    def update(self, from_ip, from_port, port_number, protocol):
+        self.from_ip = from_ip
+        self.from_port = from_port
+        self.port_number = port_number
+        self.protocol = protocol

@@ -3,8 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.deps.auth import UserInfo, get_user_info
 from api.deps.db import get_db_session
-from app.port.schemas import PortCreate, PortResponse
-from app.port.service import create_port, delete_port, list_ports
+from app.port.schemas import PortCreate, PortResponse, PortUpdate
+from app.port.service import create_port, delete_port, list_ports, update_port
 from core.schemas import CursorPage, SuccessResponse
 
 router = APIRouter(prefix="/projects/{project_id}/ports", tags=["project-ports"])
@@ -64,6 +64,32 @@ async def list_project_ports_endpoint(
     return SuccessResponse(
         message="포트 목록을 조회했습니다.",
         data=ports,
+    )
+
+
+@router.put(
+    "/{port_id}",
+    response_model=SuccessResponse[PortResponse],
+    status_code=200,
+)
+async def update_project_port_endpoint(
+    project_id: str,
+    port_id: str,
+    payload: PortUpdate,
+    user: UserInfo = Depends(get_user_info),
+    session: AsyncSession = Depends(get_db_session),
+) -> SuccessResponse[PortResponse]:
+    async with session.begin():
+        port = await update_port(
+            project_id=project_id,
+            port_id=port_id,
+            request=payload,
+            user_id=user.user_id,
+            session=session,
+        )
+    return SuccessResponse(
+        message="포트가 수정되었습니다.",
+        data=PortResponse.model_validate(port),
     )
 
 

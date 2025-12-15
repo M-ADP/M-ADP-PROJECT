@@ -8,12 +8,13 @@ async def exists_by_from_port(
     session: AsyncSession,
     project_id: str,
     from_port: int,
+    exclude_port_id: str | None = None,
 ) -> bool:
-    stmt = (
-        select(Port.id)
-        .where(Port.project_id == project_id, Port.from_port == from_port)
-        .limit(1)
-    )
+    conditions = [Port.project_id == project_id, Port.from_port == from_port]
+    if exclude_port_id:
+        conditions.append(Port.id != exclude_port_id)
+
+    stmt = select(Port.id).where(*conditions).limit(1)
     result = await session.execute(stmt)
     return result.first() is not None
 
