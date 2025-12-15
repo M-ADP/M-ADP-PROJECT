@@ -37,5 +37,10 @@ class PortResponse(BaseModel):
     project_id: str
     from_ip: str
     from_port: int
-    prot_number: int
+    port_number: int
     protocol: str
+
+
+class PortListResponse(BaseModel):
+    items: list[PortResponse]
+    next_cursor: str | None = None
