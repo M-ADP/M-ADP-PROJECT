@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.port import repository as port_repository
-from app.port.exceptions import PortAlreadyExists
+from app.port.exceptions import PortAlreadyExists, PortNotFound
 from app.port.models import Port
 from app.port.schemas import PortCreate, PortResponse
 from app.project import repository as project_repository
@@ -62,3 +62,25 @@ async def list_ports(
         items=[PortResponse.model_validate(port) for port in items],
         has_next=has_next,
     )
+
+
+async def delete_port(
+    project_id: str,
+    port_id: str,
+    user_id: str,
+    session: AsyncSession,
+) -> Port:
+    project = await project_repository.get_by_id_for_user(session, project_id, user_id)
+    if project is None:
+        raise ProjectNotFound()
+
+    port = await port_repository.get_by_id_for_project(
+        session=session,
+        project_id=project_id,
+        port_id=port_id,
+    )
+    if port is None:
+        raise PortNotFound()
+
+    await port_repository.delete(session, port)
+    return port

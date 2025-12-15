@@ -42,3 +42,18 @@ async def list_by_project(
     )
     result = await session.execute(stmt)
     return list(result.scalars().all())
+
+
+async def get_by_id_for_project(
+    session: AsyncSession,
+    project_id: str,
+    port_id: str,
+) -> Port | None:
+    stmt = select(Port).where(Port.id == port_id, Port.project_id == project_id)
+    result = await session.execute(stmt)
+    return result.scalar_one_or_none()
+
+
+async def delete(session: AsyncSession, port: Port) -> None:
+    await session.delete(port)
+    await session.flush()
