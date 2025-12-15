@@ -31,7 +31,7 @@ async def create_port(
         project_id=project_id,
         from_ip=request.from_ip,
         from_port=request.from_port,
-        prot_number=request.prot_number,
+        port_number=request.port_number,
         protocol=request.protocol,
     )
     return await port_repository.insert(session, port_row)

@@ -4,6 +4,7 @@ from api.routers import api_router
 from core.config import get_settings
 from core.exceptions import register_exception_handlers
 from core.middlewares import register_middlewares
+from core.db import create_all_tables
 
 
 def create_app() -> FastAPI:
@@ -12,6 +13,11 @@ def create_app() -> FastAPI:
     register_middlewares(application, settings)
     application.include_router(api_router)
     register_exception_handlers(application)
+
+    @application.on_event("startup")
+    async def startup_event() -> None:
+        await create_all_tables()
+
     return application
 
 

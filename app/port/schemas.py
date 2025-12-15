@@ -16,7 +16,7 @@ class PortCreate(BaseModel):
         description="공개할 포트 번호",
         examples=[80, 443],
     )
-    prot_number: int = Field(
+    port_number: int = Field(
         ...,
         ge=0,
         le=255,

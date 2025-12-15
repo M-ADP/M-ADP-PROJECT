@@ -30,7 +30,6 @@ async def create_project(
         id=project_id,
         user_id=user_id,
         name=request.name,
-        dns_id=request.dns_id,
         max_cpu=request.max_cpu,
         max_memory=request.max_memory,
         max_disk=request.max_disk,

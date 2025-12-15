@@ -23,5 +23,5 @@ class Port(BaseEntity):
     )
     from_ip: Mapped[str] = mapped_column(String(255), nullable=False)
     from_port: Mapped[int] = mapped_column(BigInteger, nullable=False)
-    prot_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    port_number: Mapped[int] = mapped_column(Integer, nullable=False)
     protocol: Mapped[str] = mapped_column(String(16), nullable=False)
