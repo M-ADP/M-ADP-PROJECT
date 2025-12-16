@@ -35,7 +35,6 @@ class ProjectResponse(BaseModel):
     id: str
     user_id: str
     name: str
-    dns_id: Optional[str]
     max_cpu: float
     max_memory: float
     max_disk: float
