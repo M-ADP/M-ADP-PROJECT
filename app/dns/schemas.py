@@ -25,8 +25,10 @@ class DNSResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: str
+    project_id: str
     dns_name: str
     state: DNSState
+    port_id: str | None = None
 
 
 class DNSUpdate(BaseModel):
@@ -44,3 +46,11 @@ class DNSUpdate(BaseModel):
         if v.startswith("-") or v.endswith("-"):
             raise ValueError("서브도메인은 하이픈으로 시작하거나 끝날 수 없습니다.")
         return v.lower()
+
+
+class DNSPortBinding(BaseModel):
+    port_id: str = Field(
+        ...,
+        description="바인딩할 공개 포트 ID",
+        examples=["123456789"],
+    )

@@ -1,4 +1,5 @@
 import enum
+from typing import Optional
 
 from sqlalchemy import Enum, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
@@ -30,6 +31,20 @@ class DNS(BaseEntity):
         nullable=False,
         default=DNSState.PENDING,
     )
+    
+    # Port binding - reference to existing Port
+    port_id: Mapped[Optional[str]] = mapped_column(
+        String(64),
+        ForeignKey("port.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
 
     def update_state(self, state: DNSState):
         self.state = state
+
+    def bind_port(self, port_id: str):
+        self.port_id = port_id
+
+    def unbind_port(self):
+        self.port_id = None

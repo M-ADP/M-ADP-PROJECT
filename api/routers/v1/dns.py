@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.dns.schemas import DNSCreate, DNSResponse, DNSUpdate
+from app.dns.schemas import DNSCreate, DNSPortBinding, DNSResponse, DNSUpdate
 from app.dns.service import (
+    bind_port_to_dns,
     create_dns_for_project,
     delete_dns_from_project,
     get_dns_for_project,
@@ -113,5 +114,32 @@ async def update_dns_endpoint(
         )
     return SuccessResponse(
         message="DNS가 업데이트되었습니다.",
+        data=DNSResponse.model_validate(dns),
+    )
+
+
+@router.patch(
+    "/{project_id}/dns-records/{dns_id}/port",
+    response_model=SuccessResponse[DNSResponse],
+    status_code=200,
+)
+async def bind_port_to_dns_endpoint(
+    project_id: str,
+    dns_id: str,
+    payload: DNSPortBinding,
+    user: UserInfo = Depends(get_user_info),
+    session: AsyncSession = Depends(get_db_session),
+) -> SuccessResponse[DNSResponse]:
+    """DNS에 포트를 바인딩합니다."""
+    async with session.begin():
+        dns = await bind_port_to_dns(
+            project_id,
+            dns_id,
+            payload,
+            user_id=user.user_id,
+            session=session,
+        )
+    return SuccessResponse(
+        message="DNS에 포트가 바인딩되었습니다.",
         data=DNSResponse.model_validate(dns),
     )

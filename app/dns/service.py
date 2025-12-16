@@ -1,11 +1,13 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dns.models import DNS, DNSState
-from app.dns.schemas import DNSCreate, DNSUpdate
+from app.dns.schemas import DNSCreate, DNSPortBinding, DNSUpdate
 from app.dns.exceptions import DNSNameAlreadyExists, DNSNotFound, ProjectAlreadyHasDNS
 from app.dns import repository as dns_repository
 from app.project import repository as project_repository
 from app.project.exceptions import ProjectNotFound
+from app.port import repository as port_repository
+from app.port.exceptions import PortNotFound
 from core.id_generator import generate_sonyflake_id
 
 DNS_DOMAIN = "mdeveloper.platform"
@@ -107,6 +109,40 @@ async def update_dns_for_project(
 
     # DNS 이름 업데이트
     dns.dns_name = new_dns_name
+    await session.flush()
+
+    return dns
+
+
+async def bind_port_to_dns(
+    project_id: str,
+    dns_id: str,
+    request: DNSPortBinding,
+    user_id: str,
+    session: AsyncSession,
+) -> DNS:
+    """DNS에 공개 포트를 바인딩합니다."""
+    # 프로젝트 확인
+    project = await project_repository.get_by_id_for_user(session, project_id, user_id)
+    if project is None:
+        raise ProjectNotFound()
+
+    # DNS 확인
+    dns = await dns_repository.get_by_id_for_project(session, dns_id, project_id)
+    if dns is None:
+        raise DNSNotFound()
+
+    # 포트가 해당 프로젝트에 속하는지 확인
+    port = await port_repository.get_by_id_for_project(
+        session=session,
+        project_id=project_id,
+        port_id=request.port_id,
+    )
+    if port is None:
+        raise PortNotFound()
+
+    # DNS에 포트 바인딩
+    dns.bind_port(request.port_id)
     await session.flush()
 
     return dns
