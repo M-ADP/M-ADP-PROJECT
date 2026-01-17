@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from src.app.port.models import Port
+from src.app.port.model import Port
 from src.core.repository.base import Repository
 
 
@@ -34,4 +34,27 @@ class PortRepository(Repository[Port], ABC):
         port_id: str,
     ) -> Port | None:
         """프로젝트의 포트를 ID로 조회합니다."""
+        pass
+
+    @abstractmethod
+    async def insert(self, port: Port) -> Port:
+        """포트를 삽입합니다."""
+        pass
+
+    @abstractmethod
+    async def delete(self, port: Port) -> None:
+        """포트를 삭제합니다."""
+        pass
+
+    @abstractmethod
+    async def update(
+        self,
+        project_id: str,
+        port_id: str,
+        from_ip: str,
+        from_port: int,
+        port_number: int,
+        protocol: str,
+    ) -> Port:
+        """포트를 업데이트합니다."""
         pass

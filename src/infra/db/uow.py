@@ -4,7 +4,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.uow import UnitOfWork
 from src.core.repository import ProjectRepository, DNSRepository, PortRepository
-from src.infra.db.repository import ProjectRepositoryImpl, DNSRepositoryImpl, PortRepositoryImpl
+from src.infra.db.project.repository import ProjectRepositoryImpl
+from src.infra.db.dns.repository import DNSRepositoryImpl
+from src.infra.db.port.repository import PortRepositoryImpl
 
 
 class SQLAlchemyUnitOfWork(UnitOfWork):
