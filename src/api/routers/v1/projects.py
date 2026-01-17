@@ -1,10 +1,15 @@
 from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.project.schemas import *
+from src.app.project.usecase import (
+    CreateProjectUseCase,
+    UpdateProjectNameUseCase,
+    DeleteProjectUseCase,
+)
 from src.api.deps.auth import UserInfo, get_user_info
 from src.api.deps.db import get_db_session
 from src.core.schemas import SuccessResponse
-from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -14,9 +19,10 @@ async def create_project_endpoint(
     payload: ProjectCreate,
     user: UserInfo = Depends(get_user_info),
     session: AsyncSession = Depends(get_db_session),
+    usecase: CreateProjectUseCase = Depends(CreateProjectUseCase),
 ) -> SuccessResponse[ProjectResponse]:
     async with session.begin():
-        project = await create_project(payload, user_id=user.user_id, session=session)
+        project = await usecase(payload, user_id=user.user_id, session=session)
     return SuccessResponse(
         message="프로젝트가 생성되었습니다.",
         data=ProjectResponse.model_validate(project),
@@ -33,9 +39,10 @@ async def update_project_name_endpoint(
     payload: ProjectNameUpdate,
     user: UserInfo = Depends(get_user_info),
     session: AsyncSession = Depends(get_db_session),
+    usecase: UpdateProjectNameUseCase = Depends(UpdateProjectNameUseCase),
 ) -> SuccessResponse[ProjectResponse]:
     async with session.begin():
-        project = await update_project_name(
+        project = await usecase(
             project_id,
             payload,
             user_id=user.user_id,
@@ -56,9 +63,10 @@ async def delete_project_endpoint(
     project_id: str,
     user: UserInfo = Depends(get_user_info),
     session: AsyncSession = Depends(get_db_session),
+    usecase: DeleteProjectUseCase = Depends(DeleteProjectUseCase),
 ) -> SuccessResponse[ProjectResponse]:
     async with session.begin():
-        project = await delete_project(
+        project = await usecase(
             project_id,
             user_id=user.user_id,
             session=session,

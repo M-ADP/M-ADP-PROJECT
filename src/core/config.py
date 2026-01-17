@@ -28,6 +28,10 @@ class Settings(BaseSettings):
     app_version: str = "v1"
     cors: CorsSettings = CorsSettings()
 
+class ProjectConfig:
+    LIMIT : int = 3
+    DNS_DOMAIN : str = "mdeveloper.platform"
+
 
 @lru_cache
 def get_settings() -> Settings:

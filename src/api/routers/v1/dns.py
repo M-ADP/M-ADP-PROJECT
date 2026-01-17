@@ -2,12 +2,12 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.dns.schemas import DNSCreate, DNSPortBinding, DNSResponse, DNSUpdate
-from src.app.dns.service import (
-    bind_port_to_dns,
-    create_dns_for_project,
-    delete_dns_from_project,
-    get_dns_for_project,
-    update_dns_for_project,
+from src.app.dns.usecase import (
+    CreateDNSForProjectUseCase,
+    GetDNSForProjectUseCase,
+    DeleteDNSFromProjectUseCase,
+    UpdateDNSForProjectUseCase,
+    BindPortToDNSUseCase,
 )
 from src.api.deps.auth import UserInfo, get_user_info
 from src.api.deps.db import get_db_session
@@ -26,10 +26,11 @@ async def create_dns_endpoint(
     payload: DNSCreate,
     user: UserInfo = Depends(get_user_info),
     session: AsyncSession = Depends(get_db_session),
+    usecase: CreateDNSForProjectUseCase = Depends(CreateDNSForProjectUseCase),
 ) -> SuccessResponse[DNSResponse]:
     """프로젝트에 DNS를 생성합니다."""
     async with session.begin():
-        dns = await create_dns_for_project(
+        dns = await usecase(
             project_id,
             payload,
             user_id=user.user_id,
@@ -50,10 +51,11 @@ async def get_dns_endpoint(
     project_id: str,
     user: UserInfo = Depends(get_user_info),
     session: AsyncSession = Depends(get_db_session),
+    usecase: GetDNSForProjectUseCase = Depends(GetDNSForProjectUseCase),
 ) -> SuccessResponse[DNSResponse | None]:
     """프로젝트의 DNS를 조회합니다."""
     async with session.begin():
-        dns = await get_dns_for_project(
+        dns = await usecase(
             project_id,
             user_id=user.user_id,
             session=session,
@@ -76,10 +78,11 @@ async def delete_dns_endpoint(
     dns_id: str,
     user: UserInfo = Depends(get_user_info),
     session: AsyncSession = Depends(get_db_session),
+    usecase: DeleteDNSFromProjectUseCase = Depends(DeleteDNSFromProjectUseCase),
 ) -> SuccessResponse[DNSResponse]:
     """프로젝트의 DNS를 삭제합니다."""
     async with session.begin():
-        dns = await delete_dns_from_project(
+        dns = await usecase(
             project_id,
             dns_id,
             user_id=user.user_id,
@@ -102,10 +105,11 @@ async def update_dns_endpoint(
     payload: DNSUpdate,
     user: UserInfo = Depends(get_user_info),
     session: AsyncSession = Depends(get_db_session),
+    usecase: UpdateDNSForProjectUseCase = Depends(UpdateDNSForProjectUseCase),
 ) -> SuccessResponse[DNSResponse]:
     """프로젝트의 DNS 서브도메인을 업데이트합니다."""
     async with session.begin():
-        dns = await update_dns_for_project(
+        dns = await usecase(
             project_id,
             dns_id,
             payload,
@@ -129,10 +133,11 @@ async def bind_port_to_dns_endpoint(
     payload: DNSPortBinding,
     user: UserInfo = Depends(get_user_info),
     session: AsyncSession = Depends(get_db_session),
+    usecase: BindPortToDNSUseCase = Depends(BindPortToDNSUseCase),
 ) -> SuccessResponse[DNSResponse]:
     """DNS에 포트를 바인딩합니다."""
     async with session.begin():
-        dns = await bind_port_to_dns(
+        dns = await usecase(
             project_id,
             dns_id,
             payload,

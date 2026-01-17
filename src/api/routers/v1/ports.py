@@ -4,7 +4,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.api.deps.auth import UserInfo, get_user_info
 from src.api.deps.db import get_db_session
 from src.app.port.schemas import PortCreate, PortResponse, PortUpdate
-from src.app.port.service import create_port, delete_port, list_ports, update_port
+from src.app.port.usecase import (
+    CreatePortUseCase,
+    ListPortsUseCase,
+    UpdatePortUseCase,
+    DeletePortUseCase,
+)
 from src.core.schemas import CursorPage, SuccessResponse
 
 router = APIRouter(prefix="/projects/{project_id}/ports", tags=["project-ports"])
@@ -20,9 +25,10 @@ async def create_project_port_endpoint(
     payload: PortCreate,
     user: UserInfo = Depends(get_user_info),
     session: AsyncSession = Depends(get_db_session),
+    usecase: CreatePortUseCase = Depends(CreatePortUseCase),
 ) -> SuccessResponse[PortResponse]:
     async with session.begin():
-        port = await create_port(
+        port = await usecase(
             project_id=project_id,
             request=payload,
             user_id=user.user_id,
@@ -53,8 +59,9 @@ async def list_project_ports_endpoint(
     ),
     user: UserInfo = Depends(get_user_info),
     session: AsyncSession = Depends(get_db_session),
+    usecase: ListPortsUseCase = Depends(ListPortsUseCase),
 ) -> SuccessResponse[CursorPage[PortResponse]]:
-    ports = await list_ports(
+    ports = await usecase(
         project_id=project_id,
         user_id=user.user_id,
         session=session,
@@ -78,9 +85,10 @@ async def update_project_port_endpoint(
     payload: PortUpdate,
     user: UserInfo = Depends(get_user_info),
     session: AsyncSession = Depends(get_db_session),
+    usecase: UpdatePortUseCase = Depends(UpdatePortUseCase),
 ) -> SuccessResponse[PortResponse]:
     async with session.begin():
-        port = await update_port(
+        port = await usecase(
             project_id=project_id,
             port_id=port_id,
             request=payload,
@@ -103,9 +111,10 @@ async def delete_project_port_endpoint(
     port_id: str,
     user: UserInfo = Depends(get_user_info),
     session: AsyncSession = Depends(get_db_session),
+    usecase: DeletePortUseCase = Depends(DeletePortUseCase),
 ) -> SuccessResponse[PortResponse]:
     async with session.begin():
-        port = await delete_port(
+        port = await usecase(
             project_id=project_id,
             port_id=port_id,
             user_id=user.user_id,
