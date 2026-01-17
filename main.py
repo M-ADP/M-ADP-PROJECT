@@ -1,10 +1,10 @@
 from fastapi import FastAPI
 
-from api.routers import api_router
-from core.config import get_settings
-from core.exceptions import register_exception_handlers
-from core.middlewares import register_middlewares
-from core.db import create_all_tables
+from src.api.routers import api_router
+from src.core.config import get_settings
+from src.core import register_exception_handlers
+from src.core.middlewares import register_middlewares
+from src.core import create_all_tables
 
 
 def create_app() -> FastAPI:
