@@ -8,7 +8,7 @@ from src.app.project.exceptions import (
 )
 from src.app.project.models import Project
 from src.app.project import repository
-from src.core.id_generator import generate_sonyflake_id
+from src.common.id_generator import generate_sonyflake_id
 
 PROJECT_LIMIT = 3
 

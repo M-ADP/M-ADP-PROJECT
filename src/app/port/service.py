@@ -7,7 +7,7 @@ from src.app.port.schemas import PortCreate, PortResponse, PortUpdate
 from src.app.project import repository as project_repository
 from src.app.project.exceptions import ProjectNotFound
 from src.core.schemas import CursorPage
-from src.core.id_generator import generate_sonyflake_id
+from src.common.id_generator import generate_sonyflake_id
 
 
 async def create_port(

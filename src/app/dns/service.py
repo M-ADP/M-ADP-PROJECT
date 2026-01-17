@@ -8,7 +8,7 @@ from src.app.project import repository as project_repository
 from src.app.project.exceptions import ProjectNotFound
 from src.app.port import repository as port_repository
 from src.app.port.exceptions import PortNotFound
-from src.core.id_generator import generate_sonyflake_id
+from src.common.id_generator import generate_sonyflake_id
 
 DNS_DOMAIN = "mdeveloper.platform"
 
