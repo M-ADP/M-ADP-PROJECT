@@ -1,4 +1,4 @@
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import Depends
 
 from src.app.project.schemas import ProjectCreate
 from src.app.project.exceptions import (
@@ -6,25 +6,30 @@ from src.app.project.exceptions import (
     ProjectNameAlreadyExists,
 )
 from src.app.project.models import Project
-from src.app.project import repository
 from src.common.id_generator import generate_sonyflake_id
+from src.core.usecase import BaseUseCase
+from src.infra.db.uow import SQLAlchemyUnitOfWork
+from src.api.deps.uow import get_uow
 
 PROJECT_LIMIT = 3
 
-class CreateProjectUseCase:
+
+class CreateProjectUseCase(BaseUseCase):
     """프로젝트를 생성하는 유즈케이스"""
 
-    async def __call__(
+    def __init__(self, uow: SQLAlchemyUnitOfWork = Depends(get_uow)):
+        super().__init__(uow)
+
+    async def execute(
         self,
         request: ProjectCreate,
         user_id: str,
-        session: AsyncSession,
     ) -> Project:
-        project_count = await repository.count_by_user(session, user_id)
+        project_count = await self.uow.project.count_by_user(user_id)
         if project_count >= PROJECT_LIMIT:
             raise ProjectLimitExceeded()
 
-        if await repository.exists_by_name(session, user_id, request.name):
+        if await self.uow.project.exists_by_name(user_id, request.name):
             raise ProjectNameAlreadyExists()
 
         project_id = generate_sonyflake_id()
@@ -36,4 +41,4 @@ class CreateProjectUseCase:
             max_memory=request.max_memory,
             max_disk=request.max_disk,
         )
-        return await repository.insert(session, project_row)
+        return await self.uow.project.insert(project_row)

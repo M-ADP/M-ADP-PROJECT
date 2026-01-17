@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.app.project.schemas import *
 from src.app.project.usecase import (
@@ -8,7 +7,6 @@ from src.app.project.usecase import (
     DeleteProjectUseCase,
 )
 from src.api.deps.auth import UserInfo, get_user_info
-from src.api.deps.db import get_db_session
 from src.core.schemas import SuccessResponse
 
 router = APIRouter(prefix="/projects", tags=["projects"])
@@ -18,11 +16,9 @@ router = APIRouter(prefix="/projects", tags=["projects"])
 async def create_project_endpoint(
     payload: ProjectCreate,
     user: UserInfo = Depends(get_user_info),
-    session: AsyncSession = Depends(get_db_session),
     usecase: CreateProjectUseCase = Depends(CreateProjectUseCase),
 ) -> SuccessResponse[ProjectResponse]:
-    async with session.begin():
-        project = await usecase(payload, user_id=user.user_id, session=session)
+    project = await usecase(payload, user_id=user.user_id)
     return SuccessResponse(
         message="프로젝트가 생성되었습니다.",
         data=ProjectResponse.model_validate(project),
@@ -38,16 +34,9 @@ async def update_project_name_endpoint(
     project_id: str,
     payload: ProjectNameUpdate,
     user: UserInfo = Depends(get_user_info),
-    session: AsyncSession = Depends(get_db_session),
     usecase: UpdateProjectNameUseCase = Depends(UpdateProjectNameUseCase),
 ) -> SuccessResponse[ProjectResponse]:
-    async with session.begin():
-        project = await usecase(
-            project_id,
-            payload,
-            user_id=user.user_id,
-            session=session,
-        )
+    project = await usecase(project_id, payload, user_id=user.user_id)
     return SuccessResponse(
         message="프로젝트 이름이 변경되었습니다.",
         data=ProjectResponse.model_validate(project),
@@ -62,15 +51,9 @@ async def update_project_name_endpoint(
 async def delete_project_endpoint(
     project_id: str,
     user: UserInfo = Depends(get_user_info),
-    session: AsyncSession = Depends(get_db_session),
     usecase: DeleteProjectUseCase = Depends(DeleteProjectUseCase),
 ) -> SuccessResponse[ProjectResponse]:
-    async with session.begin():
-        project = await usecase(
-            project_id,
-            user_id=user.user_id,
-            session=session,
-        )
+    project = await usecase(project_id, user_id=user.user_id)
     return SuccessResponse(
         message="프로젝트가 삭제되었습니다.",
         data=ProjectResponse.model_validate(project),
