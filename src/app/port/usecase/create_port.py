@@ -1,20 +1,12 @@
-from fastapi import Depends
-
 from src.app.port.exceptions import PortAlreadyExists
-from src.app.port.models import Port
+from src.app.port.model import Port
 from src.app.port.schemas import PortCreate
 from src.app.project.exceptions import ProjectNotFound
-from src.common.id_generator import generate_sonyflake_id
 from src.core.usecase import BaseUseCase
-from src.infra.db.uow import SQLAlchemyUnitOfWork
-from src.api.deps.uow import get_uow
 
 
 class CreatePortUseCase(BaseUseCase):
     """포트를 생성하는 유즈케이스"""
-
-    def __init__(self, uow: SQLAlchemyUnitOfWork = Depends(get_uow)):
-        super().__init__(uow)
 
     async def execute(
         self,
@@ -34,11 +26,12 @@ class CreatePortUseCase(BaseUseCase):
             raise PortAlreadyExists()
 
         port_row = Port(
-            id=generate_sonyflake_id(),
             project_id=project_id,
             from_ip=request.from_ip,
             from_port=request.from_port,
             port_number=request.port_number,
             protocol=request.protocol,
         )
-        return await self.uow.port.insert(port_row)
+        port = await self.uow.port.insert(port_row)
+        await self.project_resource_client.open_port()
+        return port

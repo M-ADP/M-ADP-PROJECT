@@ -1,24 +1,16 @@
-from fastapi import Depends
-
 from src.app.project.schemas import ProjectCreate
 from src.app.project.exceptions import (
     ProjectLimitExceeded,
     ProjectNameAlreadyExists,
 )
-from src.app.project.models import Project
-from src.common.id_generator import generate_sonyflake_id
+from src.app.project.model import Project
 from src.core.usecase import BaseUseCase
-from src.infra.db.uow import SQLAlchemyUnitOfWork
-from src.api.deps.uow import get_uow
 
 PROJECT_LIMIT = 3
 
 
 class CreateProjectUseCase(BaseUseCase):
     """프로젝트를 생성하는 유즈케이스"""
-
-    def __init__(self, uow: SQLAlchemyUnitOfWork = Depends(get_uow)):
-        super().__init__(uow)
 
     async def execute(
         self,
@@ -32,13 +24,13 @@ class CreateProjectUseCase(BaseUseCase):
         if await self.uow.project.exists_by_name(user_id, request.name):
             raise ProjectNameAlreadyExists()
 
-        project_id = generate_sonyflake_id()
         project_row = Project(
-            id=project_id,
             user_id=user_id,
             name=request.name,
             max_cpu=request.max_cpu,
             max_memory=request.max_memory,
             max_disk=request.max_disk,
         )
-        return await self.uow.project.insert(project_row)
+        project = await self.uow.project.insert(project_row)
+        await self.project_resource_client.create()
+        return project

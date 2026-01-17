@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field, constr, field_validator
 
-from src.app.dns.models import DNSState
+from src.app.dns.model import DNSState
 
 
 class DNSCreate(BaseModel):

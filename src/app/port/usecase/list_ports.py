@@ -1,18 +1,11 @@
-from fastapi import Depends
-
 from src.app.port.schemas import PortResponse
 from src.app.project.exceptions import ProjectNotFound
 from src.core.schemas import CursorPage
 from src.core.usecase import BaseUseCase
-from src.infra.db.uow import SQLAlchemyUnitOfWork
-from src.api.deps.uow import get_uow
 
 
 class ListPortsUseCase(BaseUseCase):
     """포트 목록을 조회하는 유즈케이스"""
-
-    def __init__(self, uow: SQLAlchemyUnitOfWork = Depends(get_uow)):
-        super().__init__(uow)
 
     async def execute(
         self,

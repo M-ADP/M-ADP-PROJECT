@@ -1,22 +1,14 @@
-from fastapi import Depends
-
-from src.app.dns.models import DNS, DNSState
+from src.app.dns.model import DNS, DNSState
 from src.app.dns.schemas import DNSCreate
 from src.app.dns.exceptions import DNSNameAlreadyExists, ProjectAlreadyHasDNS
 from src.app.project.exceptions import ProjectNotFound
-from src.common.id_generator import generate_sonyflake_id
 from src.core.usecase import BaseUseCase
-from src.infra.db.uow import SQLAlchemyUnitOfWork
-from src.api.deps.uow import get_uow
 
 DNS_DOMAIN = "mdeveloper.platform"
 
 
 class CreateDNSForProjectUseCase(BaseUseCase):
     """프로젝트에 DNS를 생성하는 유즈케이스"""
-
-    def __init__(self, uow: SQLAlchemyUnitOfWork = Depends(get_uow)):
-        super().__init__(uow)
 
     async def execute(
         self,
@@ -41,13 +33,11 @@ class CreateDNSForProjectUseCase(BaseUseCase):
             raise DNSNameAlreadyExists()
 
         # 새 DNS 생성
-        dns_id = generate_sonyflake_id()
         dns = DNS(
-            id=dns_id,
             project_id=project_id,
             dns_name=dns_name,
             state=DNSState.PENDING,
         )
         dns = await self.uow.dns.insert(dns)
-
+        await self.project_resource_client.create_dns()
         return dns

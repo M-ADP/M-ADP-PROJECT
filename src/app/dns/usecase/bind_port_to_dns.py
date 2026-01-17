@@ -1,20 +1,13 @@
-from fastapi import Depends
-
-from src.app.dns.models import DNS
+from src.app.dns.model import DNS
 from src.app.dns.schemas import DNSPortBinding
 from src.app.dns.exceptions import DNSNotFound
 from src.app.project.exceptions import ProjectNotFound
 from src.app.port.exceptions import PortNotFound
 from src.core.usecase import BaseUseCase
-from src.infra.db.uow import SQLAlchemyUnitOfWork
-from src.api.deps.uow import get_uow
 
 
 class BindPortToDNSUseCase(BaseUseCase):
     """DNS에 공개 포트를 바인딩하는 유즈케이스"""
-
-    def __init__(self, uow: SQLAlchemyUnitOfWork = Depends(get_uow)):
-        super().__init__(uow)
 
     async def execute(
         self,
@@ -42,5 +35,6 @@ class BindPortToDNSUseCase(BaseUseCase):
             raise PortNotFound()
 
         # DNS에 포트 바인딩
-        dns.bind_port(request.port_id)
+        dns = await self.uow.dns.bind_port(dns_id, project_id, request.port_id)
+        await self.project_resource_client.mapping_dns_and_port()
         return dns
