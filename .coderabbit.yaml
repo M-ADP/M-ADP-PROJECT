@@ -1,23 +1,21 @@
-# CodeRabbit Configuration - Strict Mode
-# Documentation: https://docs.coderabbit.ai/guides/configure-coderabbit
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 
 language: "ko-KR"
+early_access: true
+
+tone_instructions: |
+  엄격하고 직접적인 톤으로 리뷰하세요. 문제점을 명확히 지적하고 개선 방안을 제시하세요.
 
 reviews:
-  # 엄격한 리뷰 프로필
   profile: "assertive"
-
-  # Change Request 워크플로우 활성화
   request_changes_workflow: true
-
-  # 높은 수준의 리뷰
   high_level_summary: true
   high_level_summary_placeholder: "@coderabbitai summary"
-
-  # 시 형식 비활성화 (진지한 리뷰)
   poem: false
+  review_status: true
+  collapse_walkthrough: false
+  sequence_diagrams: true
 
-  # 자동 리뷰 활성화
   auto_review:
     enabled: true
     drafts: false
@@ -26,7 +24,6 @@ reviews:
       - main
       - develop
 
-  # 리뷰 제외 경로
   path_filters:
     - "!**/__pycache__/**"
     - "!**/.venv/**"
@@ -37,11 +34,33 @@ reviews:
     - "!**/*.min.css"
     - "!**/migrations/**"
 
-  # 리뷰 도구 - 모두 활성화
+  path_instructions:
+    - path: "src/**/*.py"
+      instructions: |
+        Python 코드 리뷰 시 다음을 엄격히 검사하세요:
+        - 모든 함수/클래스에 타입 힌트 필수
+        - public 함수/클래스에 docstring 필수
+        - PEP 8 스타일 가이드 준수
+        - async/await 패턴의 올바른 사용
+        - SQLAlchemy 쿼리 최적화 여부
+        - Pydantic 모델의 적절한 validation
+        - FastAPI 의존성 주입 패턴 검토
+        - SOLID 원칙 준수 여부
+        - 보안 취약점(SQL injection, XSS) 검사
+        - 예외 처리의 적절성
+        - 하드코딩된 값이나 매직 넘버 지적
+        - 중복 코드 발견 시 리팩토링 제안
+
+    - path: "tests/**/*.py"
+      instructions: |
+        테스트 코드 리뷰 시 다음을 검사하세요:
+        - 테스트 커버리지 충분성
+        - edge case 테스트 포함 여부
+        - mock 사용의 적절성
+        - 테스트 독립성 확보
+
   tools:
     ruff:
-      enabled: true
-    ast-grep:
       enabled: true
     shellcheck:
       enabled: true
@@ -51,31 +70,9 @@ reviews:
       enabled: true
     languagetool:
       enabled: true
+      enabled_only: false
+    semgrep:
+      enabled: true
 
-# 채팅 설정
 chat:
   auto_reply: true
-
-# 조기 액세스 기능
-early_access: true
-
-# 커스텀 리뷰 지침
-instructions: |
-  ## 리뷰 기준
-  - 모든 코드는 SOLID 원칙을 준수해야 합니다
-  - 타입 힌트가 누락된 경우 반드시 지적하세요
-  - docstring이 없는 public 함수/클래스는 지적하세요
-  - 보안 취약점(SQL injection, XSS 등)을 철저히 검사하세요
-  - 예외 처리가 불충분한 경우 지적하세요
-  - 테스트 커버리지가 부족해 보이면 언급하세요
-  - 성능 이슈가 예상되는 코드를 찾아내세요
-  - 하드코딩된 값이나 매직 넘버를 지적하세요
-  - 중복 코드를 발견하면 리팩토링을 제안하세요
-  - 네이밍 컨벤션 위반을 지적하세요
-
-  ## Python 특화 규칙
-  - PEP 8 스타일 가이드 준수 여부 확인
-  - async/await 패턴의 올바른 사용 확인
-  - SQLAlchemy 쿼리 최적화 여부 검토
-  - Pydantic 모델의 적절한 validation 확인
-  - FastAPI 의존성 주입 패턴 검토
