@@ -19,7 +19,7 @@ class Port(BaseEntity):
     id: Mapped[str] = mapped_column(
         String(64),
         primary_key=True,
-        default_factory=IdGenerator.generate_sonyflake_id,
+        default=IdGenerator.generate_sonyflake_id,
     )
     project_id: Mapped[str] = mapped_column(
         String(64),
