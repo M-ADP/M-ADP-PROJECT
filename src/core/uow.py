@@ -3,12 +3,18 @@ from typing import Self
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.repository import ProjectRepository, DNSRepository, PortRepository
+from src.core.repository import (
+    ProjectRepository,
+    ProjectMemberRepository,
+    DNSRepository,
+    PortRepository,
+)
 
 
 class UnitOfWork(ABC):
     """추상 Unit of Work 클래스"""
     project: ProjectRepository
+    project_member: ProjectMemberRepository
     dns: DNSRepository
     port: PortRepository
 
