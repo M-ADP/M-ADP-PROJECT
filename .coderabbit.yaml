@@ -1,0 +1,78 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+
+language: "ko-KR"
+early_access: true
+
+tone_instructions: |
+  엄격하고 직접적인 톤으로 리뷰하세요. 문제점을 명확히 지적하고 개선 방안을 제시하세요.
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: true
+  high_level_summary: true
+  high_level_summary_placeholder: "@coderabbitai summary"
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  sequence_diagrams: true
+
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - master
+      - main
+      - develop
+
+  path_filters:
+    - "!**/__pycache__/**"
+    - "!**/.venv/**"
+    - "!**/.ruff_cache/**"
+    - "!**/node_modules/**"
+    - "!**/*.lock"
+    - "!**/*.min.js"
+    - "!**/*.min.css"
+    - "!**/migrations/**"
+
+  path_instructions:
+    - path: "src/**/*.py"
+      instructions: |
+        Python 코드 리뷰 시 다음을 엄격히 검사하세요:
+        - 모든 함수/클래스에 타입 힌트 필수
+        - public 함수/클래스에 docstring 필수
+        - PEP 8 스타일 가이드 준수
+        - async/await 패턴의 올바른 사용
+        - SQLAlchemy 쿼리 최적화 여부
+        - Pydantic 모델의 적절한 validation
+        - FastAPI 의존성 주입 패턴 검토
+        - SOLID 원칙 준수 여부
+        - 보안 취약점(SQL injection, XSS) 검사
+        - 예외 처리의 적절성
+        - 하드코딩된 값이나 매직 넘버 지적
+        - 중복 코드 발견 시 리팩토링 제안
+
+    - path: "tests/**/*.py"
+      instructions: |
+        테스트 코드 리뷰 시 다음을 검사하세요:
+        - 테스트 커버리지 충분성
+        - edge case 테스트 포함 여부
+        - mock 사용의 적절성
+        - 테스트 독립성 확보
+
+  tools:
+    ruff:
+      enabled: true
+    shellcheck:
+      enabled: true
+    markdownlint:
+      enabled: true
+    github-checks:
+      enabled: true
+    languagetool:
+      enabled: true
+      enabled_only: false
+    semgrep:
+      enabled: true
+
+chat:
+  auto_reply: true
