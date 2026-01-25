@@ -3,8 +3,14 @@ from typing import Self
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.uow import UnitOfWork
-from src.core.repository import ProjectRepository, DNSRepository, PortRepository
+from src.core.repository import (
+    ProjectRepository,
+    ProjectMemberRepository,
+    DNSRepository,
+    PortRepository,
+)
 from src.infra.db.project.repository import ProjectRepositoryImpl
+from src.infra.db.project.member_repository import ProjectMemberRepositoryImpl
 from src.infra.db.dns.repository import DNSRepositoryImpl
 from src.infra.db.port.repository import PortRepositoryImpl
 
@@ -14,6 +20,7 @@ class SQLAlchemyUnitOfWork(UnitOfWork):
     def __init__(self, session: AsyncSession):
         self._session = session
         self._project_repository: ProjectRepository | None = None
+        self._project_member_repository: ProjectMemberRepository | None = None
         self._dns_repository: DNSRepository | None = None
         self._port_repository: PortRepository | None = None
 
@@ -46,6 +53,13 @@ class SQLAlchemyUnitOfWork(UnitOfWork):
         if self._project_repository is None:
             self._project_repository = ProjectRepositoryImpl(self._session)
         return self._project_repository
+
+    @property
+    def project_member(self) -> ProjectMemberRepository:
+        """프로젝트 멤버 Repository"""
+        if self._project_member_repository is None:
+            self._project_member_repository = ProjectMemberRepositoryImpl(self._session)
+        return self._project_member_repository
 
     @property
     def dns(self) -> DNSRepository:
