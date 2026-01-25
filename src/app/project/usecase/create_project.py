@@ -3,7 +3,7 @@ from src.app.project.exceptions import (
     ProjectLimitExceeded,
     ProjectNameAlreadyExists,
 )
-from src.app.project.model import Project
+from src.app.project.model import Project, ProjectMember
 from src.core.usecase import BaseUseCase
 
 PROJECT_LIMIT = 3
@@ -32,5 +32,16 @@ class CreateProjectUseCase(BaseUseCase):
             max_disk=request.max_disk,
         )
         project = await self.uow.project.insert(project_row)
+
+        # 프로젝트 생성자를 OWNER로 자동 추가
+        owner_member = ProjectMember(
+            project_id=project.id,
+            user_id=user_id,
+            username=user_id,  # TODO: 실제 환경에서는 사용자 서비스에서 조회
+            profile_image=None,
+            role="OWNER",
+        )
+        await self.uow.project_member.insert(owner_member)
+
         await self.project_resource_client.create()
         return project
