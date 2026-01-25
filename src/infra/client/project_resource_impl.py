@@ -1,4 +1,4 @@
-from src.common.client.project_resource import ProjectResourceClient
+from src.common.client.project_resource import ProjectResourceClient, ResourceUsageData
 
 
 class MockProjectResourceClient(ProjectResourceClient):
@@ -41,5 +41,25 @@ class MockProjectResourceClient(ProjectResourceClient):
         return None
 
     async def allocate(self) -> None:
-        print("Resource Quotar 자원 생성")
+        print("Resource Quota 자원 생성")
         return None
+
+    async def get_usage(
+        self,
+        project_id: str,
+        days: int = 7,
+        interval_minutes: int = 60,
+    ) -> ResourceUsageData:
+        print(
+            f"프로젝트 {project_id} 최근 {days}일 리소스 사용량 조회 "
+            f"(간격 {interval_minutes}분)"
+        )
+        return ResourceUsageData()
+
+    async def verify_password(
+        self,
+        user_id: str,
+        password: str,
+    ) -> bool:
+        print(f"사용자 {user_id} 비밀번호 검증")
+        return True
