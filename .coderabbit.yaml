@@ -1,0 +1,81 @@
+# CodeRabbit Configuration - Strict Mode
+# Documentation: https://docs.coderabbit.ai/guides/configure-coderabbit
+
+language: "ko-KR"
+
+reviews:
+  # 엄격한 리뷰 프로필
+  profile: "assertive"
+
+  # Change Request 워크플로우 활성화
+  request_changes_workflow: true
+
+  # 높은 수준의 리뷰
+  high_level_summary: true
+  high_level_summary_placeholder: "@coderabbitai summary"
+
+  # 시 형식 비활성화 (진지한 리뷰)
+  poem: false
+
+  # 자동 리뷰 활성화
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - master
+      - main
+      - develop
+
+  # 리뷰 제외 경로
+  path_filters:
+    - "!**/__pycache__/**"
+    - "!**/.venv/**"
+    - "!**/.ruff_cache/**"
+    - "!**/node_modules/**"
+    - "!**/*.lock"
+    - "!**/*.min.js"
+    - "!**/*.min.css"
+    - "!**/migrations/**"
+
+  # 리뷰 도구 - 모두 활성화
+  tools:
+    ruff:
+      enabled: true
+    ast-grep:
+      enabled: true
+    shellcheck:
+      enabled: true
+    markdownlint:
+      enabled: true
+    github-checks:
+      enabled: true
+    languagetool:
+      enabled: true
+
+# 채팅 설정
+chat:
+  auto_reply: true
+
+# 조기 액세스 기능
+early_access: true
+
+# 커스텀 리뷰 지침
+instructions: |
+  ## 리뷰 기준
+  - 모든 코드는 SOLID 원칙을 준수해야 합니다
+  - 타입 힌트가 누락된 경우 반드시 지적하세요
+  - docstring이 없는 public 함수/클래스는 지적하세요
+  - 보안 취약점(SQL injection, XSS 등)을 철저히 검사하세요
+  - 예외 처리가 불충분한 경우 지적하세요
+  - 테스트 커버리지가 부족해 보이면 언급하세요
+  - 성능 이슈가 예상되는 코드를 찾아내세요
+  - 하드코딩된 값이나 매직 넘버를 지적하세요
+  - 중복 코드를 발견하면 리팩토링을 제안하세요
+  - 네이밍 컨벤션 위반을 지적하세요
+
+  ## Python 특화 규칙
+  - PEP 8 스타일 가이드 준수 여부 확인
+  - async/await 패턴의 올바른 사용 확인
+  - SQLAlchemy 쿼리 최적화 여부 검토
+  - Pydantic 모델의 적절한 validation 확인
+  - FastAPI 의존성 주입 패턴 검토
