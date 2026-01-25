@@ -1,6 +1,14 @@
-from typing import Optional
+from datetime import datetime
+from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, constr
+
+from src.app.port.schemas import PortResponse
+
+
+class ProjectMemberRole(str):
+    OWNER = "OWNER"
+    VIEWER = "VIEWER"
 
 
 class ProjectCreate(BaseModel):
@@ -46,3 +54,135 @@ class ProjectNameUpdate(BaseModel):
         description="변경할 프로젝트 이름",
         examples=["windeath44"],
     )
+
+
+class ProjectDelete(BaseModel):
+    password: str = Field(
+        ...,
+        description="계정 비밀번호",
+    )
+
+
+class ProjectResourceUpdate(BaseModel):
+    max_cpu: float | None = Field(
+        None,
+        ge=0.1,
+        le=4.0,
+        description="vCPU 기준 (0.1v ~ 4v)",
+    )
+    max_memory: float | None = Field(
+        None,
+        ge=32.0,
+        le=4096.0,
+        description="MB 단위 (32MB ~ 4GB)",
+    )
+    max_disk: float | None = Field(
+        None,
+        ge=32.0,
+        le=51200.0,
+        description="MB 단위 (32MB ~ 50GB, 늘리기만 가능)",
+    )
+
+
+class ResourceUsage(BaseModel):
+    cpu: float = 0.0
+    memory: float = 0.0
+    disk: float = 0.0
+    network: float = 0.0
+    traffic_per_hour: float = 0.0
+
+
+class DeploymentSummary(BaseModel):
+    running: int = Field(
+        0,
+        ge=0,
+        description="Running 상태인 배포 개수",
+    )
+    warning: int = Field(
+        0,
+        ge=0,
+        description="Warning 상태인 배포 개수",
+    )
+
+
+class DeploymentStatus(BaseModel):
+    state: str = Field(
+        ...,
+        description="프로젝트 상태 (예: RUNNING, STOPPED)",
+    )
+    message: str = Field(
+        ...,
+        description="상태 메시지 텍스트",
+    )
+
+
+class ProjectListItemResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    name: str
+    my_role: Literal["OWNER", "VIEWER"] = Field(
+        ...,
+        description="현재 사용자의 프로젝트 내 역할",
+    )
+    domain: str | None = Field(
+        None,
+        description="프로젝트 도메인 (있을 경우)",
+    )
+    deployment_summary: DeploymentSummary
+    deployment_status: DeploymentStatus
+
+
+class MetricPoint(BaseModel):
+    timestamp: str
+    value: float
+
+
+class DeploymentItem(BaseModel):
+    id: str
+    name: str
+    runtime: str | None = None
+    pod_count: int = Field(0, ge=0)
+    exposed_port: int | None = None
+    cpu_usage_percent: float | None = None
+    ram_usage_percent: float | None = None
+    health_status: Literal["Healthy", "Unhealthy", "Stopped"] = "Stopped"
+
+
+class ProjectDetailResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    name: str
+    my_role: Literal["OWNER", "VIEWER"] = Field(
+        ...,
+        description="현재 사용자의 프로젝트 내 역할",
+    )
+    deployments: list[DeploymentItem]
+    cpu_usage: list[MetricPoint]
+    memory_usage: list[MetricPoint]
+    disk_usage: list[MetricPoint]
+    network_usage: list[MetricPoint]
+    traffic_per_hour: list[MetricPoint]
+    ports: list[PortResponse]
+
+
+# ===== Project Member Schemas =====
+
+
+class ProjectMemberAdd(BaseModel):
+    user_id: str = Field(
+        ...,
+        description="초대할 사용자의 식별자",
+        examples=["user123"],
+    )
+
+
+class ProjectMemberResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    user_id: str = Field(..., description="멤버의 사용자 식별자")
+    username: str = Field(..., description="멤버의 표시 이름")
+    profile_image: str | None = Field(None, description="프로필 이미지 URL")
+    role: Literal["OWNER", "VIEWER"] = Field(..., description="프로젝트 내 역할")
+    joined_at: datetime = Field(..., description="프로젝트 참여 일시")
