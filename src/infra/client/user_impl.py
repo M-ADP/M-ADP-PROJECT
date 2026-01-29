@@ -30,3 +30,7 @@ class MockUserClient(UserClient):
     async def exists(self, user_id: str) -> bool:
         print(f"사용자 {user_id} 존재 여부 확인")
         return user_id in self._mock_users
+
+    async def verify_password(self, user_id: str, password: str) -> bool:
+        print(f"사용자 {user_id} 비밀번호 검증")
+        return True
