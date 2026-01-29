@@ -1,48 +1,111 @@
+from enum import Enum
+
+from src.app.dns.schemas import DNSCreate, DNSPortBinding, DNSUpdate
+from src.app.port.schemas import PortCreate, PortUpdate
+from src.app.project.schemas import ProjectCreate, ProjectResourceUpdate
+from src.common.client.http import HttpClient
 from src.common.client.project_resource import ProjectResourceClient, ResourceUsageData
+from src.common.config.resource_server import ResourceServerConfig
+from src.infra.client.asyncio_http import AioHttpClient
 
 
-class MockProjectResourceClient(ProjectResourceClient):
-    """프로젝트 리소스 접근 Mock 클라이언트"""
+class ProjectResourceAPIUrls(str, Enum):
+    CREATE_PROJECT = "/v1/projects"
+    DELETE_PROJECT = "/v1/projects/{name}"
+    OPEN_PROJECT_PORT = "/v1/projects/{name}/ports"
+    UPDATE_PROJECT_PORT = "/v1/projects/{name}/ports/{port_id}"
+    CLOSE_PROJECT_PORT = "/v1/projects/{name}/ports/{port_id}"
+    CREATE_PROJECT_DNS = "/v1/projects/{name}/dns"
+    DELETE_PROJECT_DNS = "/v1/projects/{name}/dns-records/{dns_id}"
+    UPDATE_PROJECT_DNS = "/v1/projects/{name}/dns-records/{dns_id}"
+    BIND_PROJECT_DNS_PORT = "/v1/projects/{name}/dns-records/{dns_id}/port"
+    UPDATE_PROJECT_RESOURCES = "/v1/projects/{name}/resource"
 
-    async def create(self) -> None:
-        print("namespace 생성")
-        return None
 
-    async def delete(self) -> None:
-        print("namespace 삭제")
-        return None
+class ProjectResourceClientImpl(ProjectResourceClient):
 
-    async def open_port(self) -> None:
-        print("gateway 자원 생성")
-        return None
+    def __init__(
+            self,
+            resource_server_base_url: str = ResourceServerConfig.RESOURCE_SERVER_BASE_URL,
+            http_client: HttpClient = AioHttpClient(),
+    ):
+        self.base_url = resource_server_base_url
+        self.http_client = http_client
 
-    async def close_port(self) -> None:
-        print("gateway 자원 삭제")
-        return None
+    async def create(self, user_id: str, project: ProjectCreate) -> None:
+        await self.http_client.post(
+            self.base_url + ProjectResourceAPIUrls.CREATE_PROJECT,
+            headers={"user-id": user_id},
+            json=project.model_dump(),
+        )
 
-    async def update_port(self) -> None:
-        print("gateway 자원 수정")
-        return None
+    async def delete(self, user_id: str, name: str) -> None:
+        await self.http_client.delete(
+            self.base_url + ProjectResourceAPIUrls.DELETE_PROJECT.format(
+                name=name
+            ),
+            headers={"user-id": user_id},
+        )
 
-    async def create_dns(self) -> None:
-        print("ExternalDNS 자원 생성")
-        return None
+    async def open_port(self, user_id: str, name: str, port: PortCreate) -> None:
+        await self.http_client.post(
+            self.base_url + ProjectResourceAPIUrls.OPEN_PROJECT_PORT.format(
+                name=name
+            ),
+            headers={"user-id": user_id},
+            json=port.model_dump(),
+        )
 
-    async def delete_dns(self) -> None:
-        print("ExternalDNS 자원 삭제")
-        return None
+    async def close_port(self, user_id: str, name: str, port_id: str) -> None:
+        await self.http_client.delete(
+            self.base_url + ProjectResourceAPIUrls.CLOSE_PROJECT_PORT.format(
+                name=name, port_id=port_id
+            ),
+            headers={"user-id": user_id},
+        )
 
-    async def update_dns(self) -> None:
-        print("ExternalDNS 자원 수정")
-        return None
+    async def update_port(self, user_id: str, name: str, port_id: int, port: PortUpdate) -> None:
+        await self.http_client.put(
+            self.base_url + ProjectResourceAPIUrls.UPDATE_PROJECT_PORT.format(
+                name=name, port_id=port_id
+            ),
+            headers={"user-id": user_id},
+            json=port.model_dump(),
+        )
 
-    async def mapping_dns_and_port(self) -> None:
-        print("ExternalDNS 자원과 gateway 자원 매핑")
-        return None
+    async def create_dns(self, user_id: str, name: str, dns: DNSCreate) -> None:
+        await self.http_client.post(
+            self.base_url + ProjectResourceAPIUrls.CREATE_PROJECT_DNS.format(name=name),
+            headers={"user-id": user_id},
+            json=dns.model_dump(),
+        )
 
-    async def allocate(self) -> None:
-        print("Resource Quota 자원 생성")
-        return None
+    async def delete_dns(self, user_id: str, name: str, dns_id: str) -> None:
+        await self.http_client.delete(
+            self.base_url + ProjectResourceAPIUrls.DELETE_PROJECT_DNS.format(name=name, dns_id=dns_id),
+            headers={"user-id": user_id},
+        )
+
+    async def update_dns(self, user_id: str, name: str, dns_id: str, dns: DNSUpdate) -> None:
+        await self.http_client.patch(
+            self.base_url + ProjectResourceAPIUrls.UPDATE_PROJECT_DNS.format(name=name, dns_id=dns_id),
+            headers={"user-id": user_id},
+            json=dns.model_dump(),
+        )
+
+    async def mapping_dns_and_port(self, user_id: str, name: str, dns_id: str, port_binding: DNSPortBinding) -> None:
+        await self.http_client.patch(
+            self.base_url + ProjectResourceAPIUrls.BIND_PROJECT_DNS_PORT.format(name=name, dns_id=dns_id),
+            headers={"user-id": user_id},
+            json=port_binding.model_dump(),
+        )
+
+    async def allocate(self, user_id: str, name: str, resource: ProjectResourceUpdate) -> None:
+        await self.http_client.patch(
+            self.base_url + ProjectResourceAPIUrls.UPDATE_PROJECT_RESOURCES.format(name=name),
+            headers={"user-id": user_id},
+            json=resource.model_dump(),
+        )
 
     async def get_usage(
         self,
