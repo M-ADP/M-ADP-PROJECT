@@ -55,11 +55,3 @@ class MockProjectResourceClient(ProjectResourceClient):
             f"(간격 {interval_minutes}분)"
         )
         return ResourceUsageData()
-
-    async def verify_password(
-        self,
-        user_id: str,
-        password: str,
-    ) -> bool:
-        print(f"사용자 {user_id} 비밀번호 검증")
-        return True
