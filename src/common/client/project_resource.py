@@ -58,10 +58,3 @@ class ProjectResourceClient(ABC):
     ) -> ResourceUsageData:
         """최근 N일의 리소스 사용량 시계열을 조회합니다."""
         ...
-
-    @abstractmethod
-    async def verify_password(
-        self,
-        user_id: str,
-        password: str,
-    ) -> bool: ...
