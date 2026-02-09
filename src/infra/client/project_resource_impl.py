@@ -107,7 +107,7 @@ class ProjectResourceClientImpl(ProjectResourceClient):
             json=resource.model_dump(),
         )
 
-    async def get_usage(
+    async def get_usage( # 이거 어디 쓰는거임?
         self,
         project_id: str,
         days: int = 7,
@@ -118,11 +118,3 @@ class ProjectResourceClientImpl(ProjectResourceClient):
             f"(간격 {interval_minutes}분)"
         )
         return ResourceUsageData()
-
-    async def verify_password(
-        self,
-        user_id: str,
-        password: str,
-    ) -> bool:
-        print(f"사용자 {user_id} 비밀번호 검증")
-        return True
