@@ -19,3 +19,8 @@ class UserClient(ABC):
     async def exists(self, user_id: str) -> bool:
         """사용자 존재 여부를 확인합니다."""
         ...
+
+    @abstractmethod
+    async def verify_password(self, user_id: str, password: str) -> bool:
+        """사용자 비밀번호를 검증합니다."""
+        ...
