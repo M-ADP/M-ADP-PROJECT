@@ -1,4 +1,8 @@
-from src.app.project.exceptions import ProjectNotFound, DiskCannotBeReduced
+from src.app.project.exceptions import (
+    ProjectNotFound,
+    DiskCannotBeReduced,
+    OnlyOwnerCanUpdateResource,
+)
 from src.app.project.model import Project
 from src.app.project.schemas import ProjectResourceUpdate
 from src.core.usecase import BaseUseCase
@@ -11,9 +15,13 @@ class UpdateProjectResourceUseCase(BaseUseCase):
         request: ProjectResourceUpdate,
         user_id: str,
     ) -> Project:
-        project = await self.uow.project.get_by_id_for_user(project_id, user_id)
+        project = await self.uow.project.get_by_id(project_id)
         if project is None:
             raise ProjectNotFound()
+
+        is_owner = await self.uow.project_member.is_owner(project_id, user_id)
+        if not is_owner:
+            raise OnlyOwnerCanUpdateResource()
 
         if request.max_disk is not None and request.max_disk < project.max_disk:
             raise DiskCannotBeReduced()
