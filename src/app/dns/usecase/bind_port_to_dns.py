@@ -1,7 +1,7 @@
 from src.app.dns.model import DNS
 from src.app.dns.schemas import DNSPortBinding
 from src.app.dns.exceptions import DNSNotFound
-from src.app.project.exceptions import ProjectNotFound
+from src.app.project.exceptions import ProjectNotFound, OnlyOwnerCanManageDNS
 from src.app.port.exceptions import PortNotFound
 from src.core.usecase import BaseUseCase
 
@@ -17,9 +17,13 @@ class BindPortToDNSUseCase(BaseUseCase):
         user_id: str,
     ) -> DNS:
         # 프로젝트 확인
-        project = await self.uow.project.get_by_id_for_user(project_id, user_id)
+        project = await self.uow.project.get_by_id(project_id)
         if project is None:
             raise ProjectNotFound()
+
+        is_owner = await self.uow.project_member.is_owner(project_id, user_id)
+        if not is_owner:
+            raise OnlyOwnerCanManageDNS()
 
         # DNS 확인
         dns = await self.uow.dns.get_by_id_for_project(dns_id, project_id)
