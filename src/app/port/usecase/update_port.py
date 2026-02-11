@@ -1,7 +1,7 @@
 from src.app.port.exceptions import PortAlreadyExists, PortNotFound
 from src.app.port.model import Port
 from src.app.port.schemas import PortUpdate
-from src.app.project.exceptions import ProjectNotFound
+from src.app.project.exceptions import ProjectNotFound, OnlyOwnerCanManagePorts
 from src.core.usecase import BaseUseCase
 
 
@@ -15,9 +15,13 @@ class UpdatePortUseCase(BaseUseCase):
         request: PortUpdate,
         user_id: str,
     ) -> Port:
-        project = await self.uow.project.get_by_id_for_user(project_id, user_id)
+        project = await self.uow.project.get_by_id(project_id)
         if project is None:
             raise ProjectNotFound()
+
+        is_owner = await self.uow.project_member.is_owner(project_id, user_id)
+        if not is_owner:
+            raise OnlyOwnerCanManagePorts()
 
         port = await self.uow.port.get_by_id_for_project(
             project_id=project_id,
