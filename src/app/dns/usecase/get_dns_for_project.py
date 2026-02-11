@@ -11,8 +11,12 @@ class GetDNSForProjectUseCase(BaseUseCase):
         project_id: str,
         user_id: str,
     ) -> DNS | None:
-        project = await self.uow.project.get_by_id_for_user(project_id, user_id)
+        project = await self.uow.project.get_by_id(project_id)
         if project is None:
+            raise ProjectNotFound()
+
+        has_access = await self.uow.project_member.has_access(project_id, user_id)
+        if not has_access:
             raise ProjectNotFound()
 
         dns = await self.uow.dns.get_by_project(project_id)
