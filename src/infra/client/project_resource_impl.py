@@ -1,11 +1,13 @@
 from enum import Enum
 
+from fastapi import Depends
+
 from src.app.dns.schemas import DNSCreate, DNSPortBinding, DNSUpdate
 from src.app.port.schemas import PortCreate, PortUpdate
 from src.app.project.schemas import ProjectCreate, ProjectResourceUpdate
 from src.common.client.http import HttpClient
 from src.common.client.project_resource import ProjectResourceClient, ResourceUsageData
-from src.common.config.resource_server import ResourceServerConfig
+from src.common.config.resource_server import ResourceServerConfig, get_resource_config
 from src.infra.client.asyncio_http import AioHttpClient
 
 
@@ -26,11 +28,10 @@ class ProjectResourceClientImpl(ProjectResourceClient):
 
     def __init__(
             self,
-            resource_server_base_url: str | None = None,
+            resource_server_config : ResourceServerConfig = Depends(get_resource_config),
             http_client: HttpClient = AioHttpClient(),
     ):
-        config = ResourceServerConfig()
-        self.base_url = resource_server_base_url or config.RESOURCE_SERVER_BASE_URL
+        self.base_url = resource_server_config.RESOURCE_SERVER_BASE_URL
         self.http_client = http_client
 
     async def create(self, user_id: str, project: ProjectCreate) -> None:
