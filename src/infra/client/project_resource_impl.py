@@ -26,10 +26,11 @@ class ProjectResourceClientImpl(ProjectResourceClient):
 
     def __init__(
             self,
-            resource_server_base_url: str = ResourceServerConfig.RESOURCE_SERVER_BASE_URL,
+            resource_server_base_url: str | None = None,
             http_client: HttpClient = AioHttpClient(),
     ):
-        self.base_url = resource_server_base_url
+        config = ResourceServerConfig()
+        self.base_url = resource_server_base_url or config.RESOURCE_SERVER_BASE_URL
         self.http_client = http_client
 
     async def create(self, user_id: str, project: ProjectCreate) -> None:

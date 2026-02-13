@@ -1,7 +1,7 @@
 from src.app.dns.model import DNS, DNSState
 from src.app.dns.schemas import DNSCreate
 from src.app.dns.exceptions import DNSNameAlreadyExists, ProjectAlreadyHasDNS
-from src.app.project.exceptions import ProjectNotFound
+from src.app.project.exceptions import ProjectNotFound, OnlyOwnerCanManageDNS
 from src.core.usecase import BaseUseCase
 
 DNS_DOMAIN = "mdeveloper.platform"
@@ -17,9 +17,13 @@ class CreateDNSForProjectUseCase(BaseUseCase):
         user_id: str,
     ) -> DNS:
         # 프로젝트 확인
-        project = await self.uow.project.get_by_id_for_user(project_id, user_id)
+        project = await self.uow.project.get_by_id(project_id)
         if project is None:
             raise ProjectNotFound()
+
+        is_owner = await self.uow.project_member.is_owner(project_id, user_id)
+        if not is_owner:
+            raise OnlyOwnerCanManageDNS()
 
         # 프로젝트에 이미 DNS가 있는지 확인
         if await self.uow.dns.exists_by_project(project_id):

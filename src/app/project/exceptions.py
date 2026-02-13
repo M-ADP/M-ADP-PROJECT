@@ -44,6 +44,51 @@ class InvalidPassword(AppException):
         )
 
 
+class OnlyOwnerCanDeleteProject(AppException):
+    def __init__(self) -> None:
+        super().__init__(
+            "프로젝트 소유자만 프로젝트를 삭제할 수 있습니다.",
+            code="ONLY_OWNER_CAN_DELETE_PROJECT",
+            status_code=403,
+        )
+
+
+class OnlyOwnerCanUpdateResource(AppException):
+    def __init__(self) -> None:
+        super().__init__(
+            "프로젝트 소유자만 리소스를 변경할 수 있습니다.",
+            code="ONLY_OWNER_CAN_UPDATE_RESOURCE",
+            status_code=403,
+        )
+
+
+class OnlyOwnerCanUpdateProjectName(AppException):
+    def __init__(self) -> None:
+        super().__init__(
+            "프로젝트 소유자만 프로젝트 이름을 변경할 수 있습니다.",
+            code="ONLY_OWNER_CAN_UPDATE_PROJECT_NAME",
+            status_code=403,
+        )
+
+
+class OnlyOwnerCanManagePorts(AppException):
+    def __init__(self) -> None:
+        super().__init__(
+            "프로젝트 소유자만 포트를 관리할 수 있습니다.",
+            code="ONLY_OWNER_CAN_MANAGE_PORTS",
+            status_code=403,
+        )
+
+
+class OnlyOwnerCanManageDNS(AppException):
+    def __init__(self) -> None:
+        super().__init__(
+            "프로젝트 소유자만 DNS를 관리할 수 있습니다.",
+            code="ONLY_OWNER_CAN_MANAGE_DNS",
+            status_code=403,
+        )
+
+
 # ===== Project Member Exceptions =====
 
 

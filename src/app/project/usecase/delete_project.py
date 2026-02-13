@@ -1,4 +1,8 @@
-from src.app.project.exceptions import ProjectNotFound, InvalidPassword
+from src.app.project.exceptions import (
+    ProjectNotFound,
+    InvalidPassword,
+    OnlyOwnerCanDeleteProject,
+)
 from src.app.project.model import Project
 from src.app.project.schemas import ProjectDelete
 from src.core.usecase import BaseUseCase
@@ -19,8 +23,9 @@ class DeleteProjectUseCase(BaseUseCase):
         if project is None:
             raise ProjectNotFound()
 
-        if project.user_id != user_id:
-            raise InvalidPassword()
+        is_owner = await self.uow.project_member.is_owner(project_id, user_id)
+        if not is_owner:
+            raise OnlyOwnerCanDeleteProject()
 
         await self.project_resource_client.delete()
         await self.uow.project.delete(project)

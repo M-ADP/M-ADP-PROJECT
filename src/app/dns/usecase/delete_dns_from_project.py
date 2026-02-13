@@ -1,6 +1,6 @@
 from src.app.dns.model import DNS
 from src.app.dns.exceptions import DNSNotFound
-from src.app.project.exceptions import ProjectNotFound
+from src.app.project.exceptions import ProjectNotFound, OnlyOwnerCanManageDNS
 from src.core.usecase import BaseUseCase
 
 
@@ -13,9 +13,13 @@ class DeleteDNSFromProjectUseCase(BaseUseCase):
         dns_id: str,
         user_id: str,
     ) -> DNS:
-        project = await self.uow.project.get_by_id_for_user(project_id, user_id)
+        project = await self.uow.project.get_by_id(project_id)
         if project is None:
             raise ProjectNotFound()
+
+        is_owner = await self.uow.project_member.is_owner(project_id, user_id)
+        if not is_owner:
+            raise OnlyOwnerCanManageDNS()
 
         dns = await self.uow.dns.get_by_id_for_project(dns_id, project_id)
         if dns is None:

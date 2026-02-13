@@ -2,6 +2,7 @@ from src.app.project.schemas import ProjectNameUpdate
 from src.app.project.exceptions import (
     ProjectNameAlreadyExists,
     ProjectNotFound,
+    OnlyOwnerCanUpdateProjectName,
 )
 from src.app.project.model import Project
 from src.core.usecase import BaseUseCase
@@ -16,9 +17,13 @@ class UpdateProjectNameUseCase(BaseUseCase):
         request: ProjectNameUpdate,
         user_id: str,
     ) -> Project:
-        project = await self.uow.project.get_by_id_for_user(project_id, user_id)
+        project = await self.uow.project.get_by_id(project_id)
         if project is None:
             raise ProjectNotFound()
+
+        is_owner = await self.uow.project_member.is_owner(project_id, user_id)
+        if not is_owner:
+            raise OnlyOwnerCanUpdateProjectName()
 
         if await self.uow.project.exists_by_name(
             user_id,
