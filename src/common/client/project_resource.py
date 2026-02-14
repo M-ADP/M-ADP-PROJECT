@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
-from src.app.dns.schemas import DNSCreate, DNSPortBinding, DNSUpdate
 from src.app.port.schemas import PortCreate, PortUpdate
 from src.app.project.schemas import ProjectCreate, ProjectResourceUpdate
 
@@ -23,7 +22,7 @@ class ResourceUsageData:
 
 class ProjectResourceClient(ABC):
     @abstractmethod
-    async def create(self, user_id: str, project: ProjectCreate): ...
+    async def create(self, user_id: str, project_id: str, project: ProjectCreate): ...
 
     @abstractmethod
     async def delete(self, user_id: str, name: str): ...
@@ -36,18 +35,6 @@ class ProjectResourceClient(ABC):
 
     @abstractmethod
     async def update_port(self, user_id: str, name: str, port_id: int, port: PortUpdate): ...
-
-    @abstractmethod
-    async def create_dns(self, user_id: str, name: str, dns: DNSCreate): ...
-
-    @abstractmethod
-    async def delete_dns(self, user_id: str, name: str, dns_id: str): ...
-
-    @abstractmethod
-    async def update_dns(self, user_id: str, name: str, dns_id: str, dns: DNSUpdate): ...
-
-    @abstractmethod
-    async def mapping_dns_and_port(self, user_id: str, name: str, dns_id: str, port_binding: DNSPortBinding): ...
 
     @abstractmethod
     async def allocate(self, user_id: str, name: str, resource: ProjectResourceUpdate):
@@ -68,7 +55,7 @@ class ProjectResourceClient(ABC):
 class MockProjectResourceClient(ProjectResourceClient):
     """프로젝트 리소스 접근 Mock 클라이언트"""
 
-    async def create(self, user_id: str, project: ProjectCreate) -> None:
+    async def create(self, user_id: str, project_id: str, project: ProjectCreate) -> None:
         print("namespace 생성")
         return None
 
@@ -86,22 +73,6 @@ class MockProjectResourceClient(ProjectResourceClient):
 
     async def update_port(self, user_id: str, name: str, port_id: int, port: PortUpdate) -> None:
         print("gateway 자원 수정")
-        return None
-
-    async def create_dns(self, user_id: str, name: str, dns: DNSCreate) -> None:
-        print("ExternalDNS 자원 생성")
-        return None
-
-    async def delete_dns(self, user_id: str, name: str, dns_id: str) -> None:
-        print("ExternalDNS 자원 삭제")
-        return None
-
-    async def update_dns(self, user_id: str, name: str, dns_id: str, dns: DNSUpdate) -> None:
-        print("ExternalDNS 자원 수정")
-        return None
-
-    async def mapping_dns_and_port(self, user_id: str, name: str, dns_id: str, port_binding: DNSPortBinding) -> None:
-        print("ExternalDNS 자원과 gateway 자원 매핑")
         return None
 
     async def allocate(self, user_id: str, name: str, resource: ProjectResourceUpdate) -> None:

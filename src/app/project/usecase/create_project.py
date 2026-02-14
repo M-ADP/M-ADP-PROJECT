@@ -7,6 +7,7 @@ from src.app.project.model import Project, ProjectMember
 from src.core.usecase import BaseUseCase
 
 PROJECT_LIMIT = 3
+# 이거 config로 뭉쳐서 환경변수로 하는게 나을 듯
 
 
 class CreateProjectUseCase(BaseUseCase):
@@ -43,5 +44,9 @@ class CreateProjectUseCase(BaseUseCase):
         )
         await self.uow.project_member.insert(owner_member)
 
-        await self.project_resource_client.create()
+        await self.project_resource_client.create(
+            user_id=user_id,
+            project_id=project.id,
+            project=request
+        )
         return project

@@ -10,10 +10,10 @@ from src.core.usecase import BaseUseCase
 
 class DeleteProjectUseCase(BaseUseCase):
     async def execute(
-        self,
-        project_id: str,
-        request: ProjectDelete,
-        user_id: str,
+            self,
+            project_id: str,
+            request: ProjectDelete,
+            user_id: str,
     ) -> Project:
         is_valid = await self.user_client.verify_password(user_id, request.password)
         if not is_valid:
@@ -27,6 +27,9 @@ class DeleteProjectUseCase(BaseUseCase):
         if not is_owner:
             raise OnlyOwnerCanDeleteProject()
 
-        await self.project_resource_client.delete()
+        await self.project_resource_client.delete(
+            user_id=user_id,
+            name=project.name
+        )
         await self.uow.project.delete(project)
         return project

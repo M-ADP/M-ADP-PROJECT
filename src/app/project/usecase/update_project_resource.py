@@ -32,5 +32,9 @@ class UpdateProjectResourceUseCase(BaseUseCase):
             max_memory=request.max_memory,
             max_disk=request.max_disk
         )
-        await self.project_resource_client.allocate()
+        await self.project_resource_client.allocate(
+            user_id=user_id,
+            name=project.name,
+            resource=request
+        )
         return project
