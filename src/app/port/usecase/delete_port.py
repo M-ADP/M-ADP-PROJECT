@@ -28,6 +28,10 @@ class DeletePortUseCase(BaseUseCase):
         if port is None:
             raise PortNotFound()
 
-        await self.project_resource_client.close_port()
+        await self.project_resource_client.close_port(
+            user_id=user_id,
+            name=project.name,
+            port_id=str(port.from_port)
+        )
         await self.uow.port.delete(port)
         return port

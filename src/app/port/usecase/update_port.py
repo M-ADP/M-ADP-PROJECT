@@ -23,11 +23,12 @@ class UpdatePortUseCase(BaseUseCase):
         if not is_owner:
             raise OnlyOwnerCanManagePorts()
 
-        port = await self.uow.port.get_by_id_for_project(
+        
+        original_port = await self.uow.port.get_by_id_for_project(
             project_id=project_id,
             port_id=port_id,
         )
-        if port is None:
+        if original_port is None:
             raise PortNotFound()
 
         if await self.uow.port.exists_by_from_port(
@@ -45,5 +46,10 @@ class UpdatePortUseCase(BaseUseCase):
             port_number=request.port_number,
             protocol=request.protocol,
         )
-        await self.project_resource_client.update_port()
+        await self.project_resource_client.update_port(
+            user_id=user_id,
+            name=project.name,
+            port_id=original_port.from_port,
+            port=request
+        )
         return port
