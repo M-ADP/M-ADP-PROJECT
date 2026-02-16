@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from src.app.port.model import Port
+from src.core.domain.port import Port
 from src.core.repository.base import Repository
 
 

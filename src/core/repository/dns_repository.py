@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from src.app.dns.model import DNS
+from src.core.domain.dns import DNS
 from src.core.repository.base import Repository
 
 

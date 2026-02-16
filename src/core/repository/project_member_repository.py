@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from src.app.project.model import ProjectMember
+from src.core.domain.project import ProjectMember
 from src.core.repository.base import Repository
 
 
