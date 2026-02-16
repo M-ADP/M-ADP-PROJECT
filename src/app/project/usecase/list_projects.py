@@ -1,51 +1,66 @@
+from fastapi import Depends
+
 from src.app.project.schemas import (
     DeploymentStatus,
     DeploymentSummary,
     ProjectListItemResponse,
 )
-from src.common.client.deployment_summary import DeploymentSummaryItem
-from src.core.schemas import CursorPage
-from src.core.usecase import BaseUseCase
+from src.core.client.deployment_summary import DeploymentSummaryItem
+from src.common.schemas import CursorPage
+from src.app.base_usecase import BaseUseCase
+from src.core.uow import UnitOfWork
+from src.core.client.deployment_summary import DeploymentSummaryClient
+from src.dependencies.uow import get_uow
+from src.dependencies.client.deployment_summary import get_deployment_summary_client
 
 
 class ListProjectsUseCase(BaseUseCase):
     _allowed_states = {"RUNNING", "STOPPED", "FAILED"}
 
-    async def execute(
+    def __init__(
+        self,
+        uow: UnitOfWork = Depends(get_uow),
+        deployment_summary_client: DeploymentSummaryClient = Depends(get_deployment_summary_client),
+    ):
+        self.uow = uow
+        self.deployment_summary_client = deployment_summary_client
+
+    async def __call__(
         self,
         user_id: str,
         limit: int,
         cursor: str | None = None,
     ) -> CursorPage[ProjectListItemResponse]:
-        # 사용자가 멤버로 참여한 프로젝트 ID 목록 조회
-        project_ids = await self.uow.project_member.list_project_ids_by_user(
-            user_id=user_id,
-            limit=limit + 1,
-            cursor=cursor,
-        )
-        has_next = len(project_ids) > limit
-        project_ids = project_ids[:limit]
+        async with self.uow:
+            # 사용자가 멤버로 참여한 프로젝트 ID 목록 조회
+            project_ids = await self.uow.project_member.list_project_ids_by_user(
+                user_id=user_id,
+                limit=limit + 1,
+                cursor=cursor,
+            )
+            has_next = len(project_ids) > limit
+            project_ids = project_ids[:limit]
 
-        # 프로젝트 정보 조회
-        projects = await self.uow.project.get_by_ids(project_ids)
-        # ID 순서 유지
-        project_map = {p.id: p for p in projects}
-        ordered_projects = [project_map[pid] for pid in project_ids if pid in project_map]
+            # 프로젝트 정보 조회
+            projects = await self.uow.project.get_by_ids(project_ids)
+            # ID 순서 유지
+            project_map = {p.id: p for p in projects}
+            ordered_projects = [project_map[pid] for pid in project_ids if pid in project_map]
 
-        summary_map = await self._get_summary_map(project_ids)
-        role_map = await self.uow.project_member.get_roles_batch(project_ids, user_id)
+            summary_map = await self._get_summary_map(project_ids)
+            role_map = await self.uow.project_member.get_roles_batch(project_ids, user_id)
 
-        return CursorPage(
-            items=[
-                await self._to_list_item(
-                    project,
-                    summary_map.get(project.id),
-                    role_map.get(project.id, "VIEWER"),
-                )
-                for project in ordered_projects
-            ],
-            has_next=has_next,
-        )
+            return CursorPage(
+                items=[
+                    await self._to_list_item(
+                        project,
+                        summary_map.get(project.id),
+                        role_map.get(project.id, "VIEWER"),
+                    )
+                    for project in ordered_projects
+                ],
+                has_next=has_next,
+            )
 
     async def _to_list_item(
         self,
