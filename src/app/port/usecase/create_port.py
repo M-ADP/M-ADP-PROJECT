@@ -39,7 +39,7 @@ class CreatePortUseCase(BaseUseCase):
         port = await self.uow.port.insert(port_row)
         await self.project_resource_client.open_port(
             user_id=user_id,
-            name=project.name,
-            port=request
+            project=project,
+            port=port,
         )
         return port

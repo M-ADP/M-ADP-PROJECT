@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
-from src.app.port.schemas import PortCreate, PortUpdate
-from src.app.project.schemas import ProjectCreate, ProjectResourceUpdate
+if TYPE_CHECKING:
+    from src.app.port.model import Port
+    from src.app.project.model import Project
 
 
 @dataclass
@@ -22,29 +24,45 @@ class ResourceUsageData:
 
 class ProjectResourceClient(ABC):
     @abstractmethod
-    async def create(self, user_id: str, project_id: str, project: ProjectCreate): ...
+    async def create(self, user_id: str, project: "Project") -> None:
+        """프로젝트(namespace) 생성"""
+        ...
 
     @abstractmethod
-    async def delete(self, user_id: str, name: str): ...
+    async def delete(self, user_id: str, project: "Project") -> None:
+        """프로젝트(namespace) 삭제"""
+        ...
 
     @abstractmethod
-    async def open_port(self, user_id: str, name: str, port: PortCreate): ...
+    async def open_port(self, user_id: str, project: "Project", port: "Port") -> None:
+        """포트 오픈 (gateway 자원 생성)"""
+        ...
 
     @abstractmethod
-    async def close_port(self, user_id: str, name: str, port_id: str): ...
+    async def close_port(self, user_id: str, project: "Project", port: "Port") -> None:
+        """포트 닫기 (gateway 자원 삭제)"""
+        ...
 
     @abstractmethod
-    async def update_port(self, user_id: str, name: str, port_id: int, port: PortUpdate): ...
+    async def update_port(
+        self,
+        user_id: str,
+        project: "Project",
+        original_port: "Port",
+        updated_port: "Port",
+    ) -> None:
+        """포트 업데이트 (gateway 자원 수정)"""
+        ...
 
     @abstractmethod
-    async def allocate(self, user_id: str, name: str, resource: ProjectResourceUpdate):
-        """가용 자원 할당"""
+    async def allocate(self, user_id: str, project: "Project") -> None:
+        """가용 자원 할당 (Resource Quota)"""
         ...
 
     @abstractmethod
     async def get_usage(
         self,
-        project_id: str,
+        project: "Project",
         days: int = 7,
         interval_minutes: int = 60,
     ) -> ResourceUsageData:
@@ -55,38 +73,44 @@ class ProjectResourceClient(ABC):
 class MockProjectResourceClient(ProjectResourceClient):
     """프로젝트 리소스 접근 Mock 클라이언트"""
 
-    async def create(self, user_id: str, project_id: str, project: ProjectCreate) -> None:
-        print("namespace 생성")
+    async def create(self, user_id: str, project: "Project") -> None:
+        print(f"namespace 생성: {project.name}")
         return None
 
-    async def delete(self, user_id: str, name: str) -> None:
-        print("namespace 삭제")
+    async def delete(self, user_id: str, project: "Project") -> None:
+        print(f"namespace 삭제: {project.name}")
         return None
 
-    async def open_port(self, user_id: str, name: str, port: PortCreate) -> None:
-        print("gateway 자원 생성")
+    async def open_port(self, user_id: str, project: "Project", port: "Port") -> None:
+        print(f"gateway 자원 생성: {project.name}:{port.from_port}")
         return None
 
-    async def close_port(self, user_id: str, name: str, port_id: str) -> None:
-        print("gateway 자원 삭제")
+    async def close_port(self, user_id: str, project: "Project", port: "Port") -> None:
+        print(f"gateway 자원 삭제: {project.name}:{port.from_port}")
         return None
 
-    async def update_port(self, user_id: str, name: str, port_id: int, port: PortUpdate) -> None:
-        print("gateway 자원 수정")
+    async def update_port(
+        self,
+        user_id: str,
+        project: "Project",
+        original_port: "Port",
+        updated_port: "Port",
+    ) -> None:
+        print(f"gateway 자원 수정: {project.name}:{original_port.from_port} -> {updated_port.from_port}")
         return None
 
-    async def allocate(self, user_id: str, name: str, resource: ProjectResourceUpdate) -> None:
-        print("Resource Quota 자원 생성")
+    async def allocate(self, user_id: str, project: "Project") -> None:
+        print(f"Resource Quota 자원 생성: {project.name}")
         return None
 
     async def get_usage(
         self,
-        project_id: str,
+        project: "Project",
         days: int = 7,
         interval_minutes: int = 60,
     ) -> ResourceUsageData:
         print(
-            f"프로젝트 {project_id} 최근 {days}일 리소스 사용량 조회 "
+            f"프로젝트 {project.id} 최근 {days}일 리소스 사용량 조회 "
             f"(간격 {interval_minutes}분)"
         )
         return ResourceUsageData()

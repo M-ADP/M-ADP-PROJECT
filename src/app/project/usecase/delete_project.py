@@ -29,7 +29,7 @@ class DeleteProjectUseCase(BaseUseCase):
 
         await self.project_resource_client.delete(
             user_id=user_id,
-            name=project.name
+            project=project,
         )
         await self.uow.project.delete(project)
         return project

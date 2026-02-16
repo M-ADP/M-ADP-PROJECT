@@ -48,8 +48,8 @@ class UpdatePortUseCase(BaseUseCase):
         )
         await self.project_resource_client.update_port(
             user_id=user_id,
-            name=project.name,
-            port_id=original_port.from_port,
-            port=request
+            project=project,
+            original_port=original_port,
+            updated_port=port,
         )
         return port

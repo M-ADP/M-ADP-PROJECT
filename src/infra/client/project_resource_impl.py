@@ -1,12 +1,10 @@
 from enum import Enum
 
-from fastapi import Depends
-
-from src.app.port.schemas import PortCreate, PortUpdate
-from src.app.project.schemas import ProjectCreate, ProjectResourceUpdate
+from src.app.port.model import Port
+from src.app.project.model import Project
 from src.common.client.http import HttpClient
 from src.common.client.project_resource import ProjectResourceClient, ResourceUsageData
-from src.common.config.resource_server import ResourceServerConfig, get_resource_config
+from src.common.config.resource_server import ResourceServerConfig
 from src.infra.client.asyncio_http import AioHttpClient
 from src.infra.client.schemas import (
     ExternalPortCreate,
@@ -18,18 +16,18 @@ from src.infra.client.schemas import (
 
 class ProjectResourceAPIUrls(str, Enum):
     CREATE_PROJECT = "/v1/projects"
-    DELETE_PROJECT = "/v1/projects/{name}"
-    OPEN_PROJECT_PORT = "/v1/projects/{name}/ports"
-    UPDATE_PROJECT_PORT = "/v1/projects/{name}/ports/{port_id}"
-    CLOSE_PROJECT_PORT = "/v1/projects/{name}/ports/{port_id}"
-    UPDATE_PROJECT_RESOURCES = "/v1/projects/{name}/resource"
+    DELETE_PROJECT = "/v1/projects/{project_id}"
+    OPEN_PROJECT_PORT = "/v1/projects/{project_id}/ports"
+    UPDATE_PROJECT_PORT = "/v1/projects/{project_id}/ports/{port_id}"
+    CLOSE_PROJECT_PORT = "/v1/projects/{project_id}/ports/{port_id}"
+    UPDATE_PROJECT_RESOURCES = "/v1/projects/{project_id}/resource"
 
 
 class ProjectResourceClientImpl(ProjectResourceClient):
 
     def __init__(
             self,
-            resource_server_config : ResourceServerConfig = Depends(get_resource_config),
+            resource_server_config : ResourceServerConfig,
             http_client: HttpClient = AioHttpClient(),
     ):
         self.base_url = resource_server_config.RESOURCE_SERVER_BASE_URL
@@ -45,10 +43,10 @@ class ProjectResourceClientImpl(ProjectResourceClient):
             return None
         return f"{int(val)}Mi"
 
-    async def create(self, user_id: str, project_id: str, project: ProjectCreate) -> None:
+    async def create(self, user_id: str, project: Project) -> None:
         payload = ExternalProjectCreate(
-            id=project_id,
-            name=project.name,
+            id=project.id,
+            name=project.id,
             cpu=self._convert_cpu(project.max_cpu),
             memory=self._convert_memory(project.max_memory),
             disk=self._convert_memory(project.max_disk),
@@ -59,82 +57,88 @@ class ProjectResourceClientImpl(ProjectResourceClient):
             json=payload.model_dump(exclude_none=True),
         )
 
-    async def delete(self, user_id: str, name: str) -> None:
+    async def delete(self, user_id: str, project: Project) -> None:
         await self.http_client.delete(
             self.base_url + ProjectResourceAPIUrls.DELETE_PROJECT.format(
-                name=name
+                project_id=project.id
             ),
             headers={"user-id": user_id},
         )
 
-    async def open_port(self, user_id: str, name: str, port: PortCreate) -> None:
-        service_id = f"svc-{name}-{port.from_port}"
+    async def open_port(self, user_id: str, project: Project, port: Port) -> None:
+        service_id = f"svc-{project.id}-{port.id}"
         payload = ExternalPortCreate(
             service_id=service_id,
             service_name=service_id,
-            target_deployment_name=name,
+            target_deployment_name=project.id,
             port=port.from_port,
             target_port=port.from_port,
-            protocol=port.protocol.upper(),  # type: ignore
+            protocol=port.protocol.upper(),
             service_type="ClusterIP",
         )
         await self.http_client.post(
             self.base_url + ProjectResourceAPIUrls.OPEN_PROJECT_PORT.format(
-                name=name
+                project_id=project.id
             ),
             headers={"user-id": user_id},
             json=payload.model_dump(),
         )
 
-    async def close_port(self, user_id: str, name: str, port_id: str) -> None:
-        # port_id is port number string from usecase
-        service_id = f"svc-{name}-{port_id}"
+    async def close_port(self, user_id: str, project: Project, port: Port) -> None:
+        service_id = f"svc-{project.id}-{port.id}"
         await self.http_client.delete(
             self.base_url + ProjectResourceAPIUrls.CLOSE_PROJECT_PORT.format(
-                name=name, port_id=service_id
+                project_id=project.id, port_id=service_id
             ),
             headers={"user-id": user_id},
         )
 
-    async def update_port(self, user_id: str, name: str, port_id: int, port: PortUpdate) -> None:
-        # port_id is original port number from usecase
-        service_id = f"svc-{name}-{port_id}"
+    async def update_port(
+        self,
+        user_id: str,
+        project: Project,
+        original_port: Port,
+        updated_port: Port,
+    ) -> None:
+        service_id = f"svc-{project.id}-{original_port.id}"
         payload = ExternalPortUpdate(
             service_id=service_id,
             service_name=service_id,
-            target_deployment_name=name,
-            target_port=port.from_port,
-            protocol=port.protocol.upper(), # type: ignore
+            target_deployment_name=project.id,
+            target_port=updated_port.from_port,
+            protocol=updated_port.protocol.upper(),
             service_type="ClusterIP",
         )
         await self.http_client.put(
             self.base_url + ProjectResourceAPIUrls.UPDATE_PROJECT_PORT.format(
-                name=name, port_id=port_id
+                project_id=project.id, port_id=original_port.from_port
             ),
             headers={"user-id": user_id},
             json=payload.model_dump(exclude_none=True),
         )
 
-    async def allocate(self, user_id: str, name: str, resource: ProjectResourceUpdate) -> None:
+    async def allocate(self, user_id: str, project: Project) -> None:
         payload = ExternalResourceUpdate(
-            cpu=self._convert_cpu(resource.max_cpu),
-            memory=self._convert_memory(resource.max_memory),
-            disk=self._convert_memory(resource.max_disk),
+            cpu=self._convert_cpu(project.max_cpu),
+            memory=self._convert_memory(project.max_memory),
+            disk=self._convert_memory(project.max_disk),
         )
         await self.http_client.patch(
-            self.base_url + ProjectResourceAPIUrls.UPDATE_PROJECT_RESOURCES.format(name=name),
+            self.base_url + ProjectResourceAPIUrls.UPDATE_PROJECT_RESOURCES.format(
+                project_id=project.id
+            ),
             headers={"user-id": user_id},
             json=payload.model_dump(exclude_none=True),
         )
 
     async def get_usage(
         self,
-        project_id: str,
+        project: Project,
         days: int = 7,
         interval_minutes: int = 60,
     ) -> ResourceUsageData:
         print(
-            f"프로젝트 {project_id} 최근 {days}일 리소스 사용량 조회 "
+            f"프로젝트 {project.id} 최근 {days}일 리소스 사용량 조회 "
             f"(간격 {interval_minutes}분)"
         )
         return ResourceUsageData()

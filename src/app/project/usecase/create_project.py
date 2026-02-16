@@ -46,7 +46,6 @@ class CreateProjectUseCase(BaseUseCase):
 
         await self.project_resource_client.create(
             user_id=user_id,
-            project_id=project.id,
-            project=request
+            project=project,
         )
         return project

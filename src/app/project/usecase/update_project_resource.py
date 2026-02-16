@@ -34,7 +34,6 @@ class UpdateProjectResourceUseCase(BaseUseCase):
         )
         await self.project_resource_client.allocate(
             user_id=user_id,
-            name=project.name,
-            resource=request
+            project=project,
         )
         return project

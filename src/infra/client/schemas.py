@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -14,7 +14,7 @@ class ExternalProjectCreate(BaseModel):
 class ExternalPortCreate(BaseModel):
     service_id: str = Field(..., description="서비스 ID (소문자/숫자/하이픈)")
     service_name: str = Field(..., description="서비스 이름")
-    target_deployment_name: str = Field(..., description="타겟 디플로이먼트 이름")
+    target_deployment_name: Optional[str] = Field(..., description="타겟 디플로이먼트 이름")
     port: int = Field(..., description="외부 노출 포트")
     target_port: int = Field(..., description="내부 컨테이너 포트")
     protocol: Literal["TCP", "UDP", "SCTP"] = Field("TCP", description="프로토콜")
