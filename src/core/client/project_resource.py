@@ -3,8 +3,8 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from src.app.port.model import Port
-    from src.app.project.model import Project
+    from src.core.domain.port import Port
+    from src.core.domain.project import Project
 
 
 @dataclass

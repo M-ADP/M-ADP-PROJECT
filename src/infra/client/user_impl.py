@@ -1,4 +1,4 @@
-from src.common.client.user import UserClient, UserInfo
+from src.core.client.user import UserClient, UserInfo
 
 
 class MockUserClient(UserClient):

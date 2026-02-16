@@ -1,7 +1,7 @@
 from sqlalchemy import BigInteger, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.app.port.model import Port as PortEntity
+from src.core.domain.port import Port as PortEntity
 from src.common.id_generator import IdGenerator
 from src.core.db import BaseEntity
 

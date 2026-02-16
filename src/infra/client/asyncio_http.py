@@ -1,7 +1,7 @@
 from typing import Any
 from aiohttp import ClientResponse, ClientSession, ClientTimeout
 
-from src.common.client.http import HttpClient
+from src.core.client.http import HttpClient
 
 class AioHttpClient(HttpClient):
     def __init__(

@@ -1,4 +1,4 @@
-from src.common.client.deployment_summary import (
+from src.core.client.deployment_summary import (
     DeploymentSummaryClient,
     DeploymentSummaryItem,
 )

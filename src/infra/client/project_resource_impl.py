@@ -1,9 +1,9 @@
 from enum import Enum
 
-from src.app.port.model import Port
-from src.app.project.model import Project
-from src.common.client.http import HttpClient
-from src.common.client.project_resource import ProjectResourceClient, ResourceUsageData
+from src.core.domain.port import Port
+from src.core.domain.project import Project
+from src.core.client.http import HttpClient
+from src.core.client.project_resource import ProjectResourceClient, ResourceUsageData
 from src.common.config.resource_server import ResourceServerConfig
 from src.infra.client.asyncio_http import AioHttpClient
 from src.infra.client.schemas import (

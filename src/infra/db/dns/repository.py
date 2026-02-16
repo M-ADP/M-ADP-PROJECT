@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.app.dns.model import DNS
+from src.core.domain.dns import DNS
 from src.core.repository.dns_repository import DNSRepository
 from src.infra.db.dns.model import DNS as DNSModel
 
