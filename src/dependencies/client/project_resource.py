@@ -1,4 +1,4 @@
-from src.common.client.project_resource import (
+from src.core.client.project_resource import (
     MockProjectResourceClient,
     ProjectResourceClient,
 )

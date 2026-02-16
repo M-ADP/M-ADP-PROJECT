@@ -1,4 +1,4 @@
-from src.common.client.deployment_summary import DeploymentSummaryClient
+from src.core.client.deployment_summary import DeploymentSummaryClient
 from src.infra.client import MockDeploymentSummaryClient
 
 
