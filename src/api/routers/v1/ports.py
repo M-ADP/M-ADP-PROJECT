@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 
-from src.api.deps.auth import UserInfo, get_user_info
+from src.dependencies.auth import UserInfo, get_user_info
 from src.app.port.schemas import PortCreate, PortResponse, PortUpdate
 from src.app.port.usecase import (
     CreatePortUseCase,
@@ -8,7 +8,7 @@ from src.app.port.usecase import (
     UpdatePortUseCase,
     DeletePortUseCase,
 )
-from src.core.schemas import CursorPage, SuccessResponse
+from src.common.schemas import CursorPage, SuccessResponse
 
 router = APIRouter(prefix="/projects/{project_id}/ports", tags=["project-ports"])
 

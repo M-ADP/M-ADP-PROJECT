@@ -2,7 +2,7 @@ from fastapi import FastAPI
 
 from src.api.middlewares import register_middlewares
 from src.api.routers import api_router
-from src.core.config import get_settings
+from src.common.config.settings import get_settings
 from src.core.db import create_all_tables
 from src.core.exceptions import register_exception_handlers
 
