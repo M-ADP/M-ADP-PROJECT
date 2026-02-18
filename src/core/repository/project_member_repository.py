@@ -78,3 +78,13 @@ class ProjectMemberRepository(Repository[ProjectMember], ABC):
     ) -> dict[str, str]:
         """여러 프로젝트에서 사용자의 역할을 일괄 조회합니다."""
         pass
+
+    @abstractmethod
+    async def update_role(
+        self,
+        project_id: str,
+        user_id: str,
+        role: str,
+    ) -> ProjectMember | None:
+        """프로젝트 멤버 역할을 변경합니다."""
+        pass
