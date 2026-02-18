@@ -24,7 +24,8 @@
 - [Project Members (프로젝트 멤버)](#project-members)
   - [GET /v1/projects/{project_id}/members (멤버 목록 조회)](#get-v1projectsproject_idmembers)
   - [POST /v1/projects/{project_id}/members (멤버 추가)](#post-v1projectsproject_idmembers)
-  - [DELETE /v1/projects/{project_id}/members/{user_id} (멤버 제거)](#delete-v1projectsproject_idmembersuser_id)
+  - [DELETE /v1/projects/{project_id}/members/{nickname} (멤버 제거)](#delete-v1projectsproject_idmembersnickname)
+  - [PATCH /v1/projects/{project_id}/owner (소유권 이전)](#patch-v1projectsproject_idowner)
 - [Ports (포트)](#ports)
   - [POST /v1/projects/{project_id}/ports (포트 공개)](#post-v1projectsproject_idports)
   - [GET /v1/projects/{project_id}/ports (포트 목록 조회)](#get-v1projectsproject_idports)
@@ -271,24 +272,11 @@
 ### DELETE /v1/projects/{project_id}
 프로젝트 삭제
 
-요청 바디:
-```json
-{
-  "password": "string"
-}
-```
-
-필드:
-- `password` (string, 필수)
-
 응답 데이터: `ProjectResponse`
 
 에러:
 - 404: "프로젝트를 찾을 수 없습니다."
-- 401: "비밀번호가 올바르지 않습니다."
-
-주의:
-- 현재 비밀번호 검증은 주석 처리되어 있어 `user-id` 소유 여부만 확인합니다.
+- 403: "프로젝트 소유자만 프로젝트를 삭제할 수 있습니다."
 
 내부 요청 API:
 - ProjectResourceClient.delete: namespace 삭제
@@ -296,6 +284,9 @@
 ---
 
 ## Project Members
+- 프로젝트 생성자는 최초 OWNER입니다.
+- 소유권은 기존 OWNER가 같은 프로젝트의 VIEWER에게만 이전할 수 있습니다.
+- 프로젝트 내 OWNER는 항상 1명입니다.
 
 ### GET /v1/projects/{project_id}/members
 프로젝트 멤버 목록 조회
@@ -336,12 +327,12 @@
 요청 바디:
 ```json
 {
-  "user_id": "string"
+  "nickname": "string"
 }
 ```
 
 필드:
-- `user_id` (string, 필수): 초대할 사용자의 식별자
+- `nickname` (string, 필수): 초대할 사용자의 닉네임
 
 응답 데이터: `ProjectMemberResponse`
 ```json
@@ -365,7 +356,7 @@
 
 ---
 
-### DELETE /v1/projects/{project_id}/members/{user_id}
+### DELETE /v1/projects/{project_id}/members/{nickname}
 프로젝트에서 멤버 제거
 
 응답 데이터: `ProjectMemberResponse`
@@ -375,6 +366,30 @@
 - 404: "멤버를 찾을 수 없습니다."
 - 400: "프로젝트 소유자는 제거할 수 없습니다."
 - 403: "프로젝트 소유자만 멤버를 제거할 수 있습니다."
+
+---
+
+### PATCH /v1/projects/{project_id}/owner
+프로젝트 소유권 이전
+
+요청 바디:
+```json
+{
+  "target_nickname": "string"
+}
+```
+
+필드:
+- `target_nickname` (string, 필수): 소유권을 이전할 대상 VIEWER 멤버의 닉네임
+
+응답 데이터: `ProjectMemberResponse` (새 OWNER 정보 반환)
+
+에러:
+- 404: "프로젝트를 찾을 수 없습니다."
+- 404: "멤버를 찾을 수 없습니다."
+- 400: "소유권은 VIEWER 멤버에게만 이전할 수 있습니다."
+- 400: "자기 자신에게 소유권을 이전할 수 없습니다."
+- 403: "프로젝트 소유자만 소유권을 이전할 수 있습니다."
 
 ---
 
