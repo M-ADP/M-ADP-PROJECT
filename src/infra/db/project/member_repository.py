@@ -153,3 +153,23 @@ class ProjectMemberRepositoryImpl(ProjectMemberRepository):
         )
         result = await self._session.execute(stmt)
         return {row.project_id: row.role for row in result.all()}
+
+    async def update_role(
+        self,
+        project_id: str,
+        user_id: str,
+        role: str,
+    ) -> ProjectMember | None:
+        """프로젝트 멤버 역할을 변경합니다."""
+        stmt = select(ProjectMemberModel).where(
+            ProjectMemberModel.project_id == project_id,
+            ProjectMemberModel.user_id == user_id,
+        )
+        result = await self._session.execute(stmt)
+        model = result.scalar_one_or_none()
+        if model is None:
+            return None
+
+        model.role = role
+        await self._session.flush()
+        return model.to_entity()
