@@ -12,8 +12,8 @@ from src.app.project.usecase import (
     AddProjectMemberUseCase,
     RemoveProjectMemberUseCase,
 )
-from src.api.deps.auth import UserInfo, get_user_info
-from src.core.schemas import CursorPage, SuccessResponse
+from src.dependencies.auth import UserInfo, get_user_info
+from src.common.schemas import CursorPage, SuccessResponse
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 

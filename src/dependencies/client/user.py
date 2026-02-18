@@ -1,4 +1,4 @@
-from src.common.client.user import UserClient
+from src.core.client.user import UserClient
 from src.infra.client.user_impl import MockUserClient
 
 

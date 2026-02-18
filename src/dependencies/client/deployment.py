@@ -1,4 +1,4 @@
-from src.common.client.deployment import DeploymentClient
+from src.core.client.deployment import DeploymentClient
 from src.infra.client import MockDeploymentClient
 
 

@@ -3,8 +3,8 @@ from typing import Optional
 from sqlalchemy import Enum, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.app.dns.model import DNS as DNSEntity
-from src.app.dns.model import DNSState
+from src.core.domain.dns import DNS as DNSEntity
+from src.core.domain.dns import DNSState
 from src.common.id_generator import IdGenerator
 from src.core.db import BaseEntity
 

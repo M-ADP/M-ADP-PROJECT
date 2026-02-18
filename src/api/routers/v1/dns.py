@@ -8,8 +8,8 @@ from src.app.dns.usecase import (
     UpdateDNSForProjectUseCase,
     BindPortToDNSUseCase,
 )
-from src.api.deps.auth import UserInfo, get_user_info
-from src.core.schemas import SuccessResponse
+from src.dependencies.auth import UserInfo, get_user_info
+from src.common.schemas import SuccessResponse
 
 router = APIRouter(prefix="/projects", tags=["dns"])
 

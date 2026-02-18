@@ -3,8 +3,8 @@ from datetime import datetime
 from sqlalchemy import DateTime, Double, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.app.project.model import Project as ProjectEntity
-from src.app.project.model import ProjectMember as ProjectMemberEntity
+from src.core.domain.project import Project as ProjectEntity
+from src.core.domain.project import ProjectMember as ProjectMemberEntity
 from src.common.id_generator import IdGenerator
 from src.core.db import BaseEntity
 

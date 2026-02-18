@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.app.port.model import Port
+from src.core.domain.port import Port
 from src.core.repository.port_repository import PortRepository
 from src.infra.db.port.model import Port as PortModel
 

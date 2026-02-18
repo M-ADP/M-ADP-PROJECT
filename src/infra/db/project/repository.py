@@ -1,7 +1,7 @@
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.app.project.model import Project
+from src.core.domain.project import Project
 from src.core.repository.project_repository import ProjectRepository
 from src.infra.db.project.model import Project as ProjectModel
 

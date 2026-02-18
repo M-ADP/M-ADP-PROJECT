@@ -3,7 +3,7 @@ from typing import AsyncIterator
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.deps.db import get_db_session
+from src.dependencies.db import get_db_session
 from src.infra.db.uow import SQLAlchemyUnitOfWork
 
 
