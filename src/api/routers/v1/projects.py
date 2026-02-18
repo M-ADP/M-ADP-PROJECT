@@ -11,6 +11,7 @@ from src.app.project.usecase import (
     ListProjectMembersUseCase,
     AddProjectMemberUseCase,
     RemoveProjectMemberUseCase,
+    TransferProjectOwnershipUseCase,
 )
 from src.dependencies.auth import UserInfo, get_user_info
 from src.common.schemas import CursorPage, SuccessResponse
@@ -98,11 +99,10 @@ async def update_project_name_endpoint(
 )
 async def delete_project_endpoint(
     project_id: str,
-    payload: ProjectDelete,
     user: UserInfo = Depends(get_user_info),
     usecase: DeleteProjectUseCase = Depends(DeleteProjectUseCase),
 ) -> SuccessResponse[ProjectResponse]:
-    project = await usecase(project_id, request=payload, user_id=user.user_id)
+    project = await usecase(project_id, user_id=user.user_id)
     return SuccessResponse(
         message="프로젝트가 삭제되었습니다.",
         data=ProjectResponse.model_validate(project),
@@ -203,4 +203,26 @@ async def remove_project_member_endpoint(
     return SuccessResponse(
         message="멤버가 제거되었습니다.",
         data=ProjectMemberResponse.model_validate(member),
+    )
+
+
+@router.patch(
+    "/{project_id}/owner",
+    response_model=SuccessResponse[ProjectMemberResponse],
+    status_code=200,
+)
+async def transfer_project_ownership_endpoint(
+    project_id: str,
+    payload: ProjectOwnerTransfer,
+    user: UserInfo = Depends(get_user_info),
+    usecase: TransferProjectOwnershipUseCase = Depends(TransferProjectOwnershipUseCase),
+) -> SuccessResponse[ProjectMemberResponse]:
+    new_owner = await usecase(
+        project_id=project_id,
+        target_user_id=payload.target_user_id,
+        user_id=user.user_id,
+    )
+    return SuccessResponse(
+        message="프로젝트 소유자가 변경되었습니다.",
+        data=ProjectMemberResponse.model_validate(new_owner),
     )
