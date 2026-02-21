@@ -52,8 +52,6 @@ class ProjectMember(BaseEntity):
         index=True,
     )
     user_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
-    username: Mapped[str] = mapped_column(String(255), nullable=False)
-    profile_image: Mapped[str | None] = mapped_column(String(512), nullable=True)
     role: Mapped[str] = mapped_column(String(16), nullable=False, default="VIEWER")
     joined_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=datetime.now
@@ -64,8 +62,6 @@ class ProjectMember(BaseEntity):
             id=self.id,
             project_id=self.project_id,
             user_id=self.user_id,
-            username=self.username,
-            profile_image=self.profile_image,
             role=self.role,
             joined_at=self.joined_at,
         )
