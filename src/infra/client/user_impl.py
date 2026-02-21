@@ -1,36 +1,50 @@
+from enum import Enum
+
+from src.common.config.user_server import UserServerConfig
+from src.core.client.http import HttpClient
 from src.core.client.user import UserClient, UserInfo
+from src.infra.client.asyncio_http import AioHttpClient
 
 
-class MockUserClient(UserClient):
-    """사용자 서비스 Mock 클라이언트"""
+class UserAPIUrls(str, Enum):
+    GET_USER_BY_ID = "/user/profile/id/{user_id}"
 
-    # Mock 데이터: 존재하는 사용자 목록
-    _mock_users: dict[str, UserInfo] = {
-        "user1": UserInfo(
-            user_id="user1",
-            username="사용자1",
-            profile_image="https://example.com/user1.png",
-        ),
-        "user2": UserInfo(
-            user_id="user2",
-            username="사용자2",
-            profile_image=None,
-        ),
-        "user3": UserInfo(
-            user_id="user3",
-            username="사용자3",
-            profile_image="https://example.com/user3.png",
-        ),
-    }
+
+class UserClientImpl(UserClient):
+    """사용자 서비스 클라이언트 구현체"""
+
+    def __init__(
+        self,
+        user_server_config: UserServerConfig,
+        http_client: HttpClient | None = None,
+    ):
+        self.base_url = user_server_config.SERVER_BASE_URL
+        self.http_client = http_client or AioHttpClient(base_url=self.base_url)
 
     async def get_user(self, user_id: str) -> UserInfo | None:
-        print(f"사용자 {user_id} 정보 조회")
-        return self._mock_users.get(user_id)
+        response = await self.http_client.get(
+            UserAPIUrls.GET_USER_BY_ID.format(user_id=user_id)
+        )
+        try:
+            if response.status != 200:
+                return None
+
+            payload = await response.json(content_type=None)
+            return UserInfo(
+                user_id=str(payload.get("user_id")),
+                username=str(payload.get("nickname")),
+                profile_image=payload.get("profile") or None,
+            )
+        except Exception:
+            return None
+        finally:
+            response.release()
 
     async def exists(self, user_id: str) -> bool:
-        print(f"사용자 {user_id} 존재 여부 확인")
-        return user_id in self._mock_users
-
-    async def verify_password(self, user_id: str, password: str) -> bool:
-        print(f"사용자 {user_id} 비밀번호 검증")
-        return True
+        response = await self.http_client.get(
+            UserAPIUrls.GET_USER_BY_ID.format(user_id=user_id)
+        )
+        try:
+            return response.status == 200
+        finally:
+            response.release()

@@ -35,15 +35,6 @@ class DiskCannotBeReduced(AppException):
         )
 
 
-class InvalidPassword(AppException):
-    def __init__(self) -> None:
-        super().__init__(
-            "비밀번호가 올바르지 않습니다.",
-            code="INVALID_PASSWORD",
-            status_code=401,
-        )
-
-
 class OnlyOwnerCanDeleteProject(AppException):
     def __init__(self) -> None:
         super().__init__(
@@ -143,4 +134,31 @@ class UserNotFound(AppException):
             "사용자를 찾을 수 없습니다.",
             code="USER_NOT_FOUND",
             status_code=404,
+        )
+
+
+class OnlyOwnerCanTransferOwnership(AppException):
+    def __init__(self) -> None:
+        super().__init__(
+            "프로젝트 소유자만 소유권을 이전할 수 있습니다.",
+            code="ONLY_OWNER_CAN_TRANSFER_OWNERSHIP",
+            status_code=403,
+        )
+
+
+class OwnershipTransferTargetMustBeViewer(AppException):
+    def __init__(self) -> None:
+        super().__init__(
+            "소유권은 VIEWER 멤버에게만 이전할 수 있습니다.",
+            code="OWNERSHIP_TRANSFER_TARGET_MUST_BE_VIEWER",
+            status_code=400,
+        )
+
+
+class CannotTransferOwnershipToSelf(AppException):
+    def __init__(self) -> None:
+        super().__init__(
+            "자기 자신에게 소유권을 이전할 수 없습니다.",
+            code="CANNOT_TRANSFER_OWNERSHIP_TO_SELF",
+            status_code=400,
         )

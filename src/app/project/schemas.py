@@ -55,14 +55,6 @@ class ProjectNameUpdate(BaseModel):
         examples=["windeath44"],
     )
 
-
-class ProjectDelete(BaseModel):
-    password: str = Field(
-        ...,
-        description="계정 비밀번호",
-    )
-
-
 class ProjectResourceUpdate(BaseModel):
     max_cpu: float | None = Field(
         None,
@@ -173,8 +165,16 @@ class ProjectDetailResponse(BaseModel):
 class ProjectMemberAdd(BaseModel):
     user_id: str = Field(
         ...,
-        description="초대할 사용자의 식별자",
-        examples=["user123"],
+        description="초대할 사용자의 ID",
+        examples=["windeath44"],
+    )
+
+
+class ProjectOwnerTransfer(BaseModel):
+    target_user_id: str = Field(
+        ...,
+        description="소유권을 이전할 대상 VIEWER 멤버의 ID",
+        examples=["windeath44"],
     )
 
 
