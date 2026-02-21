@@ -23,7 +23,5 @@ class ProjectMember:
     id: str = field(default_factory=IdGenerator.generate_sonyflake_id)
     project_id: str = ""
     user_id: str = ""
-    username: str = ""
-    profile_image: str | None = None
     role: Literal["OWNER", "VIEWER"] = "VIEWER"
     joined_at: datetime = field(default_factory=datetime.now)
