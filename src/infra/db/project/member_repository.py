@@ -71,8 +71,6 @@ class ProjectMemberRepositoryImpl(ProjectMemberRepository):
             id=member.id,
             project_id=member.project_id,
             user_id=member.user_id,
-            username=member.username,
-            profile_image=member.profile_image,
             role=member.role,
             joined_at=member.joined_at,
         )

@@ -7,7 +7,7 @@ from src.app.project.exceptions import (
     UserNotFound,
 )
 from src.core.domain.project import ProjectMember
-from src.app.project.schemas import ProjectMemberAdd
+from src.app.project.schemas import ProjectMemberAdd, ProjectMemberResponse
 from src.app.base_usecase import BaseUseCase
 from src.core.uow import UnitOfWork
 from src.core.client.user import UserClient
@@ -31,7 +31,7 @@ class AddProjectMemberUseCase(BaseUseCase):
         project_id: str,
         request: ProjectMemberAdd,
         user_id: str,
-    ) -> ProjectMember:
+    ) -> ProjectMemberResponse:
         async with self.uow:
             # 프로젝트 존재 여부 확인
             project = await self.uow.project.get_by_id(project_id)
@@ -58,9 +58,13 @@ class AddProjectMemberUseCase(BaseUseCase):
             member = ProjectMember(
                 project_id=project_id,
                 user_id=request.user_id,
-                username=user_info.username,
-                profile_image=user_info.profile_image,
                 role="VIEWER",
             )
-
-            return await self.uow.project_member.insert(member)
+            saved = await self.uow.project_member.insert(member)
+            return ProjectMemberResponse(
+                user_id=saved.user_id,
+                username=user_info.username,
+                profile_image=user_info.profile_image,
+                role=saved.role,
+                joined_at=saved.joined_at,
+            )

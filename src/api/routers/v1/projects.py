@@ -180,7 +180,7 @@ async def add_project_member_endpoint(
     )
     return SuccessResponse(
         message="멤버가 추가되었습니다.",
-        data=ProjectMemberResponse.model_validate(member),
+        data=member,
     )
 
 
@@ -202,7 +202,7 @@ async def remove_project_member_endpoint(
     )
     return SuccessResponse(
         message="멤버가 제거되었습니다.",
-        data=ProjectMemberResponse.model_validate(member),
+        data=member,
     )
 
 
@@ -224,5 +224,5 @@ async def transfer_project_ownership_endpoint(
     )
     return SuccessResponse(
         message="프로젝트 소유자가 변경되었습니다.",
-        data=ProjectMemberResponse.model_validate(new_owner),
+        data=new_owner,
     )

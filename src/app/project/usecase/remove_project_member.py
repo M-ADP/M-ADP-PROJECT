@@ -6,24 +6,31 @@ from src.app.project.exceptions import (
     CannotRemoveOwner,
     OnlyOwnerCanRemoveMembers,
 )
-from src.core.domain.project import ProjectMember
+from src.app.project.schemas import ProjectMemberResponse
 from src.app.base_usecase import BaseUseCase
 from src.core.uow import UnitOfWork
+from src.core.client.user import UserClient
 from src.dependencies.uow import get_uow
+from src.dependencies.client.user import get_user_client
 
 
 class RemoveProjectMemberUseCase(BaseUseCase):
     """프로젝트에서 멤버를 제거하는 유즈케이스"""
 
-    def __init__(self, uow: UnitOfWork = Depends(get_uow)):
+    def __init__(
+        self,
+        uow: UnitOfWork = Depends(get_uow),
+        user_client: UserClient = Depends(get_user_client),
+    ):
         self.uow = uow
+        self.user_client = user_client
 
     async def __call__(
         self,
         project_id: str,
         target_user_id: str,
         user_id: str,
-    ) -> ProjectMember:
+    ) -> ProjectMemberResponse:
         async with self.uow:
             # 프로젝트 존재 여부 확인
             project = await self.uow.project.get_by_id(project_id)
@@ -46,5 +53,12 @@ class RemoveProjectMemberUseCase(BaseUseCase):
             if member.role == "OWNER":
                 raise CannotRemoveOwner()
 
+            user_info = await self.user_client.get_user(target_user_id)
             await self.uow.project_member.delete(member)
-            return member
+            return ProjectMemberResponse(
+                user_id=member.user_id,
+                username=user_info.username if user_info else target_user_id,
+                profile_image=user_info.profile_image if user_info else None,
+                role=member.role,
+                joined_at=member.joined_at,
+            )
