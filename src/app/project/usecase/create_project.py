@@ -53,8 +53,6 @@ class CreateProjectUseCase(BaseUseCase):
             owner_member = ProjectMember(
                 project_id=project.id,
                 user_id=user_id,
-                username=user_id,  # TODO: 실제 환경에서는 사용자 서비스에서 조회
-                profile_image=None,
                 role="OWNER",
             )
             await self.uow.project_member.insert(owner_member)
