@@ -1,34 +1,16 @@
-FROM eclipse-temurin:21-jdk-alpine AS builder
-
-WORKDIR /app
-COPY gradlew .
-COPY gradle gradle
-COPY build.gradle .
-COPY settings.gradle .
-
-# Make gradlew executable
-RUN chmod +x ./gradlew
-
-# Resolve dependencies (layer caching)
-RUN ./gradlew dependencies --no-daemon
-
-# Copy source code
-COPY src src
-
-# Build jar
-RUN ./gradlew bootJar --no-daemon
-
-# Prepare minimal runtime image
-FROM eclipse-temurin:21-jdk-alpine
+FROM python:3.12-slim
 
 WORKDIR /app
 
-# Copy the built jar from builder
-COPY --from=builder /app/build/libs/*.jar app.jar
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application source
+COPY . .
 
 ENV TZ=Asia/Seoul
-ENV SPRING_PROFILES_ACTIVE=dev
 
-EXPOSE 8080
+EXPOSE 8000
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
