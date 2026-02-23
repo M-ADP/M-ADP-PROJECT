@@ -30,7 +30,7 @@ class ProjectResourceClientImpl(ProjectResourceClient):
             resource_server_config : ResourceServerConfig,
             http_client: HttpClient = AioHttpClient(),
     ):
-        self.base_url = resource_server_config.RESOURCE_SERVER_BASE_URL
+        self.base_url = resource_server_config.SERVER_BASE_URL
         self.http_client = http_client
 
     def _convert_cpu(self, val: float | None) -> str | None:
