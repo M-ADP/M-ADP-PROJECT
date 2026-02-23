@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response, status
 
 from src.app.project.schemas import *
 from src.app.project.usecase import (
@@ -12,6 +12,7 @@ from src.app.project.usecase import (
     AddProjectMemberUseCase,
     RemoveProjectMemberUseCase,
     TransferProjectOwnershipUseCase,
+    CheckProjectAvailableUseCase,
 )
 from src.dependencies.auth import UserInfo, get_user_info
 from src.common.schemas import CursorPage, SuccessResponse
@@ -55,6 +56,22 @@ async def list_projects_endpoint(
         message="프로젝트 목록을 조회했습니다.",
         data=projects,
     )
+
+
+@router.get(
+    "/available",
+    status_code=status.HTTP_200_OK,
+    response_class=Response,
+)
+async def check_project_available_endpoint(
+    project_id: str = Query(..., description="확인할 프로젝트 ID"),
+    user: UserInfo = Depends(get_user_info),
+    usecase: CheckProjectAvailableUseCase = Depends(CheckProjectAvailableUseCase),
+) -> Response:
+    is_member = await usecase(project_id=project_id, user_id=user.user_id)
+    if is_member:
+        return Response(status_code=status.HTTP_200_OK)
+    return Response(status_code=status.HTTP_403_FORBIDDEN)
 
 
 @router.get(
