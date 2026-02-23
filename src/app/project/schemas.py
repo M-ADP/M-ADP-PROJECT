@@ -8,7 +8,7 @@ from src.app.port.schemas import PortResponse
 
 class ProjectMemberRole(str):
     OWNER = "OWNER"
-    VIEWER = "VIEWER"
+    MEMBER = "MEMBER"
 
 
 class ProjectCreate(BaseModel):
@@ -113,7 +113,7 @@ class ProjectListItemResponse(BaseModel):
 
     id: str
     name: str
-    my_role: Literal["OWNER", "VIEWER"] = Field(
+    my_role: Literal["OWNER", "MEMBER"] = Field(
         ...,
         description="현재 사용자의 프로젝트 내 역할",
     )
@@ -146,7 +146,7 @@ class ProjectDetailResponse(BaseModel):
 
     id: str
     name: str
-    my_role: Literal["OWNER", "VIEWER"] = Field(
+    my_role: Literal["OWNER", "MEMBER"] = Field(
         ...,
         description="현재 사용자의 프로젝트 내 역할",
     )
@@ -173,7 +173,7 @@ class ProjectMemberAdd(BaseModel):
 class ProjectOwnerTransfer(BaseModel):
     target_user_id: str = Field(
         ...,
-        description="소유권을 이전할 대상 VIEWER 멤버의 ID",
+        description="소유권을 이전할 대상 MEMBER 멤버의 ID",
         examples=["windeath44"],
     )
 
@@ -184,5 +184,5 @@ class ProjectMemberResponse(BaseModel):
     user_id: str = Field(..., description="멤버의 사용자 식별자")
     username: str = Field(..., description="멤버의 표시 이름")
     profile_image: str | None = Field(None, description="프로필 이미지 URL")
-    role: Literal["OWNER", "VIEWER"] = Field(..., description="프로젝트 내 역할")
+    role: Literal["OWNER", "MEMBER"] = Field(..., description="프로젝트 내 역할")
     joined_at: datetime = Field(..., description="프로젝트 참여 일시")
