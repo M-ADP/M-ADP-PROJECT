@@ -55,7 +55,7 @@ class ListProjectsUseCase(BaseUseCase):
                     await self._to_list_item(
                         project,
                         summary_map.get(project.id),
-                        role_map.get(project.id, "VIEWER"),
+                        role_map.get(project.id, "MEMBER"),
                     )
                     for project in ordered_projects
                 ],
