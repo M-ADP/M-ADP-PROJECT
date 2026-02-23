@@ -151,7 +151,7 @@
     {
       "id": "string",
       "name": "string",
-      "my_role": "OWNER|VIEWER",
+      "my_role": "OWNER|MEMBER",
       "domain": "string|null",
       "deployment_summary": { "running": 0, "warning": 0 },
       "deployment_status": { "state": "RUNNING|STOPPED|FAILED", "message": "string" }
@@ -162,7 +162,7 @@
 ```
 
 필드 설명:
-- `my_role`: 현재 요청 사용자의 프로젝트 내 역할 (OWNER: 소유자, VIEWER: 조회자)
+- `my_role`: 현재 요청 사용자의 프로젝트 내 역할 (OWNER: 소유자, MEMBER: 멤버)
 
 내부 요청 API:
 - DeploymentSummaryClient.get_summary_batch: 프로젝트 배포 요약 배치 조회
@@ -177,7 +177,7 @@
 {
   "id": "string",
   "name": "string",
-  "my_role": "OWNER|VIEWER",
+  "my_role": "OWNER|MEMBER",
   "deployments": [
     {
       "id": "string",
@@ -209,7 +209,7 @@
 ```
 
 필드 설명:
-- `my_role`: 현재 요청 사용자의 프로젝트 내 역할 (OWNER: 소유자, VIEWER: 조회자)
+- `my_role`: 현재 요청 사용자의 프로젝트 내 역할 (OWNER: 소유자, MEMBER: 멤버)
 
 에러:
 - 404: "프로젝트를 찾을 수 없습니다."
@@ -285,7 +285,7 @@
 
 ## Project Members
 - 프로젝트 생성자는 최초 OWNER입니다.
-- 소유권은 기존 OWNER가 같은 프로젝트의 VIEWER에게만 이전할 수 있습니다.
+- 소유권은 기존 OWNER가 같은 프로젝트의 MEMBER에게만 이전할 수 있습니다.
 - 프로젝트 내 OWNER는 항상 1명입니다.
 
 ### GET /v1/projects/{project_id}/members
@@ -301,7 +301,7 @@
       "user_id": "string",
       "username": "string",
       "profile_image": "string|null",
-      "role": "OWNER|VIEWER",
+      "role": "OWNER|MEMBER",
       "joined_at": "2024-01-01T00:00:00Z"
     }
   ],
@@ -313,7 +313,7 @@
 - `user_id`: 멤버의 사용자 식별자
 - `username`: 멤버의 표시 이름
 - `profile_image`: 프로필 이미지 URL (없으면 null)
-- `role`: 프로젝트 내 역할 (OWNER: 소유자, VIEWER: 조회자)
+- `role`: 프로젝트 내 역할 (OWNER: 소유자, MEMBER: 멤버)
 - `joined_at`: 프로젝트 참여 일시
 
 에러:
@@ -340,7 +340,7 @@
   "user_id": "string",
   "username": "string",
   "profile_image": "string|null",
-  "role": "VIEWER",
+  "role": "MEMBER",
   "joined_at": "2024-01-01T00:00:00Z"
 }
 ```
@@ -380,14 +380,14 @@
 ```
 
 필드:
-- `target_nickname` (string, 필수): 소유권을 이전할 대상 VIEWER 멤버의 닉네임
+- `target_nickname` (string, 필수): 소유권을 이전할 대상 MEMBER 멤버의 닉네임
 
 응답 데이터: `ProjectMemberResponse` (새 OWNER 정보 반환)
 
 에러:
 - 404: "프로젝트를 찾을 수 없습니다."
 - 404: "멤버를 찾을 수 없습니다."
-- 400: "소유권은 VIEWER 멤버에게만 이전할 수 있습니다."
+- 400: "소유권은 MEMBER 멤버에게만 이전할 수 있습니다."
 - 400: "자기 자신에게 소유권을 이전할 수 없습니다."
 - 403: "프로젝트 소유자만 소유권을 이전할 수 있습니다."
 
