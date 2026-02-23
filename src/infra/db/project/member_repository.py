@@ -12,6 +12,10 @@ class ProjectMemberRepositoryImpl(ProjectMemberRepository):
     def __init__(self, session: AsyncSession):
         super().__init__(session)
 
+    @staticmethod
+    def _normalize_role(role: str) -> str:
+        return "OWNER" if role == "OWNER" else "MEMBER"
+
     async def list_by_project(
         self,
         project_id: str,
@@ -131,7 +135,10 @@ class ProjectMemberRepositoryImpl(ProjectMemberRepository):
             ProjectMemberModel.user_id == user_id,
         )
         result = await self._session.execute(stmt)
-        return result.scalar_one_or_none()
+        role = result.scalar_one_or_none()
+        if role is None:
+            return None
+        return self._normalize_role(role)
 
     async def get_roles_batch(
         self,
@@ -150,7 +157,10 @@ class ProjectMemberRepositoryImpl(ProjectMemberRepository):
             ProjectMemberModel.user_id == user_id,
         )
         result = await self._session.execute(stmt)
-        return {row.project_id: row.role for row in result.all()}
+        return {
+            row.project_id: self._normalize_role(row.role)
+            for row in result.all()
+        }
 
     async def update_role(
         self,
