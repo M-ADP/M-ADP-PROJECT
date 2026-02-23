@@ -52,16 +52,17 @@ class ProjectMember(BaseEntity):
         index=True,
     )
     user_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
-    role: Mapped[str] = mapped_column(String(16), nullable=False, default="VIEWER")
+    role: Mapped[str] = mapped_column(String(16), nullable=False, default="MEMBER")
     joined_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=datetime.now
     )
 
     def to_entity(self) -> ProjectMemberEntity:
+        role = "OWNER" if self.role == "OWNER" else "MEMBER"
         return ProjectMemberEntity(
             id=self.id,
             project_id=self.project_id,
             user_id=self.user_id,
-            role=self.role,
+            role=role,
             joined_at=self.joined_at,
         )
