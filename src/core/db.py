@@ -2,6 +2,7 @@ import os
 from typing import AsyncIterator
 
 from dotenv import load_dotenv
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
@@ -32,3 +33,12 @@ async def get_session() -> AsyncIterator[AsyncSession]:
 async def create_all_tables() -> None:
     async with engine.begin() as conn:
         await conn.run_sync(BaseEntity.metadata.create_all)
+        await conn.execute(
+            text(
+                """
+                UPDATE project_member
+                SET role = 'MEMBER'
+                WHERE role NOT IN ('OWNER', 'MEMBER')
+                """
+            )
+        )
