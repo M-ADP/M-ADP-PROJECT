@@ -58,7 +58,7 @@ class AddProjectMemberUseCase(BaseUseCase):
             member = ProjectMember(
                 project_id=project_id,
                 user_id=request.user_id,
-                role="VIEWER",
+                role="MEMBER",
             )
             saved = await self.uow.project_member.insert(member)
             return ProjectMemberResponse(
