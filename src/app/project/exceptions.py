@@ -146,11 +146,11 @@ class OnlyOwnerCanTransferOwnership(AppException):
         )
 
 
-class OwnershipTransferTargetMustBeViewer(AppException):
+class OwnershipTransferTargetMustBeMember(AppException):
     def __init__(self) -> None:
         super().__init__(
-            "소유권은 VIEWER 멤버에게만 이전할 수 있습니다.",
-            code="OWNERSHIP_TRANSFER_TARGET_MUST_BE_VIEWER",
+            "소유권은 MEMBER 멤버에게만 이전할 수 있습니다.",
+            code="OWNERSHIP_TRANSFER_TARGET_MUST_BE_MEMBER",
             status_code=400,
         )
 
