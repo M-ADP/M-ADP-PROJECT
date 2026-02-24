@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, Query, Response, status
+from fastapi import APIRouter, Depends, Query, status
+from fastapi.responses import JSONResponse
 
 from src.app.project.schemas import *
 from src.app.project.usecase import (
@@ -61,17 +62,23 @@ async def list_projects_endpoint(
 @router.get(
     "/available",
     status_code=status.HTTP_200_OK,
-    response_class=Response,
+    response_model=ProjectAvailableResponse,
 )
 async def check_project_available_endpoint(
     project_id: str = Query(..., description="확인할 프로젝트 ID"),
     user: UserInfo = Depends(get_user_info),
     usecase: CheckProjectAvailableUseCase = Depends(CheckProjectAvailableUseCase),
-) -> Response:
+) -> JSONResponse:
     is_member = await usecase(project_id=project_id, user_id=user.user_id)
     if is_member:
-        return Response(status_code=status.HTTP_200_OK)
-    return Response(status_code=status.HTTP_403_FORBIDDEN)
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=ProjectAvailableResponse(status=True).model_dump(),
+        )
+    return JSONResponse(
+        status_code=status.HTTP_403_FORBIDDEN,
+        content=ProjectAvailableResponse(status=False).model_dump(),
+    )
 
 
 @router.get(
