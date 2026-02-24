@@ -125,6 +125,13 @@ class ProjectListItemResponse(BaseModel):
     deployment_status: DeploymentStatus
 
 
+class ProjectAvailableResponse(BaseModel):
+    status: bool = Field(
+        ...,
+        description="요청 사용자의 프로젝트 접근 가능 여부",
+    )
+
+
 class MetricPoint(BaseModel):
     timestamp: str
     value: float
