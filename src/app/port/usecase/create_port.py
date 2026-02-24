@@ -24,7 +24,7 @@ class CreatePortUseCase(BaseUseCase):
 
     async def __call__(
         self,
-        project_id: str,
+        project_id: int,
         request: PortCreate,
         user_id: str,
     ) -> Port:

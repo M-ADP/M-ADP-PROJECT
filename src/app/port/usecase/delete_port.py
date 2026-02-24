@@ -23,8 +23,8 @@ class DeletePortUseCase(BaseUseCase):
 
     async def __call__(
         self,
-        project_id: str,
-        port_id: str,
+        project_id: int,
+        port_id: int,
         user_id: str,
     ) -> Port:
         async with self.uow:

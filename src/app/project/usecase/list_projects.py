@@ -29,7 +29,7 @@ class ListProjectsUseCase(BaseUseCase):
         self,
         user_id: str,
         limit: int,
-        cursor: str | None = None,
+        cursor: int | None = None,
     ) -> CursorPage[ProjectListItemResponse]:
         async with self.uow:
             # 사용자가 멤버로 참여한 프로젝트 ID 목록 조회
@@ -92,8 +92,8 @@ class ListProjectsUseCase(BaseUseCase):
 
     async def _get_summary_map(
         self,
-        project_ids: list[str],
-    ) -> dict[str, DeploymentSummaryItem]:
+        project_ids: list[int],
+    ) -> dict[int, DeploymentSummaryItem]:
         if not project_ids:
             return {}
         summaries = await self.deployment_summary_client.get_summary_batch(

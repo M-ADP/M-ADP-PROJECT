@@ -25,7 +25,7 @@ class UpdateProjectResourceUseCase(BaseUseCase):
 
     async def __call__(
         self,
-        project_id: str,
+        project_id: int,
         request: ProjectResourceUpdate,
         user_id: str,
     ) -> Project:

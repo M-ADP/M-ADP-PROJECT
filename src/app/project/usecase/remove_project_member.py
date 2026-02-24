@@ -27,7 +27,7 @@ class RemoveProjectMemberUseCase(BaseUseCase):
 
     async def __call__(
         self,
-        project_id: str,
+        project_id: int,
         target_user_id: str,
         user_id: str,
     ) -> ProjectMemberResponse:

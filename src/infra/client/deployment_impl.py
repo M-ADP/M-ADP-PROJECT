@@ -6,6 +6,6 @@ class MockDeploymentClient(DeploymentClient):
 
     async def list_by_project(
         self,
-        project_id: str,
+        project_id: int,
     ) -> list[DeploymentItemData]:
         return []

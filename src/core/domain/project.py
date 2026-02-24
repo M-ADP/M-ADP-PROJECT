@@ -7,7 +7,7 @@ from src.common.id_generator import IdGenerator
 
 @dataclass
 class Project:
-    id: str = field(default_factory=IdGenerator.generate_sonyflake_id)
+    id: int = field(default_factory=IdGenerator.generate_sonyflake_id)
     user_id: str = ""
     name: str = ""
     max_cpu: float = 0.0
@@ -20,8 +20,8 @@ class Project:
 
 @dataclass
 class ProjectMember:
-    id: str = field(default_factory=IdGenerator.generate_sonyflake_id)
-    project_id: str = ""
+    id: int = field(default_factory=IdGenerator.generate_sonyflake_id)
+    project_id: int = 0
     user_id: str = ""
     role: Literal["OWNER", "MEMBER"] = "MEMBER"
     joined_at: datetime = field(default_factory=datetime.now)

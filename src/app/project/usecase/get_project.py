@@ -25,7 +25,7 @@ class GetProjectUseCase(BaseUseCase):
 
     async def __call__(
         self,
-        project_id: str,
+        project_id: int,
         user_id: str,
     ) -> ProjectDetailResponse:
         async with self.uow:

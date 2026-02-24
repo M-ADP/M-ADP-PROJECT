@@ -24,8 +24,8 @@ class UpdatePortUseCase(BaseUseCase):
 
     async def __call__(
         self,
-        project_id: str,
-        port_id: str,
+        project_id: int,
+        port_id: int,
         request: PortUpdate,
         user_id: str,
     ) -> Port:

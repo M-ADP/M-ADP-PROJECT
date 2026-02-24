@@ -18,7 +18,7 @@ class DeploymentClient(ABC):
     @abstractmethod
     async def list_by_project(
         self,
-        project_id: str,
+        project_id: int,
     ) -> list[DeploymentItemData]:
         """프로젝트의 앱 배포 목록을 조회합니다."""
         ...

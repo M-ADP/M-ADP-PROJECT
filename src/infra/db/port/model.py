@@ -16,13 +16,13 @@ class Port(BaseEntity):
         ),
     )
 
-    id: Mapped[str] = mapped_column(
-        String(64),
+    id: Mapped[int] = mapped_column(
+        BigInteger,
         primary_key=True,
         default=IdGenerator.generate_sonyflake_id,
     )
-    project_id: Mapped[str] = mapped_column(
-        String(64),
+    project_id: Mapped[int] = mapped_column(
+        BigInteger,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
         index=True,

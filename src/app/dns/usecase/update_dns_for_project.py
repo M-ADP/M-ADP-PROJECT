@@ -26,8 +26,8 @@ class UpdateDNSForProjectUseCase(BaseUseCase):
 
     async def __call__(
         self,
-        project_id: str,
-        dns_id: str,
+        project_id: int,
+        dns_id: int,
         request: DNSUpdate,
         user_id: str,
     ) -> DNS:

@@ -40,9 +40,9 @@ async def create_project_endpoint(
     status_code=200,
 )
 async def list_projects_endpoint(
-    cursor: str | None = Query(
+    cursor: int | None = Query(
         None,
-        description="다음 페이지 커서(id). 지정하면 해당 커서 이후부터 조회",
+        description="다음 페이지 커서(project id). 지정하면 해당 커서 이후부터 조회",
     ),
     limit: int = Query(
         20,
@@ -65,7 +65,7 @@ async def list_projects_endpoint(
     response_model=ProjectAvailableResponse,
 )
 async def check_project_available_endpoint(
-    project_id: str = Query(..., description="확인할 프로젝트 ID"),
+    project_id: int = Query(..., description="확인할 프로젝트 ID"),
     user: UserInfo = Depends(get_user_info),
     usecase: CheckProjectAvailableUseCase = Depends(CheckProjectAvailableUseCase),
 ) -> JSONResponse:
@@ -87,7 +87,7 @@ async def check_project_available_endpoint(
     status_code=200,
 )
 async def get_project_endpoint(
-    project_id: str,
+    project_id: int,
     user: UserInfo = Depends(get_user_info),
     usecase: GetProjectUseCase = Depends(GetProjectUseCase),
 ) -> SuccessResponse[ProjectDetailResponse]:
@@ -104,7 +104,7 @@ async def get_project_endpoint(
     status_code=200,
 )
 async def update_project_name_endpoint(
-    project_id: str,
+    project_id: int,
     payload: ProjectNameUpdate,
     user: UserInfo = Depends(get_user_info),
     usecase: UpdateProjectNameUseCase = Depends(UpdateProjectNameUseCase),
@@ -122,7 +122,7 @@ async def update_project_name_endpoint(
     status_code=200,
 )
 async def delete_project_endpoint(
-    project_id: str,
+    project_id: int,
     user: UserInfo = Depends(get_user_info),
     usecase: DeleteProjectUseCase = Depends(DeleteProjectUseCase),
 ) -> SuccessResponse[ProjectResponse]:
@@ -139,7 +139,7 @@ async def delete_project_endpoint(
     status_code=200,
 )
 async def update_project_resource_endpoint(
-    project_id: str,
+    project_id: int,
     payload: ProjectResourceUpdate,
     user: UserInfo = Depends(get_user_info),
     usecase: UpdateProjectResourceUseCase = Depends(UpdateProjectResourceUseCase),
@@ -160,8 +160,8 @@ async def update_project_resource_endpoint(
     status_code=200,
 )
 async def list_project_members_endpoint(
-    project_id: str,
-    cursor: str | None = Query(
+    project_id: int,
+    cursor: int | None = Query(
         None,
         description="다음 페이지 커서(id). 지정하면 해당 커서 이후부터 조회",
     ),
@@ -192,7 +192,7 @@ async def list_project_members_endpoint(
     status_code=201,
 )
 async def add_project_member_endpoint(
-    project_id: str,
+    project_id: int,
     payload: ProjectMemberAdd,
     user: UserInfo = Depends(get_user_info),
     usecase: AddProjectMemberUseCase = Depends(AddProjectMemberUseCase),
@@ -214,7 +214,7 @@ async def add_project_member_endpoint(
     status_code=200,
 )
 async def remove_project_member_endpoint(
-    project_id: str,
+    project_id: int,
     target_user_id: str,
     user: UserInfo = Depends(get_user_info),
     usecase: RemoveProjectMemberUseCase = Depends(RemoveProjectMemberUseCase),
@@ -236,7 +236,7 @@ async def remove_project_member_endpoint(
     status_code=200,
 )
 async def transfer_project_ownership_endpoint(
-    project_id: str,
+    project_id: int,
     payload: ProjectOwnerTransfer,
     user: UserInfo = Depends(get_user_info),
     usecase: TransferProjectOwnershipUseCase = Depends(TransferProjectOwnershipUseCase),

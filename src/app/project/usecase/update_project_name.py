@@ -20,7 +20,7 @@ class UpdateProjectNameUseCase(BaseUseCase):
 
     async def __call__(
         self,
-        project_id: str,
+        project_id: int,
         request: ProjectNameUpdate,
         user_id: str,
     ) -> Project:

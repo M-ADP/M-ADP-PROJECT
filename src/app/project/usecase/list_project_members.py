@@ -23,10 +23,10 @@ class ListProjectMembersUseCase(BaseUseCase):
 
     async def __call__(
         self,
-        project_id: str,
+        project_id: int,
         user_id: str,
         limit: int = 20,
-        cursor: str | None = None,
+        cursor: int | None = None,
     ) -> CursorPage[ProjectMemberResponse]:
         async with self.uow:
             # 프로젝트 존재 여부 확인 (소유자 또는 멤버만 조회 가능)

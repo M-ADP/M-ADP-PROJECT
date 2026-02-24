@@ -17,18 +17,18 @@ class ProjectRepository(Repository[Project], ABC):
         self,
         user_id: str,
         name: str,
-        exclude_project_id: str | None = None,
+        exclude_project_id: int | None = None,
     ) -> bool:
         """프로젝트 이름 중복 여부를 확인합니다."""
         pass
 
     @abstractmethod
-    async def get_by_id_for_user(self, project_id: str, user_id: str) -> Project | None:
+    async def get_by_id_for_user(self, project_id: int, user_id: str) -> Project | None:
         """사용자의 프로젝트를 ID로 조회합니다."""
         pass
 
     @abstractmethod
-    async def get_by_id(self, project_id: str) -> Project | None:
+    async def get_by_id(self, project_id: int) -> Project | None:
         """프로젝트를 ID로 조회합니다."""
         pass
 
@@ -43,7 +43,7 @@ class ProjectRepository(Repository[Project], ABC):
         pass
 
     @abstractmethod
-    async def update_name(self, project_id: str, name: str) -> Project:
+    async def update_name(self, project_id: int, name: str) -> Project:
         """프로젝트 이름을 업데이트합니다."""
         pass
 
@@ -52,7 +52,7 @@ class ProjectRepository(Repository[Project], ABC):
         self,
         user_id: str,
         limit: int,
-        cursor: str | None = None,
+        cursor: int | None = None,
     ) -> list[Project]:
         """사용자의 프로젝트 목록을 조회합니다."""
         pass
@@ -60,7 +60,7 @@ class ProjectRepository(Repository[Project], ABC):
     @abstractmethod
     async def update_resource(
         self,
-        project_id: str,
+        project_id: int,
         max_cpu: float | None = None,
         max_memory: float | None = None,
         max_disk: float | None = None,
@@ -69,6 +69,6 @@ class ProjectRepository(Repository[Project], ABC):
         pass
 
     @abstractmethod
-    async def get_by_ids(self, project_ids: list[str]) -> list[Project]:
+    async def get_by_ids(self, project_ids: list[int]) -> list[Project]:
         """프로젝트 ID 목록으로 프로젝트들을 조회합니다."""
         pass

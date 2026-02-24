@@ -40,7 +40,7 @@ class ProjectCreate(BaseModel):
 class ProjectResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
+    id: int
     user_id: str
     name: str
     max_cpu: float
@@ -111,7 +111,7 @@ class DeploymentStatus(BaseModel):
 class ProjectListItemResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
+    id: int
     name: str
     my_role: Literal["OWNER", "MEMBER"] = Field(
         ...,
@@ -151,7 +151,7 @@ class DeploymentItem(BaseModel):
 class ProjectDetailResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
+    id: int
     name: str
     my_role: Literal["OWNER", "MEMBER"] = Field(
         ...,

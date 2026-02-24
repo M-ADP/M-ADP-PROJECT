@@ -14,16 +14,16 @@ class DNSState(str, enum.Enum):
 
 @dataclass
 class DNS:
-    id: str = field(default_factory=IdGenerator.generate_sonyflake_id)
-    project_id: str = ""
+    id: int = field(default_factory=IdGenerator.generate_sonyflake_id)
+    project_id: int = 0
     dns_name: str = ""
     state: DNSState = DNSState.PENDING
-    port_id: Optional[str] = None
+    port_id: Optional[int] = None
 
     def update_state(self, state: DNSState) -> None:
         self.state = state
 
-    def bind_port(self, port_id: str) -> None:
+    def bind_port(self, port_id: int) -> None:
         self.port_id = port_id
 
     def unbind_port(self) -> None:

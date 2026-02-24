@@ -26,7 +26,7 @@ class CreateDNSForProjectUseCase(BaseUseCase):
 
     async def __call__(
         self,
-        project_id: str,
+        project_id: int,
         request: DNSCreate,
         user_id: str,
     ) -> DNS:

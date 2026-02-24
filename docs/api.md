@@ -121,7 +121,7 @@
 응답 데이터: `ProjectResponse`
 ```json
 {
-  "id": "string",
+  "id": 1234567890123,
   "user_id": "string",
   "name": "string",
   "max_cpu": 0.1,
@@ -149,7 +149,7 @@
 {
   "items": [
     {
-      "id": "string",
+      "id": 1234567890123,
       "name": "string",
       "my_role": "OWNER|MEMBER",
       "domain": "string|null",
@@ -175,7 +175,7 @@
 응답 데이터: `ProjectDetailResponse`
 ```json
 {
-  "id": "string",
+  "id": 1234567890123,
   "name": "string",
   "my_role": "OWNER|MEMBER",
   "deployments": [
@@ -198,7 +198,7 @@
   "ports": [
     {
       "id": "string",
-      "project_id": "string",
+      "project_id": 1234567890123,
       "from_ip": "string",
       "from_port": 80,
       "port_number": 6,
@@ -501,7 +501,7 @@ DNS 생성
 ```json
 {
   "id": "string",
-  "project_id": "string",
+  "project_id": 1234567890123,
   "dns_name": "subdomain.mdeveloper.platform",
   "state": "PENDING|ACTIVE|FAILED|DELETED",
   "port_id": "string|null"

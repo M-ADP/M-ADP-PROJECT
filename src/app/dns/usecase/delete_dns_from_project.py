@@ -23,8 +23,8 @@ class DeleteDNSFromProjectUseCase(BaseUseCase):
 
     async def __call__(
         self,
-        project_id: str,
-        dns_id: str,
+        project_id: int,
+        dns_id: int,
         user_id: str,
     ) -> DNS:
         async with self.uow:

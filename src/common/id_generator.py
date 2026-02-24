@@ -35,6 +35,6 @@ class IdGenerator:
         )
 
     @classmethod
-    def generate_sonyflake_id(cls) -> str:
+    def generate_sonyflake_id(cls) -> int:
         cls._init_generator()
-        return str(cls._generator.next_id())
+        return cls._generator.next_id()

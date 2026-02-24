@@ -14,7 +14,7 @@ from src.core.domain.project import Project, ProjectMember
 
 
 def make_project(
-    project_id: str,
+    project_id: int,
     *,
     user_id: str = "user-1",
     name: str | None = None,
@@ -33,15 +33,15 @@ def make_project(
 
 
 def make_member(
-    project_id: str,
+    project_id: int,
     user_id: str,
     *,
-    member_id: str | None = None,
+    member_id: int | None = None,
     role: str = "MEMBER",
     joined_at: datetime | None = None,
 ) -> ProjectMember:
     return ProjectMember(
-        id=member_id or f"m-{project_id}-{user_id}",
+        id=member_id or abs(hash(f"m-{project_id}-{user_id}")),
         project_id=project_id,
         user_id=user_id,
         role=role,
@@ -50,8 +50,8 @@ def make_member(
 
 
 def make_port(
-    project_id: str,
-    port_id: str,
+    project_id: int,
+    port_id: int,
     *,
     from_ip: str = "0.0.0.0/0",
     from_port: int = 80,
@@ -69,12 +69,12 @@ def make_port(
 
 
 def make_dns(
-    project_id: str,
-    dns_id: str,
+    project_id: int,
+    dns_id: int,
     *,
     dns_name: str,
     state: DNSState = DNSState.PENDING,
-    port_id: str | None = None,
+    port_id: int | None = None,
 ) -> DNS:
     return DNS(
         id=dns_id,
@@ -92,7 +92,7 @@ class FakeProjectRepository:
         *,
         reverse_get_by_ids: bool = False,
     ) -> None:
-        self.projects: dict[str, Project] = {
+        self.projects: dict[int, Project] = {
             project.id: project for project in (projects or [])
         }
         self.reverse_get_by_ids = reverse_get_by_ids
@@ -104,16 +104,18 @@ class FakeProjectRepository:
         self,
         user_id: str,
         name: str,
-        exclude_project_id: str | None = None,
+        exclude_project_id: int | None = None,
     ) -> bool:
         return any(
             project.user_id == user_id
             and project.name == name
-            and project.id != exclude_project_id
+            and (
+                exclude_project_id is None or project.id != exclude_project_id
+            )
             for project in self.projects.values()
         )
 
-    async def get_by_id_for_user(self, project_id: str, user_id: str) -> Project | None:
+    async def get_by_id_for_user(self, project_id: int, user_id: str) -> Project | None:
         project = self.projects.get(project_id)
         if project is None:
             return None
@@ -121,7 +123,7 @@ class FakeProjectRepository:
             return None
         return project
 
-    async def get_by_id(self, project_id: str) -> Project | None:
+    async def get_by_id(self, project_id: int) -> Project | None:
         return self.projects.get(project_id)
 
     async def insert(self, project: Project) -> Project:
@@ -131,7 +133,7 @@ class FakeProjectRepository:
     async def delete(self, project: Project) -> None:
         self.projects.pop(project.id, None)
 
-    async def update_name(self, project_id: str, name: str) -> Project:
+    async def update_name(self, project_id: int, name: str) -> Project:
         project = self.projects[project_id]
         project.name = name
         return project
@@ -140,7 +142,7 @@ class FakeProjectRepository:
         self,
         user_id: str,
         limit: int,
-        cursor: str | None = None,
+        cursor: int | None = None,
     ) -> list[Project]:
         projects = [project for project in self.projects.values() if project.user_id == user_id]
         projects.sort(key=lambda project: project.id)
@@ -150,7 +152,7 @@ class FakeProjectRepository:
 
     async def update_resource(
         self,
-        project_id: str,
+        project_id: int,
         max_cpu: float | None = None,
         max_memory: float | None = None,
         max_disk: float | None = None,
@@ -164,7 +166,7 @@ class FakeProjectRepository:
             project.max_disk = max_disk
         return project
 
-    async def get_by_ids(self, project_ids: list[str]) -> list[Project]:
+    async def get_by_ids(self, project_ids: list[int]) -> list[Project]:
         ids = list(reversed(project_ids)) if self.reverse_get_by_ids else project_ids
         return [self.projects[project_id] for project_id in ids if project_id in self.projects]
 
@@ -174,18 +176,18 @@ class FakeProjectMemberRepository:
         self,
         members: list[ProjectMember] | None = None,
         *,
-        project_ids_override: dict[str, list[str]] | None = None,
+        project_ids_override: dict[str, list[int]] | None = None,
     ) -> None:
-        self.members: dict[tuple[str, str], ProjectMember] = {
+        self.members: dict[tuple[int, str], ProjectMember] = {
             (member.project_id, member.user_id): member for member in (members or [])
         }
         self.project_ids_override = project_ids_override or {}
 
     async def list_by_project(
         self,
-        project_id: str,
+        project_id: int,
         limit: int,
-        cursor: str | None = None,
+        cursor: int | None = None,
     ) -> list[ProjectMember]:
         members = [member for member in self.members.values() if member.project_id == project_id]
         members.sort(key=lambda member: (member.joined_at, member.id))
@@ -195,14 +197,14 @@ class FakeProjectMemberRepository:
 
     async def get_by_project_and_user(
         self,
-        project_id: str,
+        project_id: int,
         user_id: str,
     ) -> ProjectMember | None:
         return self.members.get((project_id, user_id))
 
     async def exists_by_project_and_user(
         self,
-        project_id: str,
+        project_id: int,
         user_id: str,
     ) -> bool:
         return (project_id, user_id) in self.members
@@ -214,19 +216,19 @@ class FakeProjectMemberRepository:
     async def delete(self, member: ProjectMember) -> None:
         self.members.pop((member.project_id, member.user_id), None)
 
-    async def is_owner(self, project_id: str, user_id: str) -> bool:
+    async def is_owner(self, project_id: int, user_id: str) -> bool:
         member = self.members.get((project_id, user_id))
         return member is not None and member.role == "OWNER"
 
-    async def has_access(self, project_id: str, user_id: str) -> bool:
+    async def has_access(self, project_id: int, user_id: str) -> bool:
         return (project_id, user_id) in self.members
 
     async def list_project_ids_by_user(
         self,
         user_id: str,
         limit: int,
-        cursor: str | None = None,
-    ) -> list[str]:
+        cursor: int | None = None,
+    ) -> list[int]:
         if user_id in self.project_ids_override:
             project_ids = list(self.project_ids_override[user_id])
         else:
@@ -240,15 +242,15 @@ class FakeProjectMemberRepository:
             project_ids = [project_id for project_id in project_ids if project_id > cursor]
         return project_ids[:limit]
 
-    async def get_role(self, project_id: str, user_id: str) -> str | None:
+    async def get_role(self, project_id: int, user_id: str) -> str | None:
         member = self.members.get((project_id, user_id))
         return member.role if member is not None else None
 
     async def get_roles_batch(
         self,
-        project_ids: list[str],
+        project_ids: list[int],
         user_id: str,
-    ) -> dict[str, str]:
+    ) -> dict[int, str]:
         return {
             project_id: member.role
             for project_id in project_ids
@@ -257,7 +259,7 @@ class FakeProjectMemberRepository:
 
     async def update_role(
         self,
-        project_id: str,
+        project_id: int,
         user_id: str,
         role: str,
     ) -> ProjectMember | None:
@@ -270,15 +272,15 @@ class FakeProjectMemberRepository:
 
 class FakePortRepository:
     def __init__(self, ports: list[Port] | None = None) -> None:
-        self.ports: dict[tuple[str, str], Port] = {
+        self.ports: dict[tuple[int, int], Port] = {
             (port.project_id, port.id): port for port in (ports or [])
         }
 
     async def exists_by_from_port(
         self,
-        project_id: str,
+        project_id: int,
         from_port: int,
-        exclude_port_id: str | None = None,
+        exclude_port_id: int | None = None,
     ) -> bool:
         return any(
             port.project_id == project_id
@@ -289,9 +291,9 @@ class FakePortRepository:
 
     async def list_by_project(
         self,
-        project_id: str,
+        project_id: int,
         limit: int,
-        cursor: str | None = None,
+        cursor: int | None = None,
     ) -> list[Port]:
         ports = [port for port in self.ports.values() if port.project_id == project_id]
         ports.sort(key=lambda port: port.id)
@@ -301,8 +303,8 @@ class FakePortRepository:
 
     async def get_by_id_for_project(
         self,
-        project_id: str,
-        port_id: str,
+        project_id: int,
+        port_id: int,
     ) -> Port | None:
         return self.ports.get((project_id, port_id))
 
@@ -315,8 +317,8 @@ class FakePortRepository:
 
     async def update(
         self,
-        project_id: str,
-        port_id: str,
+        project_id: int,
+        port_id: int,
         from_ip: str,
         from_port: int,
         port_number: int,
@@ -332,31 +334,31 @@ class FakePortRepository:
 
 class FakeDNSRepository:
     def __init__(self, dns_records: list[DNS] | None = None) -> None:
-        self.dns_records: dict[tuple[str, str], DNS] = {
+        self.dns_records: dict[tuple[int, int], DNS] = {
             (dns.project_id, dns.id): dns for dns in (dns_records or [])
         }
 
     async def exists_by_dns_name(
         self,
         dns_name: str,
-        exclude_dns_id: str | None = None,
+        exclude_dns_id: int | None = None,
     ) -> bool:
         return any(
             dns.dns_name == dns_name and dns.id != exclude_dns_id
             for dns in self.dns_records.values()
         )
 
-    async def exists_by_project(self, project_id: str) -> bool:
+    async def exists_by_project(self, project_id: int) -> bool:
         return any(key[0] == project_id for key in self.dns_records)
 
-    async def get_by_project(self, project_id: str) -> DNS | None:
+    async def get_by_project(self, project_id: int) -> DNS | None:
         records = [dns for dns in self.dns_records.values() if dns.project_id == project_id]
         if not records:
             return None
         records.sort(key=lambda dns: dns.id)
         return records[0]
 
-    async def get_by_id_for_project(self, dns_id: str, project_id: str) -> DNS | None:
+    async def get_by_id_for_project(self, dns_id: int, project_id: int) -> DNS | None:
         return self.dns_records.get((project_id, dns_id))
 
     async def insert(self, dns: DNS) -> DNS:
@@ -368,8 +370,8 @@ class FakeDNSRepository:
 
     async def update_name(
         self,
-        dns_id: str,
-        project_id: str,
+        dns_id: int,
+        project_id: int,
         dns_name: str,
     ) -> DNS:
         dns = self.dns_records[(project_id, dns_id)]
@@ -378,9 +380,9 @@ class FakeDNSRepository:
 
     async def bind_port(
         self,
-        dns_id: str,
-        project_id: str,
-        port_id: str,
+        dns_id: int,
+        project_id: int,
+        port_id: int,
     ) -> DNS:
         dns = self.dns_records[(project_id, dns_id)]
         dns.port_id = port_id
@@ -488,9 +490,9 @@ class FakeProjectResourceClient:
 
 @dataclass
 class FakeDeploymentClient:
-    deployments_by_project: dict[str, list[DeploymentItemData]]
+    deployments_by_project: dict[int, list[DeploymentItemData]]
 
-    async def list_by_project(self, project_id: str) -> list[DeploymentItemData]:
+    async def list_by_project(self, project_id: int) -> list[DeploymentItemData]:
         return list(self.deployments_by_project.get(project_id, []))
 
 
@@ -499,9 +501,9 @@ class FakeDeploymentSummaryClient:
         self.summary_map = {
             summary.project_id: summary for summary in (summaries or [])
         }
-        self.requests: list[list[str]] = []
+        self.requests: list[list[int]] = []
 
-    async def get_summary_batch(self, project_ids: list[str]) -> list[DeploymentSummaryItem]:
+    async def get_summary_batch(self, project_ids: list[int]) -> list[DeploymentSummaryItem]:
         self.requests.append(list(project_ids))
         return [
             self.summary_map[project_id]

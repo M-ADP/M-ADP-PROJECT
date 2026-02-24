@@ -60,7 +60,7 @@ async def test_create_project_raises_when_project_limit_exceeded() -> None:
 
 
 async def test_create_project_raises_when_project_name_exists() -> None:
-    project = make_project("p1", user_id="owner", name="duplicate")
+    project = make_project(1, user_id="owner", name="duplicate")
     uow = FakeUnitOfWork(project_repo=FakeProjectRepository([project]))
     resource_client = FakeProjectResourceClient()
     usecase = CreateProjectUseCase(uow=uow, project_resource_client=resource_client)
@@ -94,8 +94,8 @@ async def test_delete_project_raises_when_project_not_found() -> None:
 
 
 async def test_delete_project_raises_when_requester_is_not_owner() -> None:
-    project = make_project("p1", user_id="owner")
-    members = [make_member("p1", "member", role="MEMBER")]
+    project = make_project(1, user_id="owner")
+    members = [make_member(1, "member", role="MEMBER")]
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
         project_member_repo=FakeProjectMemberRepository(members),
@@ -103,12 +103,12 @@ async def test_delete_project_raises_when_requester_is_not_owner() -> None:
     usecase = DeleteProjectUseCase(uow=uow, project_resource_client=FakeProjectResourceClient())
 
     with pytest.raises(OnlyOwnerCanDeleteProject):
-        await usecase(project_id="p1", user_id="member")
+        await usecase(project_id=1, user_id="member")
 
 
 async def test_delete_project_success() -> None:
-    project = make_project("p1", user_id="owner")
-    members = [make_member("p1", "owner", role="OWNER")]
+    project = make_project(1, user_id="owner")
+    members = [make_member(1, "owner", role="OWNER")]
     resource_client = FakeProjectResourceClient()
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
@@ -116,10 +116,10 @@ async def test_delete_project_success() -> None:
     )
     usecase = DeleteProjectUseCase(uow=uow, project_resource_client=resource_client)
 
-    deleted = await usecase(project_id="p1", user_id="owner")
+    deleted = await usecase(project_id=1, user_id="owner")
 
-    assert deleted.id == "p1"
-    assert "p1" not in uow.project.projects
+    assert deleted.id == 1
+    assert 1 not in uow.project.projects
     assert resource_client.calls[0][0] == "delete"
 
 
@@ -132,8 +132,8 @@ async def test_update_project_name_raises_when_project_not_found() -> None:
 
 
 async def test_update_project_name_raises_when_requester_not_owner() -> None:
-    project = make_project("p1", user_id="owner", name="old")
-    members = [make_member("p1", "member", role="MEMBER")]
+    project = make_project(1, user_id="owner", name="old")
+    members = [make_member(1, "member", role="MEMBER")]
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
         project_member_repo=FakeProjectMemberRepository(members),
@@ -141,15 +141,15 @@ async def test_update_project_name_raises_when_requester_not_owner() -> None:
     usecase = UpdateProjectNameUseCase(uow=uow)
 
     with pytest.raises(OnlyOwnerCanUpdateProjectName):
-        await usecase("p1", ProjectNameUpdate(name="new"), user_id="member")
+        await usecase(1, ProjectNameUpdate(name="new"), user_id="member")
 
 
 async def test_update_project_name_raises_when_name_exists() -> None:
     projects = [
-        make_project("p1", user_id="owner", name="old"),
-        make_project("p2", user_id="owner", name="new"),
+        make_project(1, user_id="owner", name="old"),
+        make_project(2, user_id="owner", name="new"),
     ]
-    members = [make_member("p1", "owner", role="OWNER")]
+    members = [make_member(1, "owner", role="OWNER")]
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository(projects),
         project_member_repo=FakeProjectMemberRepository(members),
@@ -157,19 +157,19 @@ async def test_update_project_name_raises_when_name_exists() -> None:
     usecase = UpdateProjectNameUseCase(uow=uow)
 
     with pytest.raises(ProjectNameAlreadyExists):
-        await usecase("p1", ProjectNameUpdate(name="new"), user_id="owner")
+        await usecase(1, ProjectNameUpdate(name="new"), user_id="owner")
 
 
 async def test_update_project_name_success() -> None:
-    project = make_project("p1", user_id="owner", name="old")
-    members = [make_member("p1", "owner", role="OWNER")]
+    project = make_project(1, user_id="owner", name="old")
+    members = [make_member(1, "owner", role="OWNER")]
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
         project_member_repo=FakeProjectMemberRepository(members),
     )
     usecase = UpdateProjectNameUseCase(uow=uow)
 
-    updated = await usecase("p1", ProjectNameUpdate(name="new"), user_id="owner")
+    updated = await usecase(1, ProjectNameUpdate(name="new"), user_id="owner")
 
     assert updated.name == "new"
 
@@ -189,8 +189,8 @@ async def test_update_project_resource_raises_when_project_not_found() -> None:
 
 
 async def test_update_project_resource_raises_when_requester_not_owner() -> None:
-    project = make_project("p1", user_id="owner", max_disk=200)
-    members = [make_member("p1", "member", role="MEMBER")]
+    project = make_project(1, user_id="owner", max_disk=200)
+    members = [make_member(1, "member", role="MEMBER")]
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
         project_member_repo=FakeProjectMemberRepository(members),
@@ -202,15 +202,15 @@ async def test_update_project_resource_raises_when_requester_not_owner() -> None
 
     with pytest.raises(OnlyOwnerCanUpdateResource):
         await usecase(
-            project_id="p1",
+            project_id=1,
             request=ProjectResourceUpdate(max_disk=300),
             user_id="member",
         )
 
 
 async def test_update_project_resource_raises_when_disk_is_reduced() -> None:
-    project = make_project("p1", user_id="owner", max_disk=200)
-    members = [make_member("p1", "owner", role="OWNER")]
+    project = make_project(1, user_id="owner", max_disk=200)
+    members = [make_member(1, "owner", role="OWNER")]
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
         project_member_repo=FakeProjectMemberRepository(members),
@@ -222,15 +222,15 @@ async def test_update_project_resource_raises_when_disk_is_reduced() -> None:
 
     with pytest.raises(DiskCannotBeReduced):
         await usecase(
-            project_id="p1",
+            project_id=1,
             request=ProjectResourceUpdate(max_disk=100),
             user_id="owner",
         )
 
 
 async def test_update_project_resource_success_allocates_resource() -> None:
-    project = make_project("p1", user_id="owner", max_cpu=1.0, max_memory=128.0, max_disk=200)
-    members = [make_member("p1", "owner", role="OWNER")]
+    project = make_project(1, user_id="owner", max_cpu=1.0, max_memory=128.0, max_disk=200)
+    members = [make_member(1, "owner", role="OWNER")]
     resource_client = FakeProjectResourceClient()
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
@@ -242,7 +242,7 @@ async def test_update_project_resource_success_allocates_resource() -> None:
     )
 
     updated = await usecase(
-        project_id="p1",
+        project_id=1,
         request=ProjectResourceUpdate(max_cpu=2.0, max_memory=256.0, max_disk=300.0),
         user_id="owner",
     )
@@ -265,7 +265,7 @@ async def test_get_project_raises_when_project_not_found() -> None:
 
 
 async def test_get_project_raises_when_user_has_no_role() -> None:
-    project = make_project("p1")
+    project = make_project(1)
     uow = FakeUnitOfWork(project_repo=FakeProjectRepository([project]))
     usecase = GetProjectUseCase(
         uow=uow,
@@ -274,15 +274,15 @@ async def test_get_project_raises_when_user_has_no_role() -> None:
     )
 
     with pytest.raises(ProjectNotFound):
-        await usecase(project_id="p1", user_id="outsider")
+        await usecase(project_id=1, user_id="outsider")
 
 
 async def test_get_project_success_maps_all_fields() -> None:
-    project = make_project("p1", name="api-project")
-    members = [make_member("p1", "owner", role="OWNER")]
+    project = make_project(1, name="api-project")
+    members = [make_member(1, "owner", role="OWNER")]
     ports = [
-        make_port("p1", "port-1", from_port=80, port_number=6, protocol="tcp"),
-        make_port("p1", "port-2", from_port=53, port_number=17, protocol="udp"),
+        make_port(1, 1, from_port=80, port_number=6, protocol="tcp"),
+        make_port(1, 2, from_port=53, port_number=17, protocol="udp"),
     ]
     usage = ResourceUsageData(
         cpu=single_metric(0.1),
@@ -294,7 +294,7 @@ async def test_get_project_success_maps_all_fields() -> None:
     resource_client = FakeProjectResourceClient(usage=usage)
     deployment_client = FakeDeploymentClient(
         {
-            "p1": [
+            1: [
                 DeploymentItemData(
                     id="d1",
                     name="web",
@@ -319,36 +319,36 @@ async def test_get_project_success_maps_all_fields() -> None:
         deployment_client=deployment_client,
     )
 
-    detail = await usecase(project_id="p1", user_id="owner")
+    detail = await usecase(project_id=1, user_id="owner")
 
-    assert detail.id == "p1"
+    assert detail.id == 1
     assert detail.name == "api-project"
     assert detail.my_role == "OWNER"
     assert detail.deployments[0].name == "web"
     assert detail.cpu_usage[0].value == 0.1
-    assert detail.ports[0].id == "port-1"
+    assert detail.ports[0].id == 1
     assert resource_client.calls[0][0] == "get_usage"
 
 
 async def test_list_projects_applies_order_default_role_and_state_fallback() -> None:
     projects = [
-        make_project("p10", name="A"),
-        make_project("p20", name="B"),
-        make_project("p30", name="C"),
-        make_project("p40", name="D"),
+        make_project(10, name="A"),
+        make_project(20, name="B"),
+        make_project(30, name="C"),
+        make_project(40, name="D"),
     ]
     members = [
-        make_member("p10", "user-1", role="OWNER"),
-        make_member("p20", "user-1", role="MEMBER"),
+        make_member(10, "user-1", role="OWNER"),
+        make_member(20, "user-1", role="MEMBER"),
     ]
     project_member_repo = FakeProjectMemberRepository(
         members,
-        project_ids_override={"user-1": ["p10", "p20", "p30", "p40"]},
+        project_ids_override={"user-1": [10, 20, 30, 40]},
     )
     summary_client = FakeDeploymentSummaryClient(
         [
             DeploymentSummaryItem(
-                project_id="p20",
+                project_id=20,
                 running=3,
                 warning=1,
                 state="BROKEN",
@@ -359,14 +359,14 @@ async def test_list_projects_applies_order_default_role_and_state_fallback() -> 
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository(projects, reverse_get_by_ids=True),
         project_member_repo=project_member_repo,
-        dns_repo=FakeDNSRepository([make_dns("p10", "dns-1", dns_name="a.mdeveloper.platform")]),
+        dns_repo=FakeDNSRepository([make_dns(10, "dns-1", dns_name="a.mdeveloper.platform")]),
     )
     usecase = ListProjectsUseCase(uow=uow, deployment_summary_client=summary_client)
 
     result = await usecase(user_id="user-1", limit=3)
 
     assert result.has_next is True
-    assert [item.id for item in result.items] == ["p10", "p20", "p30"]
+    assert [item.id for item in result.items] == [10, 20, 30]
     assert result.items[0].domain == "a.mdeveloper.platform"
     assert result.items[1].deployment_status.state == "FAILED"
     assert result.items[2].my_role == "MEMBER"
@@ -388,7 +388,7 @@ async def test_list_projects_empty_ids_skips_summary_lookup() -> None:
 @pytest.mark.parametrize(
     "members, expected",
     [
-        ([make_member("p1", "user-1")], True),
+        ([make_member(1, "user-1")], True),
         ([], False),
     ],
 )
@@ -399,7 +399,7 @@ async def test_check_project_available_returns_member_access(
     uow = FakeUnitOfWork(project_member_repo=FakeProjectMemberRepository(members))
     usecase = CheckProjectAvailableUseCase(uow=uow)
 
-    result = await usecase(project_id="p1", user_id="user-1")
+    result = await usecase(project_id=1, user_id="user-1")
 
     assert result is expected
 
@@ -415,20 +415,20 @@ async def test_list_project_members_raises_when_project_not_found() -> None:
 
 
 async def test_list_project_members_raises_without_access() -> None:
-    project = make_project("p1")
+    project = make_project(1)
     uow = FakeUnitOfWork(project_repo=FakeProjectRepository([project]))
     usecase = ListProjectMembersUseCase(uow=uow, user_client=FakeUserClient())
 
     with pytest.raises(ProjectNotFound):
-        await usecase(project_id="p1", user_id="user-1")
+        await usecase(project_id=1, user_id="user-1")
 
 
 async def test_list_project_members_success_with_pagination_and_fallback_user_info() -> None:
-    project = make_project("p1")
+    project = make_project(1)
     members = [
-        make_member("p1", "owner", member_id="m1", role="OWNER"),
-        make_member("p1", "member-1", member_id="m2", role="MEMBER"),
-        make_member("p1", "member-2", member_id="m3", role="MEMBER"),
+        make_member(1, "owner", member_id="m1", role="OWNER"),
+        make_member(1, "member-1", member_id="m2", role="MEMBER"),
+        make_member(1, "member-2", member_id="m3", role="MEMBER"),
     ]
     user_client = FakeUserClient([UserInfo(user_id="owner", username="Owner", profile_image="img")])
     uow = FakeUnitOfWork(
@@ -437,7 +437,7 @@ async def test_list_project_members_success_with_pagination_and_fallback_user_in
     )
     usecase = ListProjectMembersUseCase(uow=uow, user_client=user_client)
 
-    result = await usecase(project_id="p1", user_id="owner", limit=2)
+    result = await usecase(project_id=1, user_id="owner", limit=2)
 
     assert result.has_next is True
     assert len(result.items) == 2

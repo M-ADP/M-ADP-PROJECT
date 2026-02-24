@@ -46,7 +46,7 @@ class ProjectResourceClientImpl(ProjectResourceClient):
     async def create(self, user_id: str, project: Project) -> None:
         payload = ExternalProjectCreate(
             id=project.id,
-            name=project.id,
+            name=str(project.id),
             cpu=self._convert_cpu(project.max_cpu),
             memory=self._convert_memory(project.max_memory),
             disk=self._convert_memory(project.max_disk),
@@ -70,7 +70,7 @@ class ProjectResourceClientImpl(ProjectResourceClient):
         payload = ExternalPortCreate(
             service_id=service_id,
             service_name=service_id,
-            target_deployment_name=project.id,
+            target_deployment_name=str(project.id),
             port=port.from_port,
             target_port=port.from_port,
             protocol=port.protocol.upper(),
@@ -104,7 +104,7 @@ class ProjectResourceClientImpl(ProjectResourceClient):
         payload = ExternalPortUpdate(
             service_id=service_id,
             service_name=service_id,
-            target_deployment_name=project.id,
+            target_deployment_name=str(project.id),
             target_port=updated_port.from_port,
             protocol=updated_port.protocol.upper(),
             service_type="ClusterIP",
