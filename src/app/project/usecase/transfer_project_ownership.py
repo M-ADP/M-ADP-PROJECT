@@ -29,8 +29,8 @@ class TransferProjectOwnershipUseCase(BaseUseCase):
     async def __call__(
         self,
         project_id: int,
-        target_user_id: str,
-        user_id: str,
+        target_user_id: int,
+        user_id: int,
     ) -> ProjectMemberResponse:
         async with self.uow:
             project = await self.uow.project.get_by_id(project_id)
