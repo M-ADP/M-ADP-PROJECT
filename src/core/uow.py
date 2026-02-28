@@ -1,8 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Self
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from src.core.repository import (
     ProjectRepository,
     ProjectMemberRepository,
