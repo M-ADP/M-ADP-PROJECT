@@ -180,7 +180,7 @@
   "my_role": "OWNER|MEMBER",
   "deployments": [
     {
-      "id": "string",
+      "id": 1234567890123,
       "name": "string",
       "runtime": "string|null",
       "pod_count": 0,
@@ -197,7 +197,7 @@
   "traffic_per_hour": [{ "timestamp": "string", "value": 0.0 }],
   "ports": [
     {
-      "id": "string",
+      "id": 1234567890123,
       "project_id": 1234567890123,
       "from_ip": "string",
       "from_port": 80,
@@ -216,7 +216,7 @@
 
 내부 요청 API:
 - ProjectResourceClient.get_usage: 최근 7일 리소스 사용량 조회
-- DeploymentClient.list_by_project: 프로젝트 배포 목록 조회
+- ApplicationClient.list_by_project: 프로젝트 배포 목록 조회
 
 ---
 
@@ -500,11 +500,11 @@ DNS 생성
 응답 데이터: `DNSResponse`
 ```json
 {
-  "id": "string",
+  "id": 1234567890123,
   "project_id": 1234567890123,
   "dns_name": "subdomain.mdeveloper.platform",
   "state": "PENDING|ACTIVE|FAILED|DELETED",
-  "port_id": "string|null"
+  "port_id": 1234567890123
 }
 ```
 
@@ -573,12 +573,12 @@ DNS에 포트 바인딩
 요청 바디:
 ```json
 {
-  "port_id": "string"
+  "port_id": 1234567890123
 }
 ```
 
 필드:
-- `port_id` (string, 필수): 바인딩할 공개 포트 ID
+- `port_id` (integer, 필수): 바인딩할 공개 포트 ID
 
 응답 데이터: `DNSResponse`
 
