@@ -17,7 +17,7 @@ class Project(BaseEntity):
         primary_key=True,
         default=IdGenerator.generate_sonyflake_id,
     )
-    user_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     max_cpu: Mapped[float] = mapped_column(Double, nullable=False)
     max_memory: Mapped[float] = mapped_column(Double, nullable=False)
@@ -51,7 +51,7 @@ class ProjectMember(BaseEntity):
         nullable=False,
         index=True,
     )
-    user_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
     role: Mapped[str] = mapped_column(String(16), nullable=False, default="MEMBER")
     joined_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=datetime.now
