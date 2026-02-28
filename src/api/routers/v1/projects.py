@@ -1,7 +1,18 @@
 from fastapi import APIRouter, Depends, Query, status
 from fastapi.responses import JSONResponse
 
-from src.app.project.schemas import *
+from src.app.project.schemas import (
+    ProjectAvailableResponse,
+    ProjectCreate,
+    ProjectDetailResponse,
+    ProjectListItemResponse,
+    ProjectMemberAdd,
+    ProjectMemberResponse,
+    ProjectNameUpdate,
+    ProjectOwnerTransfer,
+    ProjectResourceUpdate,
+    ProjectResponse,
+)
 from src.app.project.usecase import (
     CreateProjectUseCase,
     UpdateProjectNameUseCase,
@@ -27,7 +38,7 @@ async def create_project_endpoint(
     user: UserInfo = Depends(get_user_info),
     usecase: CreateProjectUseCase = Depends(CreateProjectUseCase),
 ) -> SuccessResponse[ProjectResponse]:
-    project = await usecase(payload, user_id=user.user_id)
+    project = await usecase(payload, user_id=user.user_id, role=user.role)
     return SuccessResponse(
         message="프로젝트가 생성되었습니다.",
         data=ProjectResponse.model_validate(project),
@@ -126,7 +137,7 @@ async def delete_project_endpoint(
     user: UserInfo = Depends(get_user_info),
     usecase: DeleteProjectUseCase = Depends(DeleteProjectUseCase),
 ) -> SuccessResponse[ProjectResponse]:
-    project = await usecase(project_id, user_id=user.user_id)
+    project = await usecase(project_id, user_id=user.user_id, role=user.role)
     return SuccessResponse(
         message="프로젝트가 삭제되었습니다.",
         data=ProjectResponse.model_validate(project),
@@ -144,7 +155,7 @@ async def update_project_resource_endpoint(
     user: UserInfo = Depends(get_user_info),
     usecase: UpdateProjectResourceUseCase = Depends(UpdateProjectResourceUseCase),
 ) -> SuccessResponse[ProjectResponse]:
-    project = await usecase(project_id, request=payload, user_id=user.user_id)
+    project = await usecase(project_id, request=payload, user_id=user.user_id, role=user.role)
     return SuccessResponse(
         message="프로젝트 리소스가 변경되었습니다.",
         data=ProjectResponse.model_validate(project),
@@ -215,7 +226,7 @@ async def add_project_member_endpoint(
 )
 async def remove_project_member_endpoint(
     project_id: int,
-    target_user_id: str,
+    target_user_id: int,
     user: UserInfo = Depends(get_user_info),
     usecase: RemoveProjectMemberUseCase = Depends(RemoveProjectMemberUseCase),
 ) -> SuccessResponse[ProjectMemberResponse]:
