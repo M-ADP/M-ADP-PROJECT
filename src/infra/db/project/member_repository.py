@@ -39,7 +39,7 @@ class ProjectMemberRepositoryImpl(ProjectMemberRepository):
     async def get_by_project_and_user(
         self,
         project_id: int,
-        user_id: str,
+        user_id: int,
     ) -> ProjectMember | None:
         """프로젝트와 사용자 ID로 멤버를 조회합니다."""
         stmt = select(ProjectMemberModel).where(
@@ -55,7 +55,7 @@ class ProjectMemberRepositoryImpl(ProjectMemberRepository):
     async def exists_by_project_and_user(
         self,
         project_id: int,
-        user_id: str,
+        user_id: int,
     ) -> bool:
         """프로젝트에 해당 사용자가 멤버로 존재하는지 확인합니다."""
         stmt = (
@@ -90,7 +90,7 @@ class ProjectMemberRepositoryImpl(ProjectMemberRepository):
         await self._session.delete(model)
         await self._session.flush()
 
-    async def is_owner(self, project_id: int, user_id: str) -> bool:
+    async def is_owner(self, project_id: int, user_id: int) -> bool:
         """사용자가 프로젝트 소유자인지 확인합니다."""
         stmt = (
             select(ProjectMemberModel.id)
@@ -104,13 +104,13 @@ class ProjectMemberRepositoryImpl(ProjectMemberRepository):
         result = await self._session.execute(stmt)
         return result.first() is not None
 
-    async def has_access(self, project_id: int, user_id: str) -> bool:
+    async def has_access(self, project_id: int, user_id: int) -> bool:
         """사용자가 프로젝트에 접근 권한이 있는지 확인합니다."""
         return await self.exists_by_project_and_user(project_id, user_id)
 
     async def list_project_ids_by_user(
         self,
-        user_id: str,
+        user_id: int,
         limit: int,
         cursor: int | None = None,
     ) -> list[int]:
@@ -128,7 +128,7 @@ class ProjectMemberRepositoryImpl(ProjectMemberRepository):
         result = await self._session.execute(stmt)
         return list(result.scalars().all())
 
-    async def get_role(self, project_id: int, user_id: str) -> str | None:
+    async def get_role(self, project_id: int, user_id: int) -> str | None:
         """프로젝트에서 사용자의 역할을 조회합니다."""
         stmt = select(ProjectMemberModel.role).where(
             ProjectMemberModel.project_id == project_id,
@@ -143,7 +143,7 @@ class ProjectMemberRepositoryImpl(ProjectMemberRepository):
     async def get_roles_batch(
         self,
         project_ids: list[int],
-        user_id: str,
+        user_id: int,
     ) -> dict[int, str]:
         """여러 프로젝트에서 사용자의 역할을 일괄 조회합니다."""
         if not project_ids:
@@ -165,7 +165,7 @@ class ProjectMemberRepositoryImpl(ProjectMemberRepository):
     async def update_role(
         self,
         project_id: int,
-        user_id: str,
+        user_id: int,
         role: str,
     ) -> ProjectMember | None:
         """프로젝트 멤버 역할을 변경합니다."""
