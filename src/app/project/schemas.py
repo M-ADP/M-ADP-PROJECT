@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Literal, Optional
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, constr
 
@@ -41,7 +41,7 @@ class ProjectResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    user_id: str
+    user_id: int
     name: str
     max_cpu: float
     max_memory: float
@@ -137,8 +137,8 @@ class MetricPoint(BaseModel):
     value: float
 
 
-class DeploymentItem(BaseModel):
-    id: str
+class ApplicationItem(BaseModel):
+    id: int
     name: str
     runtime: str | None = None
     pod_count: int = Field(0, ge=0)
@@ -157,7 +157,7 @@ class ProjectDetailResponse(BaseModel):
         ...,
         description="현재 사용자의 프로젝트 내 역할",
     )
-    deployments: list[DeploymentItem]
+    deployments: list[ApplicationItem]
     cpu_usage: list[MetricPoint]
     memory_usage: list[MetricPoint]
     disk_usage: list[MetricPoint]
@@ -170,7 +170,7 @@ class ProjectDetailResponse(BaseModel):
 
 
 class ProjectMemberAdd(BaseModel):
-    user_id: str = Field(
+    user_id: int = Field(
         ...,
         description="초대할 사용자의 ID",
         examples=["windeath44"],
@@ -178,7 +178,7 @@ class ProjectMemberAdd(BaseModel):
 
 
 class ProjectOwnerTransfer(BaseModel):
-    target_user_id: str = Field(
+    target_user_id: int = Field(
         ...,
         description="소유권을 이전할 대상 MEMBER 멤버의 ID",
         examples=["windeath44"],
@@ -188,7 +188,7 @@ class ProjectOwnerTransfer(BaseModel):
 class ProjectMemberResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    user_id: str = Field(..., description="멤버의 사용자 식별자")
+    user_id: int = Field(..., description="멤버의 사용자 식별자")
     username: str = Field(..., description="멤버의 표시 이름")
     profile_image: str | None = Field(None, description="프로필 이미지 URL")
     role: Literal["OWNER", "MEMBER"] = Field(..., description="프로젝트 내 역할")
