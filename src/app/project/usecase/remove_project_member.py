@@ -28,8 +28,8 @@ class RemoveProjectMemberUseCase(BaseUseCase):
     async def __call__(
         self,
         project_id: int,
-        target_user_id: str,
-        user_id: str,
+        target_user_id: int,
+        user_id: int,
     ) -> ProjectMemberResponse:
         async with self.uow:
             # 프로젝트 존재 여부 확인
