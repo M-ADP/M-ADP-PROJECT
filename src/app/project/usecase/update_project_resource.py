@@ -27,7 +27,8 @@ class UpdateProjectResourceUseCase(BaseUseCase):
         self,
         project_id: int,
         request: ProjectResourceUpdate,
-        user_id: str,
+        user_id: int,
+        role: str,
     ) -> Project:
         async with self.uow:
             project = await self.uow.project.get_by_id(project_id)
@@ -49,6 +50,7 @@ class UpdateProjectResourceUseCase(BaseUseCase):
             )
             await self.project_resource_client.allocate(
                 user_id=user_id,
+                role=role,
                 project=project,
             )
             return project
