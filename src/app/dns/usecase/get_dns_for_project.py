@@ -16,7 +16,7 @@ class GetDNSForProjectUseCase(BaseUseCase):
     async def __call__(
         self,
         project_id: int,
-        user_id: str,
+        user_id: int,
     ) -> DNS | None:
         async with self.uow:
             project = await self.uow.project.get_by_id(project_id)
