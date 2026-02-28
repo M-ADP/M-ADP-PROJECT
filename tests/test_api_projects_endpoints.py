@@ -16,7 +16,7 @@ from src.api.routers.v1.projects import (
 )
 from src.app.port.schemas import PortResponse
 from src.app.project.schemas import (
-    DeploymentItem,
+    ApplicationItem,
     MetricPoint,
     ProjectCreate,
     ProjectDetailResponse,
@@ -100,7 +100,7 @@ async def test_get_project_endpoint_contract() -> None:
         id=1,
         name="alpha",
         my_role="OWNER",
-        deployments=[DeploymentItem(id="d1", name="web", runtime="python", pod_count=1, health_status="Healthy")],
+        deployments=[ApplicationItem(id="d1", name="web", runtime="python", pod_count=1, health_status="Healthy")],
         cpu_usage=[MetricPoint(timestamp="2026-01-01T00:00:00Z", value=0.1)],
         memory_usage=[MetricPoint(timestamp="2026-01-01T00:00:00Z", value=10.0)],
         disk_usage=[MetricPoint(timestamp="2026-01-01T00:00:00Z", value=20.0)],
