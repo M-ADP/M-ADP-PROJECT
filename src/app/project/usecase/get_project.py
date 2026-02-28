@@ -2,14 +2,14 @@ from fastapi import Depends
 
 from src.app.project.exceptions import ProjectNotFound
 from src.app.port.schemas import PortResponse
-from src.app.project.schemas import DeploymentItem, MetricPoint, ProjectDetailResponse
+from src.app.project.schemas import ApplicationItem, MetricPoint, ProjectDetailResponse
 from src.app.base_usecase import BaseUseCase
 from src.core.uow import UnitOfWork
 from src.core.client.project_resource import ProjectResourceClient
-from src.core.client.deployment import DeploymentClient
+from src.core.client.application import ApplicationClient
 from src.dependencies.uow import get_uow
 from src.dependencies.client.project_resource import get_project_resource_client
-from src.dependencies.client.deployment import get_deployment_client
+from src.dependencies.client.application import get_deployment_client
 
 
 class GetProjectUseCase(BaseUseCase):
@@ -17,7 +17,7 @@ class GetProjectUseCase(BaseUseCase):
         self,
         uow: UnitOfWork = Depends(get_uow),
         project_resource_client: ProjectResourceClient = Depends(get_project_resource_client),
-        deployment_client: DeploymentClient = Depends(get_deployment_client),
+        deployment_client: ApplicationClient = Depends(get_deployment_client),
     ):
         self.uow = uow
         self.project_resource_client = project_resource_client
@@ -26,7 +26,7 @@ class GetProjectUseCase(BaseUseCase):
     async def __call__(
         self,
         project_id: int,
-        user_id: str,
+        user_id: int,
     ) -> ProjectDetailResponse:
         async with self.uow:
             # 프로젝트 존재 여부 확인
@@ -57,7 +57,7 @@ class GetProjectUseCase(BaseUseCase):
                 name=project.name,
                 my_role=my_role,
                 deployments=[
-                    DeploymentItem(
+                    ApplicationItem(
                         id=deployment.id,
                         name=deployment.name,
                         runtime=deployment.runtime,
