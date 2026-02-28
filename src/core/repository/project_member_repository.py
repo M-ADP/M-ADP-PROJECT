@@ -21,7 +21,7 @@ class ProjectMemberRepository(Repository[ProjectMember], ABC):
     async def get_by_project_and_user(
         self,
         project_id: int,
-        user_id: str,
+        user_id: int,
     ) -> ProjectMember | None:
         """프로젝트와 사용자 ID로 멤버를 조회합니다."""
         pass
@@ -30,7 +30,7 @@ class ProjectMemberRepository(Repository[ProjectMember], ABC):
     async def exists_by_project_and_user(
         self,
         project_id: int,
-        user_id: str,
+        user_id: int,
     ) -> bool:
         """프로젝트에 해당 사용자가 멤버로 존재하는지 확인합니다."""
         pass
@@ -46,19 +46,19 @@ class ProjectMemberRepository(Repository[ProjectMember], ABC):
         pass
 
     @abstractmethod
-    async def is_owner(self, project_id: int, user_id: str) -> bool:
+    async def is_owner(self, project_id: int, user_id: int) -> bool:
         """사용자가 프로젝트 소유자인지 확인합니다."""
         pass
 
     @abstractmethod
-    async def has_access(self, project_id: int, user_id: str) -> bool:
+    async def has_access(self, project_id: int, user_id: int) -> bool:
         """사용자가 프로젝트에 접근 권한이 있는지 확인합니다 (소유자 또는 멤버)."""
         pass
 
     @abstractmethod
     async def list_project_ids_by_user(
         self,
-        user_id: str,
+        user_id: int,
         limit: int,
         cursor: int | None = None,
     ) -> list[int]:
@@ -66,7 +66,7 @@ class ProjectMemberRepository(Repository[ProjectMember], ABC):
         pass
 
     @abstractmethod
-    async def get_role(self, project_id: int, user_id: str) -> str | None:
+    async def get_role(self, project_id: int, user_id: int) -> str | None:
         """프로젝트에서 사용자의 역할을 조회합니다."""
         pass
 
@@ -74,7 +74,7 @@ class ProjectMemberRepository(Repository[ProjectMember], ABC):
     async def get_roles_batch(
         self,
         project_ids: list[int],
-        user_id: str,
+        user_id: int,
     ) -> dict[int, str]:
         """여러 프로젝트에서 사용자의 역할을 일괄 조회합니다."""
         pass
@@ -83,7 +83,7 @@ class ProjectMemberRepository(Repository[ProjectMember], ABC):
     async def update_role(
         self,
         project_id: int,
-        user_id: str,
+        user_id: int,
         role: str,
     ) -> ProjectMember | None:
         """프로젝트 멤버 역할을 변경합니다."""
