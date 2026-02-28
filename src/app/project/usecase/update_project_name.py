@@ -22,7 +22,7 @@ class UpdateProjectNameUseCase(BaseUseCase):
         self,
         project_id: int,
         request: ProjectNameUpdate,
-        user_id: str,
+        user_id: int,
     ) -> Project:
         async with self.uow:
             project = await self.uow.project.get_by_id(project_id)
