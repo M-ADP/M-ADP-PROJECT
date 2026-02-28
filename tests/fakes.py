@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
 
-from src.core.client.deployment import DeploymentItemData
+from src.core.client.deployment import ApplicationItemData
 from src.core.client.deployment_summary import DeploymentSummaryItem
 from src.core.client.project_resource import MetricPointData, ResourceUsageData
 from src.core.client.user import UserInfo
@@ -490,9 +490,9 @@ class FakeProjectResourceClient:
 
 @dataclass
 class FakeDeploymentClient:
-    deployments_by_project: dict[int, list[DeploymentItemData]]
+    deployments_by_project: dict[int, list[ApplicationItemData]]
 
-    async def list_by_project(self, project_id: int) -> list[DeploymentItemData]:
+    async def list_by_project(self, project_id: int) -> list[ApplicationItemData]:
         return list(self.deployments_by_project.get(project_id, []))
 
 
