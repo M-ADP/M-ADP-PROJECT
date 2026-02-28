@@ -12,7 +12,7 @@ class ProjectRepositoryImpl(ProjectRepository):
     def __init__(self, session: AsyncSession):
         super().__init__(session)
 
-    async def count_by_user(self, user_id: str) -> int:
+    async def count_by_user(self, user_id: int) -> int:
         """사용자의 프로젝트 개수를 조회합니다."""
         stmt = (
             select(func.count())
@@ -24,7 +24,7 @@ class ProjectRepositoryImpl(ProjectRepository):
 
     async def exists_by_name(
         self,
-        user_id: str,
+        user_id: int,
         name: str,
         exclude_project_id: int | None = None,
     ) -> bool:
@@ -40,7 +40,7 @@ class ProjectRepositoryImpl(ProjectRepository):
         result = await self._session.execute(stmt)
         return result.first() is not None
 
-    async def get_by_id_for_user(self, project_id: int, user_id: str) -> Project | None:
+    async def get_by_id_for_user(self, project_id: int, user_id: int) -> Project | None:
         """사용자의 프로젝트를 ID로 조회합니다."""
         stmt = select(ProjectModel).where(
             ProjectModel.id == project_id,
@@ -92,7 +92,7 @@ class ProjectRepositoryImpl(ProjectRepository):
 
     async def list_by_user(
         self,
-        user_id: str,
+        user_id: int,
         limit: int,
         cursor: int | None = None,
     ) -> list[Project]:
