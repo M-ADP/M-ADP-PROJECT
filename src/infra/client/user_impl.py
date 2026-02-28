@@ -21,7 +21,7 @@ class UserClientImpl(UserClient):
         self.base_url = user_server_config.SERVER_BASE_URL
         self.http_client = http_client or AioHttpClient(base_url=self.base_url)
 
-    async def get_user(self, user_id: str) -> UserInfo | None:
+    async def get_user(self, user_id: int) -> UserInfo | None:
         response = await self.http_client.get(
             UserAPIUrls.GET_USER_BY_ID.format(user_id=user_id)
         )
@@ -40,7 +40,7 @@ class UserClientImpl(UserClient):
         finally:
             response.release()
 
-    async def exists(self, user_id: str) -> bool:
+    async def exists(self, user_id: int) -> bool:
         response = await self.http_client.get(
             UserAPIUrls.GET_USER_BY_ID.format(user_id=user_id)
         )
