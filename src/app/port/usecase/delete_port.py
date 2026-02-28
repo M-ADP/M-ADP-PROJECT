@@ -25,7 +25,8 @@ class DeletePortUseCase(BaseUseCase):
         self,
         project_id: int,
         port_id: int,
-        user_id: str,
+        user_id: int,
+        role: str,
     ) -> Port:
         async with self.uow:
             project = await self.uow.project.get_by_id(project_id)
@@ -45,6 +46,7 @@ class DeletePortUseCase(BaseUseCase):
 
             await self.project_resource_client.close_port(
                 user_id=user_id,
+                role=role,
                 project=project,
                 port=port,
             )
