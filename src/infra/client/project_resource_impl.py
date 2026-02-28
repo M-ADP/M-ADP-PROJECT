@@ -43,7 +43,7 @@ class ProjectResourceClientImpl(ProjectResourceClient):
             return None
         return f"{int(val)}Mi"
 
-    async def create(self, user_id: str, project: Project) -> None:
+    async def create(self, user_id: int, role: str, project: Project) -> None:
         payload = ExternalProjectCreate(
             id=project.id,
             name=str(project.id),
@@ -53,19 +53,19 @@ class ProjectResourceClientImpl(ProjectResourceClient):
         )
         await self.http_client.post(
             self.base_url + ProjectResourceAPIUrls.CREATE_PROJECT,
-            headers={"user-id": user_id},
+            headers={"X-User-Id": user_id, "X-User-Role": role},
             json=payload.model_dump(exclude_none=True),
         )
 
-    async def delete(self, user_id: str, project: Project) -> None:
+    async def delete(self, user_id: int, role: str, project: Project) -> None:
         await self.http_client.delete(
             self.base_url + ProjectResourceAPIUrls.DELETE_PROJECT.format(
                 project_id=project.id
             ),
-            headers={"user-id": user_id},
+            headers={"X-User-Id": user_id, "X-User-Role": role},
         )
 
-    async def open_port(self, user_id: str, project: Project, port: Port) -> None:
+    async def open_port(self, user_id: int, role: str, project: Project, port: Port) -> None:
         service_id = f"svc-{project.id}-{port.id}"
         payload = ExternalPortCreate(
             service_id=service_id,
@@ -80,22 +80,23 @@ class ProjectResourceClientImpl(ProjectResourceClient):
             self.base_url + ProjectResourceAPIUrls.OPEN_PROJECT_PORT.format(
                 project_id=project.id
             ),
-            headers={"user-id": user_id},
+            headers={"X-User-Id": user_id, "X-User-Role": role},
             json=payload.model_dump(),
         )
 
-    async def close_port(self, user_id: str, project: Project, port: Port) -> None:
+    async def close_port(self, user_id: int, role: str, project: Project, port: Port) -> None:
         service_id = f"svc-{project.id}-{port.id}"
         await self.http_client.delete(
             self.base_url + ProjectResourceAPIUrls.CLOSE_PROJECT_PORT.format(
                 project_id=project.id, port_id=service_id
             ),
-            headers={"user-id": user_id},
+            headers={"X-User-Id": user_id, "X-User-Role": role},
         )
 
     async def update_port(
         self,
-        user_id: str,
+        user_id: int,
+        role: str,
         project: Project,
         original_port: Port,
         updated_port: Port,
@@ -113,11 +114,11 @@ class ProjectResourceClientImpl(ProjectResourceClient):
             self.base_url + ProjectResourceAPIUrls.UPDATE_PROJECT_PORT.format(
                 project_id=project.id, port_id=original_port.from_port
             ),
-            headers={"user-id": user_id},
+            headers={"X-User-Id": user_id, "X-User-Role": role},
             json=payload.model_dump(exclude_none=True),
         )
 
-    async def allocate(self, user_id: str, project: Project) -> None:
+    async def allocate(self, user_id: int, role: str, project: Project) -> None:
         payload = ExternalResourceUpdate(
             cpu=self._convert_cpu(project.max_cpu),
             memory=self._convert_memory(project.max_memory),
@@ -127,7 +128,7 @@ class ProjectResourceClientImpl(ProjectResourceClient):
             self.base_url + ProjectResourceAPIUrls.UPDATE_PROJECT_RESOURCES.format(
                 project_id=project.id
             ),
-            headers={"user-id": user_id},
+            headers={"X-User-Id": user_id, "X-User-Role": role},
             json=payload.model_dump(exclude_none=True),
         )
 
