@@ -18,7 +18,7 @@ from src.app.project.usecase.list_project_members import ListProjectMembersUseCa
 from src.app.project.usecase.list_projects import ListProjectsUseCase
 from src.app.project.usecase.update_project_name import UpdateProjectNameUseCase
 from src.app.project.usecase.update_project_resource import UpdateProjectResourceUseCase
-from src.core.client.deployment import DeploymentItemData
+from src.core.client.deployment import ApplicationItemData
 from src.core.client.deployment_summary import DeploymentSummaryItem
 from src.core.client.project_resource import ResourceUsageData
 from src.core.client.user import UserInfo
@@ -295,7 +295,7 @@ async def test_get_project_success_maps_all_fields() -> None:
     deployment_client = FakeDeploymentClient(
         {
             1: [
-                DeploymentItemData(
+                ApplicationItemData(
                     id="d1",
                     name="web",
                     runtime="python",
