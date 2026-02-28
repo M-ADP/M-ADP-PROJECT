@@ -30,7 +30,7 @@ class AddProjectMemberUseCase(BaseUseCase):
         self,
         project_id: int,
         request: ProjectMemberAdd,
-        user_id: str,
+        user_id: int,
     ) -> ProjectMemberResponse:
         async with self.uow:
             # 프로젝트 존재 여부 확인
