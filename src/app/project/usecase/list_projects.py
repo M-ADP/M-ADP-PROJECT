@@ -27,7 +27,7 @@ class ListProjectsUseCase(BaseUseCase):
 
     async def __call__(
         self,
-        user_id: str,
+        user_id: int,
         limit: int,
         cursor: int | None = None,
     ) -> CursorPage[ProjectListItemResponse]:
