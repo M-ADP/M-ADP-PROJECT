@@ -26,7 +26,8 @@ class CreatePortUseCase(BaseUseCase):
         self,
         project_id: int,
         request: PortCreate,
-        user_id: str,
+        user_id: int,
+        role: str,
     ) -> Port:
         async with self.uow:
             project = await self.uow.project.get_by_id(project_id)
@@ -54,6 +55,7 @@ class CreatePortUseCase(BaseUseCase):
             port = await self.uow.port.insert(port_row)
             await self.project_resource_client.open_port(
                 user_id=user_id,
+                role=role,
                 project=project,
                 port=port,
             )
