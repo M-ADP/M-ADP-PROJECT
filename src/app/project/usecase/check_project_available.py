@@ -17,7 +17,7 @@ class CheckProjectAvailableUseCase(BaseUseCase):
     async def __call__(
         self,
         project_id: int,
-        user_id: str,
+        user_id: int,
     ) -> bool:
         async with self.uow:
             return await self.uow.project_member.has_access(
