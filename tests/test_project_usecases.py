@@ -18,15 +18,13 @@ from src.app.project.usecase.list_project_members import ListProjectMembersUseCa
 from src.app.project.usecase.list_projects import ListProjectsUseCase
 from src.app.project.usecase.update_project_name import UpdateProjectNameUseCase
 from src.app.project.usecase.update_project_resource import UpdateProjectResourceUseCase
-from src.core.client.deployment import ApplicationItemData
-from src.core.client.deployment_summary import DeploymentSummaryItem
+from src.core.client.application import ApplicationItemData, DeploymentSummaryItem
 from src.core.client.project_resource import ResourceUsageData
 from src.core.client.user import UserInfo
 
 from tests.fakes import (
     FakeDNSRepository,
-    FakeDeploymentClient,
-    FakeDeploymentSummaryClient,
+    FakeApplicationClient,
     FakeProjectMemberRepository,
     FakeProjectRepository,
     FakeProjectResourceClient,
@@ -257,11 +255,11 @@ async def test_get_project_raises_when_project_not_found() -> None:
     usecase = GetProjectUseCase(
         uow=FakeUnitOfWork(),
         project_resource_client=FakeProjectResourceClient(),
-        deployment_client=FakeDeploymentClient({}),
+        deployment_client=FakeApplicationClient({}),
     )
 
     with pytest.raises(ProjectNotFound):
-        await usecase(project_id="missing", user_id="owner")
+        await usecase(project_id="missing", user_id="owner", role="OWNER")
 
 
 async def test_get_project_raises_when_user_has_no_role() -> None:
@@ -270,11 +268,11 @@ async def test_get_project_raises_when_user_has_no_role() -> None:
     usecase = GetProjectUseCase(
         uow=uow,
         project_resource_client=FakeProjectResourceClient(),
-        deployment_client=FakeDeploymentClient({}),
+        deployment_client=FakeApplicationClient({}),
     )
 
     with pytest.raises(ProjectNotFound):
-        await usecase(project_id=1, user_id="outsider")
+        await usecase(project_id=1, user_id="outsider", role="USER")
 
 
 async def test_get_project_success_maps_all_fields() -> None:
@@ -292,7 +290,7 @@ async def test_get_project_success_maps_all_fields() -> None:
         traffic_per_hour=single_metric(40.0),
     )
     resource_client = FakeProjectResourceClient(usage=usage)
-    deployment_client = FakeDeploymentClient(
+    deployment_client = FakeApplicationClient(
         {
             1: [
                 ApplicationItemData(
@@ -319,7 +317,7 @@ async def test_get_project_success_maps_all_fields() -> None:
         deployment_client=deployment_client,
     )
 
-    detail = await usecase(project_id=1, user_id="owner")
+    detail = await usecase(project_id=1, user_id="owner", role="OWNER")
 
     assert detail.id == 1
     assert detail.name == "api-project"
@@ -345,8 +343,8 @@ async def test_list_projects_applies_order_default_role_and_state_fallback() -> 
         members,
         project_ids_override={"user-1": [10, 20, 30, 40]},
     )
-    summary_client = FakeDeploymentSummaryClient(
-        [
+    summary_client = FakeApplicationClient(
+        summaries=[
             DeploymentSummaryItem(
                 project_id=20,
                 running=3,
@@ -361,9 +359,9 @@ async def test_list_projects_applies_order_default_role_and_state_fallback() -> 
         project_member_repo=project_member_repo,
         dns_repo=FakeDNSRepository([make_dns(10, "dns-1", dns_name="a.mdeveloper.platform")]),
     )
-    usecase = ListProjectsUseCase(uow=uow, deployment_summary_client=summary_client)
+    usecase = ListProjectsUseCase(uow=uow, application_client=summary_client)
 
-    result = await usecase(user_id="user-1", limit=3)
+    result = await usecase(user_id="user-1", role="USER", limit=3)
 
     assert result.has_next is True
     assert [item.id for item in result.items] == [10, 20, 30]
@@ -374,11 +372,11 @@ async def test_list_projects_applies_order_default_role_and_state_fallback() -> 
 
 async def test_list_projects_empty_ids_skips_summary_lookup() -> None:
     project_member_repo = FakeProjectMemberRepository(project_ids_override={"user-1": []})
-    summary_client = FakeDeploymentSummaryClient()
+    summary_client = FakeApplicationClient()
     uow = FakeUnitOfWork(project_member_repo=project_member_repo)
-    usecase = ListProjectsUseCase(uow=uow, deployment_summary_client=summary_client)
+    usecase = ListProjectsUseCase(uow=uow, application_client=summary_client)
 
-    result = await usecase(user_id="user-1", limit=20)
+    result = await usecase(user_id="user-1", role="USER", limit=20)
 
     assert result.items == []
     assert result.has_next is False
