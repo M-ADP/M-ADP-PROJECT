@@ -15,12 +15,12 @@ from src.infra.client.schemas import (
 
 
 class ProjectResourceAPIUrls(str, Enum):
-    CREATE_PROJECT = "/v1/projects"
-    DELETE_PROJECT = "/v1/projects/{project_id}"
-    OPEN_PROJECT_PORT = "/v1/projects/{project_id}/ports"
-    UPDATE_PROJECT_PORT = "/v1/projects/{project_id}/ports/{port_id}"
-    CLOSE_PROJECT_PORT = "/v1/projects/{project_id}/ports/{port_id}"
-    UPDATE_PROJECT_RESOURCES = "/v1/projects/{project_id}/resource"
+    CREATE_PROJECT = "/projects"
+    DELETE_PROJECT = "/projects/{project_id}"
+    OPEN_PROJECT_PORT = "/projects/{project_id}/ports"
+    UPDATE_PROJECT_PORT = "/projects/{project_id}/ports/{port_id}"
+    CLOSE_PROJECT_PORT = "/projects/{project_id}/ports/{port_id}"
+    UPDATE_PROJECT_RESOURCES = "/projects/{project_id}/resource"
 
 
 class ProjectResourceClientImpl(ProjectResourceClient):
