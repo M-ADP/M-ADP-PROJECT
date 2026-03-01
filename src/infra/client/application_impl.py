@@ -76,7 +76,6 @@ class ApplicationClientImpl(ApplicationClient):
                     running=item.get("running", 0),
                     warning=item.get("warning", 0),
                     state=item.get("state", "STOPPED"),
-                    message=item.get("message", ""),
                 )
                 for item in payload
             ]
@@ -109,7 +108,6 @@ class MockApplicationClient(ApplicationClient):
                 running=0,
                 warning=0,
                 state="STOPPED",
-                message="프로젝트가 현재 중지 상태입니다.",
             )
             for project_id in project_ids
         ]
