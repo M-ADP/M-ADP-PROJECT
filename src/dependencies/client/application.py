@@ -1,6 +1,7 @@
 from src.core.client.application import ApplicationClient
-from src.infra.client import MockApplicationClient
 
 
 def get_deployment_client() -> ApplicationClient:
-    return MockApplicationClient()
+    from src.common.config.application_server import get_application_server_config
+    from src.infra.client import ApplicationClientImpl
+    return ApplicationClientImpl(config=get_application_server_config())
