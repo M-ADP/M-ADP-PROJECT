@@ -6,7 +6,7 @@ class UserServerConfig(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="USER_",
         extra="ignore",
-        env_file=".env",
+        env_file="/vault/secrets/.env",
         env_file_encoding="utf-8",
     )
 

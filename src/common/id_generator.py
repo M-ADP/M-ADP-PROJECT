@@ -1,6 +1,7 @@
-import os
 from datetime import datetime, timedelta, timezone
 from sonyflake import Sonyflake
+
+from src.common.config.settings import get_sonyflake_config
 
 
 class IdGenerator:
@@ -12,16 +13,9 @@ class IdGenerator:
             return
 
         cls._generator = Sonyflake(
-            machine_id=cls._machine_id(),
+            machine_id=get_sonyflake_config().machine_id,
             start_time=cls._kst_midnight_today(),
         )
-
-    @staticmethod
-    def _machine_id() -> int:
-        try:
-            return int(os.getenv("SONYFLAKE_MACHINE_ID", "0"))
-        except ValueError:
-            return 0
 
     @staticmethod
     def _kst_midnight_today() -> datetime:

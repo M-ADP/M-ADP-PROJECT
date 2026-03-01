@@ -1,14 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.common.config.settings import Settings
+from src.common.config.settings import AppConfig
 
 
-def register_middlewares(app: FastAPI, settings: Settings) -> None:
+def register_middlewares(app: FastAPI, app_config: AppConfig) -> None:
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.cors.allow_origins,
-        allow_methods=settings.cors.allow_methods,
-        allow_credentials=settings.cors.allow_credentials,
-        allow_headers=settings.cors.allow_headers,
+        allow_origins=app_config.cors.allow_origins,
+        allow_methods=app_config.cors.allow_methods,
+        allow_credentials=app_config.cors.allow_credentials,
+        allow_headers=app_config.cors.allow_headers,
     )
