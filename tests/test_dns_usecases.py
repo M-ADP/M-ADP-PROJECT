@@ -33,12 +33,12 @@ async def test_create_dns_raises_when_project_not_found() -> None:
     )
 
     with pytest.raises(ProjectNotFound):
-        await usecase("missing", DNSCreate(subdomain="app"), user_id="owner")
+        await usecase("missing", DNSCreate(subdomain="app"), user_id=1)
 
 
 async def test_create_dns_raises_when_requester_not_owner() -> None:
     project = make_project(1)
-    members = [make_member(1, "member", role="MEMBER")]
+    members = [make_member(1, 2, role="MEMBER")]
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
         project_member_repo=FakeProjectMemberRepository(members),
@@ -46,12 +46,12 @@ async def test_create_dns_raises_when_requester_not_owner() -> None:
     usecase = CreateDNSForProjectUseCase(uow=uow, project_resource_client=FakeProjectResourceClient())
 
     with pytest.raises(OnlyOwnerCanManageDNS):
-        await usecase(1, DNSCreate(subdomain="app"), user_id="member")
+        await usecase(1, DNSCreate(subdomain="app"), user_id=2)
 
 
 async def test_create_dns_raises_when_project_already_has_dns() -> None:
     project = make_project(1)
-    members = [make_member(1, "owner", role="OWNER")]
+    members = [make_member(1, 1, role="OWNER")]
     dns = make_dns(1, 1, dns_name="app.mdeveloper.platform")
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
@@ -61,13 +61,13 @@ async def test_create_dns_raises_when_project_already_has_dns() -> None:
     usecase = CreateDNSForProjectUseCase(uow=uow, project_resource_client=FakeProjectResourceClient())
 
     with pytest.raises(ProjectAlreadyHasDNS):
-        await usecase(1, DNSCreate(subdomain="new"), user_id="owner")
+        await usecase(1, DNSCreate(subdomain="new"), user_id=1)
 
 
 async def test_create_dns_raises_when_dns_name_exists() -> None:
     project = make_project(1)
     other_dns = make_dns(2, 2, dns_name="taken.mdeveloper.platform")
-    members = [make_member(1, "owner", role="OWNER")]
+    members = [make_member(1, 1, role="OWNER")]
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
         project_member_repo=FakeProjectMemberRepository(members),
@@ -76,12 +76,12 @@ async def test_create_dns_raises_when_dns_name_exists() -> None:
     usecase = CreateDNSForProjectUseCase(uow=uow, project_resource_client=FakeProjectResourceClient())
 
     with pytest.raises(DNSNameAlreadyExists):
-        await usecase(1, DNSCreate(subdomain="taken"), user_id="owner")
+        await usecase(1, DNSCreate(subdomain="taken"), user_id=1)
 
 
 async def test_create_dns_success_builds_dns_name_and_calls_client() -> None:
     project = make_project(1)
-    members = [make_member(1, "owner", role="OWNER")]
+    members = [make_member(1, 1, role="OWNER")]
     resource_client = FakeProjectResourceClient()
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
@@ -89,7 +89,7 @@ async def test_create_dns_success_builds_dns_name_and_calls_client() -> None:
     )
     usecase = CreateDNSForProjectUseCase(uow=uow, project_resource_client=resource_client)
 
-    created = await usecase(1, DNSCreate(subdomain="My-App"), user_id="owner")
+    created = await usecase(1, DNSCreate(subdomain="My-App"), user_id=1)
 
     assert created.dns_name == "my-app.mdeveloper.platform"
     assert resource_client.calls[0][0] == "create_dns"
@@ -99,7 +99,7 @@ async def test_get_dns_raises_when_project_not_found() -> None:
     usecase = GetDNSForProjectUseCase(uow=FakeUnitOfWork())
 
     with pytest.raises(ProjectNotFound):
-        await usecase(project_id="missing", user_id="user-1")
+        await usecase(project_id="missing", user_id=1)
 
 
 async def test_get_dns_raises_without_access() -> None:
@@ -108,12 +108,12 @@ async def test_get_dns_raises_without_access() -> None:
     usecase = GetDNSForProjectUseCase(uow=uow)
 
     with pytest.raises(ProjectNotFound):
-        await usecase(project_id=1, user_id="outsider")
+        await usecase(project_id=1, user_id=99)
 
 
 async def test_get_dns_returns_dns_and_none() -> None:
     project = make_project(1)
-    member = make_member(1, "user-1", role="MEMBER")
+    member = make_member(1, 1, role="MEMBER")
     dns = make_dns(1, 1, dns_name="app.mdeveloper.platform")
 
     uow_with_dns = FakeUnitOfWork(
@@ -123,7 +123,7 @@ async def test_get_dns_returns_dns_and_none() -> None:
     )
     usecase_with_dns = GetDNSForProjectUseCase(uow=uow_with_dns)
 
-    found = await usecase_with_dns(project_id=1, user_id="user-1")
+    found = await usecase_with_dns(project_id=1, user_id=1)
 
     assert found is not None
     assert found.dns_name == "app.mdeveloper.platform"
@@ -135,7 +135,7 @@ async def test_get_dns_returns_dns_and_none() -> None:
     )
     usecase_without_dns = GetDNSForProjectUseCase(uow=uow_without_dns)
 
-    not_found = await usecase_without_dns(project_id=1, user_id="user-1")
+    not_found = await usecase_without_dns(project_id=1, user_id=1)
 
     assert not_found is None
 
@@ -147,12 +147,12 @@ async def test_delete_dns_raises_when_project_not_found() -> None:
     )
 
     with pytest.raises(ProjectNotFound):
-        await usecase(project_id="missing", dns_id=1, user_id="owner")
+        await usecase(project_id="missing", dns_id=1, user_id=1)
 
 
 async def test_delete_dns_raises_when_requester_not_owner() -> None:
     project = make_project(1)
-    members = [make_member(1, "member", role="MEMBER")]
+    members = [make_member(1, 2, role="MEMBER")]
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
         project_member_repo=FakeProjectMemberRepository(members),
@@ -160,12 +160,12 @@ async def test_delete_dns_raises_when_requester_not_owner() -> None:
     usecase = DeleteDNSFromProjectUseCase(uow=uow, project_resource_client=FakeProjectResourceClient())
 
     with pytest.raises(OnlyOwnerCanManageDNS):
-        await usecase(project_id=1, dns_id=1, user_id="member")
+        await usecase(project_id=1, dns_id=1, user_id=2)
 
 
 async def test_delete_dns_raises_when_dns_not_found() -> None:
     project = make_project(1)
-    members = [make_member(1, "owner", role="OWNER")]
+    members = [make_member(1, 1, role="OWNER")]
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
         project_member_repo=FakeProjectMemberRepository(members),
@@ -173,12 +173,12 @@ async def test_delete_dns_raises_when_dns_not_found() -> None:
     usecase = DeleteDNSFromProjectUseCase(uow=uow, project_resource_client=FakeProjectResourceClient())
 
     with pytest.raises(DNSNotFound):
-        await usecase(project_id=1, dns_id=1, user_id="owner")
+        await usecase(project_id=1, dns_id=1, user_id=1)
 
 
 async def test_delete_dns_success_calls_resource_client_and_deletes_dns() -> None:
     project = make_project(1)
-    members = [make_member(1, "owner", role="OWNER")]
+    members = [make_member(1, 1, role="OWNER")]
     dns = make_dns(1, 1, dns_name="app.mdeveloper.platform")
     resource_client = FakeProjectResourceClient()
     uow = FakeUnitOfWork(
@@ -188,7 +188,7 @@ async def test_delete_dns_success_calls_resource_client_and_deletes_dns() -> Non
     )
     usecase = DeleteDNSFromProjectUseCase(uow=uow, project_resource_client=resource_client)
 
-    deleted = await usecase(project_id=1, dns_id=1, user_id="owner")
+    deleted = await usecase(project_id=1, dns_id=1, user_id=1)
 
     assert deleted.id == 1
     assert resource_client.calls[0][0] == "delete_dns"
@@ -202,12 +202,12 @@ async def test_update_dns_raises_when_project_not_found() -> None:
     )
 
     with pytest.raises(ProjectNotFound):
-        await usecase("missing", 1, DNSUpdate(subdomain="new"), user_id="owner")
+        await usecase("missing", 1, DNSUpdate(subdomain="new"), user_id=1)
 
 
 async def test_update_dns_raises_when_requester_not_owner() -> None:
     project = make_project(1)
-    members = [make_member(1, "member", role="MEMBER")]
+    members = [make_member(1, 2, role="MEMBER")]
     dns = make_dns(1, 1, dns_name="old.mdeveloper.platform")
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
@@ -217,12 +217,12 @@ async def test_update_dns_raises_when_requester_not_owner() -> None:
     usecase = UpdateDNSForProjectUseCase(uow=uow, project_resource_client=FakeProjectResourceClient())
 
     with pytest.raises(OnlyOwnerCanManageDNS):
-        await usecase(1, 1, DNSUpdate(subdomain="new"), user_id="member")
+        await usecase(1, 1, DNSUpdate(subdomain="new"), user_id=2)
 
 
 async def test_update_dns_raises_when_dns_not_found() -> None:
     project = make_project(1)
-    members = [make_member(1, "owner", role="OWNER")]
+    members = [make_member(1, 1, role="OWNER")]
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
         project_member_repo=FakeProjectMemberRepository(members),
@@ -230,12 +230,12 @@ async def test_update_dns_raises_when_dns_not_found() -> None:
     usecase = UpdateDNSForProjectUseCase(uow=uow, project_resource_client=FakeProjectResourceClient())
 
     with pytest.raises(DNSNotFound):
-        await usecase(1, 1, DNSUpdate(subdomain="new"), user_id="owner")
+        await usecase(1, 1, DNSUpdate(subdomain="new"), user_id=1)
 
 
 async def test_update_dns_raises_when_name_exists() -> None:
     project = make_project(1)
-    members = [make_member(1, "owner", role="OWNER")]
+    members = [make_member(1, 1, role="OWNER")]
     current_dns = make_dns(1, 1, dns_name="old.mdeveloper.platform")
     existing_dns = make_dns(2, 2, dns_name="new.mdeveloper.platform")
     uow = FakeUnitOfWork(
@@ -246,12 +246,12 @@ async def test_update_dns_raises_when_name_exists() -> None:
     usecase = UpdateDNSForProjectUseCase(uow=uow, project_resource_client=FakeProjectResourceClient())
 
     with pytest.raises(DNSNameAlreadyExists):
-        await usecase(1, 1, DNSUpdate(subdomain="new"), user_id="owner")
+        await usecase(1, 1, DNSUpdate(subdomain="new"), user_id=1)
 
 
 async def test_update_dns_success_updates_name_and_calls_client() -> None:
     project = make_project(1)
-    members = [make_member(1, "owner", role="OWNER")]
+    members = [make_member(1, 1, role="OWNER")]
     current_dns = make_dns(1, 1, dns_name="old.mdeveloper.platform")
     resource_client = FakeProjectResourceClient()
     uow = FakeUnitOfWork(
@@ -261,7 +261,7 @@ async def test_update_dns_success_updates_name_and_calls_client() -> None:
     )
     usecase = UpdateDNSForProjectUseCase(uow=uow, project_resource_client=resource_client)
 
-    updated = await usecase(1, 1, DNSUpdate(subdomain="new-name"), user_id="owner")
+    updated = await usecase(1, 1, DNSUpdate(subdomain="new-name"), user_id=1)
 
     assert updated.dns_name == "new-name.mdeveloper.platform"
     assert resource_client.calls[0][0] == "update_dns"
@@ -274,12 +274,12 @@ async def test_bind_dns_raises_when_project_not_found() -> None:
     )
 
     with pytest.raises(ProjectNotFound):
-        await usecase("missing", 1, DNSPortBinding(port_id=1), user_id="owner")
+        await usecase("missing", 1, DNSPortBinding(port_id=1), user_id=1)
 
 
 async def test_bind_dns_raises_when_requester_not_owner() -> None:
     project = make_project(1)
-    members = [make_member(1, "member", role="MEMBER")]
+    members = [make_member(1, 2, role="MEMBER")]
     dns = make_dns(1, 1, dns_name="app.mdeveloper.platform")
     port = make_port(1, 1)
     uow = FakeUnitOfWork(
@@ -291,12 +291,12 @@ async def test_bind_dns_raises_when_requester_not_owner() -> None:
     usecase = BindPortToDNSUseCase(uow=uow, project_resource_client=FakeProjectResourceClient())
 
     with pytest.raises(OnlyOwnerCanManageDNS):
-        await usecase(1, 1, DNSPortBinding(port_id=1), user_id="member")
+        await usecase(1, 1, DNSPortBinding(port_id=1), user_id=2)
 
 
 async def test_bind_dns_raises_when_dns_not_found() -> None:
     project = make_project(1)
-    members = [make_member(1, "owner", role="OWNER")]
+    members = [make_member(1, 1, role="OWNER")]
     port = make_port(1, 1)
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
@@ -306,12 +306,12 @@ async def test_bind_dns_raises_when_dns_not_found() -> None:
     usecase = BindPortToDNSUseCase(uow=uow, project_resource_client=FakeProjectResourceClient())
 
     with pytest.raises(DNSNotFound):
-        await usecase(1, 1, DNSPortBinding(port_id=1), user_id="owner")
+        await usecase(1, 1, DNSPortBinding(port_id=1), user_id=1)
 
 
 async def test_bind_dns_raises_when_port_not_found() -> None:
     project = make_project(1)
-    members = [make_member(1, "owner", role="OWNER")]
+    members = [make_member(1, 1, role="OWNER")]
     dns = make_dns(1, 1, dns_name="app.mdeveloper.platform")
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
@@ -321,12 +321,12 @@ async def test_bind_dns_raises_when_port_not_found() -> None:
     usecase = BindPortToDNSUseCase(uow=uow, project_resource_client=FakeProjectResourceClient())
 
     with pytest.raises(PortNotFound):
-        await usecase(1, 1, DNSPortBinding(port_id=1), user_id="owner")
+        await usecase(1, 1, DNSPortBinding(port_id=1), user_id=1)
 
 
 async def test_bind_dns_success_binds_port_and_calls_resource_client() -> None:
     project = make_project(1)
-    members = [make_member(1, "owner", role="OWNER")]
+    members = [make_member(1, 1, role="OWNER")]
     dns = make_dns(1, 1, dns_name="app.mdeveloper.platform")
     port = make_port(1, 1)
     resource_client = FakeProjectResourceClient()
@@ -338,7 +338,7 @@ async def test_bind_dns_success_binds_port_and_calls_resource_client() -> None:
     )
     usecase = BindPortToDNSUseCase(uow=uow, project_resource_client=resource_client)
 
-    bound = await usecase(1, 1, DNSPortBinding(port_id=1), user_id="owner")
+    bound = await usecase(1, 1, DNSPortBinding(port_id=1), user_id=1)
 
     assert bound.port_id == 1
     assert resource_client.calls[0][0] == "mapping_dns_and_port"
