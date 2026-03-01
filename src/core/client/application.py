@@ -20,7 +20,6 @@ class DeploymentSummaryItem:
     running: int = 0
     warning: int = 0
     state: str = "STOPPED"
-    message: str = ""
 
 
 class ApplicationClient(ABC):
