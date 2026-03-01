@@ -28,9 +28,9 @@ class AddProjectMemberUseCase(BaseUseCase):
 
     async def __call__(
         self,
-        project_id: str,
+        project_id: int,
         request: ProjectMemberAdd,
-        user_id: str,
+        user_id: int,
     ) -> ProjectMemberResponse:
         async with self.uow:
             # 프로젝트 존재 여부 확인
@@ -58,7 +58,7 @@ class AddProjectMemberUseCase(BaseUseCase):
             member = ProjectMember(
                 project_id=project_id,
                 user_id=request.user_id,
-                role="VIEWER",
+                role="MEMBER",
             )
             saved = await self.uow.project_member.insert(member)
             return ProjectMemberResponse(

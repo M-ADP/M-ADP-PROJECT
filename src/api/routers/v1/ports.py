@@ -19,12 +19,12 @@ router = APIRouter(prefix="/projects/{project_id}/ports", tags=["project-ports"]
     status_code=201,
 )
 async def create_project_port_endpoint(
-    project_id: str,
+    project_id: int,
     payload: PortCreate,
     user: UserInfo = Depends(get_user_info),
     usecase: CreatePortUseCase = Depends(CreatePortUseCase),
 ) -> SuccessResponse[PortResponse]:
-    port = await usecase(project_id=project_id, request=payload, user_id=user.user_id)
+    port = await usecase(project_id=project_id, request=payload, user_id=user.user_id, role=user.role)
     return SuccessResponse(
         message="포트가 공개되었습니다.",
         data=PortResponse.model_validate(port),
@@ -37,8 +37,8 @@ async def create_project_port_endpoint(
     status_code=200,
 )
 async def list_project_ports_endpoint(
-    project_id: str,
-    cursor: str | None = Query(
+    project_id: int,
+    cursor: int | None = Query(
         None,
         description="다음 페이지 커서(id). 지정하면 해당 커서 이후부터 조회",
     ),
@@ -69,8 +69,8 @@ async def list_project_ports_endpoint(
     status_code=200,
 )
 async def update_project_port_endpoint(
-    project_id: str,
-    port_id: str,
+    project_id: int,
+    port_id: int,
     payload: PortUpdate,
     user: UserInfo = Depends(get_user_info),
     usecase: UpdatePortUseCase = Depends(UpdatePortUseCase),
@@ -80,6 +80,7 @@ async def update_project_port_endpoint(
         port_id=port_id,
         request=payload,
         user_id=user.user_id,
+        role=user.role,
     )
     return SuccessResponse(
         message="포트가 수정되었습니다.",
@@ -93,12 +94,12 @@ async def update_project_port_endpoint(
     status_code=200,
 )
 async def delete_project_port_endpoint(
-    project_id: str,
-    port_id: str,
+    project_id: int,
+    port_id: int,
     user: UserInfo = Depends(get_user_info),
     usecase: DeletePortUseCase = Depends(DeletePortUseCase),
 ) -> SuccessResponse[PortResponse]:
-    port = await usecase(project_id=project_id, port_id=port_id, user_id=user.user_id)
+    port = await usecase(project_id=project_id, port_id=port_id, user_id=user.user_id, role=user.role)
     return SuccessResponse(
         message="포트가 삭제되었습니다.",
         data=PortResponse.model_validate(port),

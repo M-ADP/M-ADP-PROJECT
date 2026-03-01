@@ -23,9 +23,9 @@ class DeleteDNSFromProjectUseCase(BaseUseCase):
 
     async def __call__(
         self,
-        project_id: str,
-        dns_id: str,
-        user_id: str,
+        project_id: int,
+        dns_id: int,
+        user_id: int,
     ) -> DNS:
         async with self.uow:
             project = await self.uow.project.get_by_id(project_id)

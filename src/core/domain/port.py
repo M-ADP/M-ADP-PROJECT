@@ -5,8 +5,8 @@ from src.common.id_generator import IdGenerator
 
 @dataclass
 class Port:
-    id: str = field(default_factory=IdGenerator.generate_sonyflake_id)
-    project_id: str = ""
+    id: int = field(default_factory=IdGenerator.generate_sonyflake_id)
+    project_id: int = 0
     from_ip: str = ""
     from_port: int = 0
     port_number: int = 0

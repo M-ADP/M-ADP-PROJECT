@@ -37,8 +37,8 @@ class PortUpdate(PortCreate):
 class PortResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
-    project_id: str
+    id: int
+    project_id: int
     from_ip: str
     from_port: int
     port_number: int

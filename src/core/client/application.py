@@ -3,8 +3,8 @@ from dataclasses import dataclass
 
 
 @dataclass
-class DeploymentItemData:
-    id: str
+class ApplicationItemData:
+    id: int
     name: str
     runtime: str | None = None
     pod_count: int = 0
@@ -14,11 +14,11 @@ class DeploymentItemData:
     health_status: str = "Stopped"
 
 
-class DeploymentClient(ABC):
+class ApplicationClient(ABC):
     @abstractmethod
     async def list_by_project(
         self,
-        project_id: str,
-    ) -> list[DeploymentItemData]:
+        project_id: int,
+    ) -> list[ApplicationItemData]:
         """프로젝트의 앱 배포 목록을 조회합니다."""
         ...

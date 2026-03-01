@@ -10,6 +10,7 @@ from src.app.project.usecase.remove_project_member import RemoveProjectMemberUse
 from src.app.project.usecase.transfer_project_ownership import (
     TransferProjectOwnershipUseCase,
 )
+from src.app.project.usecase.check_project_available import CheckProjectAvailableUseCase
 
 __all__ = [
     "CreateProjectUseCase",
@@ -22,4 +23,5 @@ __all__ = [
     "AddProjectMemberUseCase",
     "RemoveProjectMemberUseCase",
     "TransferProjectOwnershipUseCase",
+    "CheckProjectAvailableUseCase",
 ]

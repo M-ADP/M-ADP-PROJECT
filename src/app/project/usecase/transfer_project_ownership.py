@@ -5,7 +5,7 @@ from src.app.project.exceptions import (
     CannotTransferOwnershipToSelf,
     MemberNotFound,
     OnlyOwnerCanTransferOwnership,
-    OwnershipTransferTargetMustBeViewer,
+    OwnershipTransferTargetMustBeMember,
     ProjectNotFound,
 )
 from src.app.project.schemas import ProjectMemberResponse
@@ -16,7 +16,7 @@ from src.dependencies.client.user import get_user_client
 
 
 class TransferProjectOwnershipUseCase(BaseUseCase):
-    """프로젝트 소유권을 다른 VIEWER 멤버에게 이전하는 유즈케이스"""
+    """프로젝트 소유권을 다른 MEMBER 멤버에게 이전하는 유즈케이스"""
 
     def __init__(
         self,
@@ -28,9 +28,9 @@ class TransferProjectOwnershipUseCase(BaseUseCase):
 
     async def __call__(
         self,
-        project_id: str,
-        target_user_id: str,
-        user_id: str,
+        project_id: int,
+        target_user_id: int,
+        user_id: int,
     ) -> ProjectMemberResponse:
         async with self.uow:
             project = await self.uow.project.get_by_id(project_id)
@@ -51,13 +51,13 @@ class TransferProjectOwnershipUseCase(BaseUseCase):
             if target_member is None:
                 raise MemberNotFound()
 
-            if target_member.role != "VIEWER":
-                raise OwnershipTransferTargetMustBeViewer()
+            if target_member.role != "MEMBER":
+                raise OwnershipTransferTargetMustBeMember()
 
             await self.uow.project_member.update_role(
                 project_id=project_id,
                 user_id=user_id,
-                role="VIEWER",
+                role="MEMBER",
             )
             new_owner = await self.uow.project_member.update_role(
                 project_id=project_id,

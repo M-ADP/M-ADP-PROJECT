@@ -24,10 +24,11 @@ class UpdatePortUseCase(BaseUseCase):
 
     async def __call__(
         self,
-        project_id: str,
-        port_id: str,
+        project_id: int,
+        port_id: int,
         request: PortUpdate,
-        user_id: str,
+        user_id: int,
+        role: str,
     ) -> Port:
         async with self.uow:
             project = await self.uow.project.get_by_id(project_id)
@@ -63,6 +64,7 @@ class UpdatePortUseCase(BaseUseCase):
             )
             await self.project_resource_client.update_port(
                 user_id=user_id,
+                role=role,
                 project=project,
                 original_port=original_port,
                 updated_port=port,

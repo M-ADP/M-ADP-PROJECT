@@ -24,29 +24,30 @@ class ResourceUsageData:
 
 class ProjectResourceClient(ABC):
     @abstractmethod
-    async def create(self, user_id: str, project: "Project") -> None:
+    async def create(self, user_id: int, role: str, project: "Project") -> None:
         """프로젝트(namespace) 생성"""
         ...
 
     @abstractmethod
-    async def delete(self, user_id: str, project: "Project") -> None:
+    async def delete(self, user_id: int, role: str, project: "Project") -> None:
         """프로젝트(namespace) 삭제"""
         ...
 
     @abstractmethod
-    async def open_port(self, user_id: str, project: "Project", port: "Port") -> None:
+    async def open_port(self, user_id: int, role: str, project: "Project", port: "Port") -> None:
         """포트 오픈 (gateway 자원 생성)"""
         ...
 
     @abstractmethod
-    async def close_port(self, user_id: str, project: "Project", port: "Port") -> None:
+    async def close_port(self, user_id: int, role: str, project: "Project", port: "Port") -> None:
         """포트 닫기 (gateway 자원 삭제)"""
         ...
 
     @abstractmethod
     async def update_port(
         self,
-        user_id: str,
+        user_id: int,
+        role: str,
         project: "Project",
         original_port: "Port",
         updated_port: "Port",
@@ -55,7 +56,7 @@ class ProjectResourceClient(ABC):
         ...
 
     @abstractmethod
-    async def allocate(self, user_id: str, project: "Project") -> None:
+    async def allocate(self, user_id: int, role: str, project: "Project") -> None:
         """가용 자원 할당 (Resource Quota)"""
         ...
 
@@ -73,25 +74,26 @@ class ProjectResourceClient(ABC):
 class MockProjectResourceClient(ProjectResourceClient):
     """프로젝트 리소스 접근 Mock 클라이언트"""
 
-    async def create(self, user_id: str, project: "Project") -> None:
+    async def create(self, user_id: int, role: str, project: "Project") -> None:
         print(f"namespace 생성: {project.name}")
         return None
 
-    async def delete(self, user_id: str, project: "Project") -> None:
+    async def delete(self, user_id: int, role: str, project: "Project") -> None:
         print(f"namespace 삭제: {project.name}")
         return None
 
-    async def open_port(self, user_id: str, project: "Project", port: "Port") -> None:
+    async def open_port(self, user_id: int, role: str, project: "Project", port: "Port") -> None:
         print(f"gateway 자원 생성: {project.name}:{port.from_port}")
         return None
 
-    async def close_port(self, user_id: str, project: "Project", port: "Port") -> None:
+    async def close_port(self, user_id: int, role: str, project: "Project", port: "Port") -> None:
         print(f"gateway 자원 삭제: {project.name}:{port.from_port}")
         return None
 
     async def update_port(
         self,
-        user_id: str,
+        user_id: int,
+        role: str,
         project: "Project",
         original_port: "Port",
         updated_port: "Port",
@@ -99,7 +101,7 @@ class MockProjectResourceClient(ProjectResourceClient):
         print(f"gateway 자원 수정: {project.name}:{original_port.from_port} -> {updated_port.from_port}")
         return None
 
-    async def allocate(self, user_id: str, project: "Project") -> None:
+    async def allocate(self, user_id: int, role: str, project: "Project") -> None:
         print(f"Resource Quota 자원 생성: {project.name}")
         return None
 

@@ -9,7 +9,7 @@ class MockDeploymentSummaryClient(DeploymentSummaryClient):
 
     async def get_summary_batch(
         self,
-        project_ids: list[str],
+        project_ids: list[int],
     ) -> list[DeploymentSummaryItem]:
         return [
             DeploymentSummaryItem(

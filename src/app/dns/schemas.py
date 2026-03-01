@@ -24,11 +24,11 @@ class DNSCreate(BaseModel):
 class DNSResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
-    project_id: str
+    id: int
+    project_id: int
     dns_name: str
     state: DNSState
-    port_id: str | None = None
+    port_id: int | None = None
 
 
 class DNSUpdate(BaseModel):
@@ -49,8 +49,8 @@ class DNSUpdate(BaseModel):
 
 
 class DNSPortBinding(BaseModel):
-    port_id: str = Field(
+    port_id: int = Field(
         ...,
         description="바인딩할 공개 포트 ID",
-        examples=["123456789"],
+        examples=[123456789],
     )

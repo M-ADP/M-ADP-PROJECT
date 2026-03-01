@@ -1,7 +1,4 @@
-from src.core.client.project_resource import (
-    MockProjectResourceClient,
-    ProjectResourceClient,
-)
+from src.core.client.project_resource import ProjectResourceClient
 from src.common.config.resource_server import get_resource_config
 
 from src.infra.client import ProjectResourceClientImpl

@@ -20,7 +20,7 @@ router = APIRouter(prefix="/projects", tags=["dns"])
     status_code=201,
 )
 async def create_dns_endpoint(
-    project_id: str,
+    project_id: int,
     payload: DNSCreate,
     user: UserInfo = Depends(get_user_info),
     usecase: CreateDNSForProjectUseCase = Depends(CreateDNSForProjectUseCase),
@@ -39,7 +39,7 @@ async def create_dns_endpoint(
     status_code=200,
 )
 async def get_dns_endpoint(
-    project_id: str,
+    project_id: int,
     user: UserInfo = Depends(get_user_info),
     usecase: GetDNSForProjectUseCase = Depends(GetDNSForProjectUseCase),
 ) -> SuccessResponse[DNSResponse | None]:
@@ -59,8 +59,8 @@ async def get_dns_endpoint(
     status_code=200,
 )
 async def delete_dns_endpoint(
-    project_id: str,
-    dns_id: str,
+    project_id: int,
+    dns_id: int,
     user: UserInfo = Depends(get_user_info),
     usecase: DeleteDNSFromProjectUseCase = Depends(DeleteDNSFromProjectUseCase),
 ) -> SuccessResponse[DNSResponse]:
@@ -78,8 +78,8 @@ async def delete_dns_endpoint(
     status_code=200,
 )
 async def update_dns_endpoint(
-    project_id: str,
-    dns_id: str,
+    project_id: int,
+    dns_id: int,
     payload: DNSUpdate,
     user: UserInfo = Depends(get_user_info),
     usecase: UpdateDNSForProjectUseCase = Depends(UpdateDNSForProjectUseCase),
@@ -98,8 +98,8 @@ async def update_dns_endpoint(
     status_code=200,
 )
 async def bind_port_to_dns_endpoint(
-    project_id: str,
-    dns_id: str,
+    project_id: int,
+    dns_id: int,
     payload: DNSPortBinding,
     user: UserInfo = Depends(get_user_info),
     usecase: BindPortToDNSUseCase = Depends(BindPortToDNSUseCase),

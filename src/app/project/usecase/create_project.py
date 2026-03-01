@@ -30,7 +30,8 @@ class CreateProjectUseCase(BaseUseCase):
     async def __call__(
         self,
         request: ProjectCreate,
-        user_id: str,
+        user_id: int,
+        role: str,
     ) -> Project:
         async with self.uow:
             project_count = await self.uow.project.count_by_user(user_id)
@@ -59,6 +60,7 @@ class CreateProjectUseCase(BaseUseCase):
 
             await self.project_resource_client.create(
                 user_id=user_id,
+                role=role,
                 project=project,
             )
             return project

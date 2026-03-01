@@ -12,7 +12,7 @@ class ProjectRepositoryImpl(ProjectRepository):
     def __init__(self, session: AsyncSession):
         super().__init__(session)
 
-    async def count_by_user(self, user_id: str) -> int:
+    async def count_by_user(self, user_id: int) -> int:
         """사용자의 프로젝트 개수를 조회합니다."""
         stmt = (
             select(func.count())
@@ -24,23 +24,23 @@ class ProjectRepositoryImpl(ProjectRepository):
 
     async def exists_by_name(
         self,
-        user_id: str,
+        user_id: int,
         name: str,
-        exclude_project_id: str | None = None,
+        exclude_project_id: int | None = None,
     ) -> bool:
         """프로젝트 이름 중복 여부를 확인합니다."""
         conditions = [
             ProjectModel.user_id == user_id,
             func.lower(ProjectModel.name) == func.lower(name),
         ]
-        if exclude_project_id:
+        if exclude_project_id is not None:
             conditions.append(ProjectModel.id != exclude_project_id)
 
         stmt = select(ProjectModel.id).where(*conditions).limit(1)
         result = await self._session.execute(stmt)
         return result.first() is not None
 
-    async def get_by_id_for_user(self, project_id: str, user_id: str) -> Project | None:
+    async def get_by_id_for_user(self, project_id: int, user_id: int) -> Project | None:
         """사용자의 프로젝트를 ID로 조회합니다."""
         stmt = select(ProjectModel).where(
             ProjectModel.id == project_id,
@@ -52,7 +52,7 @@ class ProjectRepositoryImpl(ProjectRepository):
             return None
         return model.to_entity()
 
-    async def get_by_id(self, project_id: str) -> Project | None:
+    async def get_by_id(self, project_id: int) -> Project | None:
         """프로젝트를 ID로 조회합니다."""
         model = await self._session.get(ProjectModel, project_id)
         if model is None:
@@ -81,7 +81,7 @@ class ProjectRepositoryImpl(ProjectRepository):
         await self._session.delete(model)
         await self._session.flush()
 
-    async def update_name(self, project_id: str, name: str) -> Project:
+    async def update_name(self, project_id: int, name: str) -> Project:
         """프로젝트 이름을 업데이트합니다."""
         model = await self._session.get(ProjectModel, project_id)
         if model is None:
@@ -92,13 +92,13 @@ class ProjectRepositoryImpl(ProjectRepository):
 
     async def list_by_user(
         self,
-        user_id: str,
+        user_id: int,
         limit: int,
-        cursor: str | None = None,
+        cursor: int | None = None,
     ) -> list[Project]:
         """사용자의 프로젝트 목록을 조회합니다."""
         conditions = [ProjectModel.user_id == user_id]
-        if cursor:
+        if cursor is not None:
             conditions.append(ProjectModel.id > cursor)
 
         stmt = (
@@ -112,7 +112,7 @@ class ProjectRepositoryImpl(ProjectRepository):
 
     async def update_resource(
         self,
-        project_id: str,
+        project_id: int,
         max_cpu: float | None = None,
         max_memory: float | None = None,
         max_disk: float | None = None,
@@ -132,7 +132,7 @@ class ProjectRepositoryImpl(ProjectRepository):
         await self._session.flush()
         return model.to_entity()
 
-    async def get_by_ids(self, project_ids: list[str]) -> list[Project]:
+    async def get_by_ids(self, project_ids: list[int]) -> list[Project]:
         """프로젝트 ID 목록으로 프로젝트들을 조회합니다."""
         if not project_ids:
             return []

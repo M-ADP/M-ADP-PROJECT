@@ -23,8 +23,9 @@ class DeleteProjectUseCase(BaseUseCase):
 
     async def __call__(
         self,
-        project_id: str,
-        user_id: str,
+        project_id: int,
+        user_id: int,
+        role: str,
     ) -> Project:
         async with self.uow:
             project = await self.uow.project.get_by_id(project_id)
@@ -37,6 +38,7 @@ class DeleteProjectUseCase(BaseUseCase):
 
             await self.project_resource_client.delete(
                 user_id=user_id,
+                role=role,
                 project=project,
             )
             await self.uow.project.delete(project)
