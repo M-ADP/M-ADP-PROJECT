@@ -350,7 +350,6 @@ async def test_list_projects_applies_order_default_role_and_state_fallback() -> 
                 running=3,
                 warning=1,
                 state="BROKEN",
-                message="unexpected",
             )
         ]
     )
