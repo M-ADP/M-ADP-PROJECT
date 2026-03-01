@@ -5,6 +5,7 @@ from src.app.project.exceptions import (
     MemberNotFound,
     CannotRemoveOwner,
     OnlyOwnerCanRemoveMembers,
+    UserNotFound,
 )
 from src.app.project.schemas import ProjectMemberResponse
 from src.app.base_usecase import BaseUseCase
@@ -54,11 +55,13 @@ class RemoveProjectMemberUseCase(BaseUseCase):
                 raise CannotRemoveOwner()
 
             user_info = await self.user_client.get_user(target_user_id)
+            if user_info is None:
+                raise UserNotFound()
             await self.uow.project_member.delete(member)
             return ProjectMemberResponse(
                 user_id=member.user_id,
-                username=user_info.username if user_info else target_user_id,
-                profile_image=user_info.profile_image if user_info else None,
+                username=user_info.username,
+                profile_image=user_info.profile_image,
                 role=member.role,
                 joined_at=member.joined_at,
             )
