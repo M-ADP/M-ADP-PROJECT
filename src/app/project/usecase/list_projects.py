@@ -86,7 +86,7 @@ class ListProjectsUseCase(BaseUseCase):
             ),
             deployment_status=DeploymentStatus(
                 state=state,
-                message=summary_item.message,
+                message="",
             ),
         )
 
