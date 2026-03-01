@@ -4,8 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
 
-from src.core.client.deployment import ApplicationItemData
-from src.core.client.deployment_summary import DeploymentSummaryItem
+from src.core.client.application import ApplicationItemData, DeploymentSummaryItem
 from src.core.client.project_resource import MetricPointData, ResourceUsageData
 from src.core.client.user import UserInfo
 from src.core.domain.dns import DNS, DNSState
@@ -488,23 +487,24 @@ class FakeProjectResourceClient:
         self._record("mapping_dns_and_port")
 
 
-@dataclass
-class FakeDeploymentClient:
-    deployments_by_project: dict[int, list[ApplicationItemData]]
-
-    async def list_by_project(self, project_id: int) -> list[ApplicationItemData]:
-        return list(self.deployments_by_project.get(project_id, []))
-
-
-class FakeDeploymentSummaryClient:
-    def __init__(self, summaries: list[DeploymentSummaryItem] | None = None) -> None:
+class FakeApplicationClient:
+    def __init__(
+        self,
+        deployments_by_project: dict[int, list[ApplicationItemData]] | None = None,
+        summaries: list[DeploymentSummaryItem] | None = None,
+    ) -> None:
+        self.deployments_by_project = deployments_by_project or {}
         self.summary_map = {
             summary.project_id: summary for summary in (summaries or [])
         }
-        self.requests: list[list[int]] = []
+        self.summary_requests: list[list[int]] = []
+        self.requests = self.summary_requests  # 하위 호환 별칭
 
-    async def get_summary_batch(self, project_ids: list[int]) -> list[DeploymentSummaryItem]:
-        self.requests.append(list(project_ids))
+    async def list_by_project(self, project_id: int, user_id: int = 0, role: str = "") -> list[ApplicationItemData]:
+        return list(self.deployments_by_project.get(project_id, []))
+
+    async def get_summary_batch(self, project_ids: list[int], user_id: int = 0, role: str = "") -> list[DeploymentSummaryItem]:
+        self.summary_requests.append(list(project_ids))
         return [
             self.summary_map[project_id]
             for project_id in project_ids
