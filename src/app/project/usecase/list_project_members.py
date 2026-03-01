@@ -1,6 +1,6 @@
 from fastapi import Depends
 
-from src.app.project.exceptions import ProjectNotFound
+from src.app.project.exceptions import ProjectNotFound, UserNotFound
 from src.app.project.schemas import ProjectMemberResponse
 from src.common.schemas import CursorPage
 from src.app.base_usecase import BaseUseCase
@@ -50,18 +50,19 @@ class ListProjectMembersUseCase(BaseUseCase):
             if has_next:
                 members = members[:limit]
 
-            user_infos = {
-                info.user_id: info
-                for m in members
-                if (info := await self.user_client.get_user(m.user_id)) is not None
-            }
+            user_infos: dict[int, any] = {}
+            for m in members:
+                info = await self.user_client.get_user(m.user_id)
+                if info is None:
+                    raise UserNotFound()
+                user_infos[m.user_id] = info
 
             return CursorPage(
                 items=[
                     ProjectMemberResponse(
                         user_id=m.user_id,
-                        username=user_infos[m.user_id].username if m.user_id in user_infos else m.user_id,
-                        profile_image=user_infos[m.user_id].profile_image if m.user_id in user_infos else None,
+                        username=user_infos[m.user_id].username,
+                        profile_image=user_infos[m.user_id].profile_image,
                         role=m.role,
                         joined_at=m.joined_at,
                     )
