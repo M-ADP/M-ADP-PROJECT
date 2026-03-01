@@ -84,30 +84,3 @@ class ApplicationClientImpl(ApplicationClient):
         finally:
             response.release()
 
-
-class MockApplicationClient(ApplicationClient):
-    """앱 배포 정보 접근 Mock 클라이언트"""
-
-    async def list_by_project(
-        self,
-        project_id: int,
-        user_id: int,
-        role: str,
-    ) -> list[ApplicationItemData]:
-        return []
-
-    async def get_summary_batch(
-        self,
-        project_ids: list[int],
-        user_id: int,
-        role: str,
-    ) -> list[DeploymentSummaryItem]:
-        return [
-            DeploymentSummaryItem(
-                project_id=project_id,
-                running=0,
-                warning=0,
-                state="STOPPED",
-            )
-            for project_id in project_ids
-        ]
