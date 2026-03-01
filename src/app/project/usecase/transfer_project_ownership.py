@@ -7,6 +7,7 @@ from src.app.project.exceptions import (
     OnlyOwnerCanTransferOwnership,
     OwnershipTransferTargetMustBeMember,
     ProjectNotFound,
+    UserNotFound,
 )
 from src.app.project.schemas import ProjectMemberResponse
 from src.core.uow import UnitOfWork
@@ -69,10 +70,12 @@ class TransferProjectOwnershipUseCase(BaseUseCase):
                 raise MemberNotFound()
 
             user_info = await self.user_client.get_user(target_user_id)
+            if user_info is None:
+                raise UserNotFound()
             return ProjectMemberResponse(
                 user_id=new_owner.user_id,
-                username=user_info.username if user_info else target_user_id,
-                profile_image=user_info.profile_image if user_info else None,
+                username=user_info.username,
+                profile_image=user_info.profile_image,
                 role=new_owner.role,
                 joined_at=new_owner.joined_at,
             )

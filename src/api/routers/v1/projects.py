@@ -63,7 +63,7 @@ async def list_projects_endpoint(
     user: UserInfo = Depends(get_user_info),
     usecase: ListProjectsUseCase = Depends(ListProjectsUseCase),
 ) -> SuccessResponse[CursorPage[ProjectListItemResponse]]:
-    projects = await usecase(user_id=user.user_id, limit=limit, cursor=cursor)
+    projects = await usecase(user_id=user.user_id, role=user.role, limit=limit, cursor=cursor)
     return SuccessResponse(
         message="프로젝트 목록을 조회했습니다.",
         data=projects,
@@ -102,7 +102,7 @@ async def get_project_endpoint(
     user: UserInfo = Depends(get_user_info),
     usecase: GetProjectUseCase = Depends(GetProjectUseCase),
 ) -> SuccessResponse[ProjectDetailResponse]:
-    project = await usecase(project_id, user_id=user.user_id)
+    project = await usecase(project_id, user_id=user.user_id, role=user.role)
     return SuccessResponse(
         message="프로젝트를 조회했습니다.",
         data=project,

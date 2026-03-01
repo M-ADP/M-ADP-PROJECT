@@ -4,8 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
 
-from src.core.client.deployment import ApplicationItemData
-from src.core.client.deployment_summary import DeploymentSummaryItem
+from src.core.client.application import ApplicationItemData, DeploymentSummaryItem
 from src.core.client.project_resource import MetricPointData, ResourceUsageData
 from src.core.client.user import UserInfo
 from src.core.domain.dns import DNS, DNSState
@@ -16,7 +15,7 @@ from src.core.domain.project import Project, ProjectMember
 def make_project(
     project_id: int,
     *,
-    user_id: str = "user-1",
+    user_id: int = 1,
     name: str | None = None,
     max_cpu: float = 1.0,
     max_memory: float = 128.0,
@@ -34,7 +33,7 @@ def make_project(
 
 def make_member(
     project_id: int,
-    user_id: str,
+    user_id: int,
     *,
     member_id: int | None = None,
     role: str = "MEMBER",
@@ -97,12 +96,12 @@ class FakeProjectRepository:
         }
         self.reverse_get_by_ids = reverse_get_by_ids
 
-    async def count_by_user(self, user_id: str) -> int:
+    async def count_by_user(self, user_id: int) -> int:
         return sum(1 for project in self.projects.values() if project.user_id == user_id)
 
     async def exists_by_name(
         self,
-        user_id: str,
+        user_id: int,
         name: str,
         exclude_project_id: int | None = None,
     ) -> bool:
@@ -115,7 +114,7 @@ class FakeProjectRepository:
             for project in self.projects.values()
         )
 
-    async def get_by_id_for_user(self, project_id: int, user_id: str) -> Project | None:
+    async def get_by_id_for_user(self, project_id: int, user_id: int) -> Project | None:
         project = self.projects.get(project_id)
         if project is None:
             return None
@@ -140,7 +139,7 @@ class FakeProjectRepository:
 
     async def list_by_user(
         self,
-        user_id: str,
+        user_id: int,
         limit: int,
         cursor: int | None = None,
     ) -> list[Project]:
@@ -176,9 +175,9 @@ class FakeProjectMemberRepository:
         self,
         members: list[ProjectMember] | None = None,
         *,
-        project_ids_override: dict[str, list[int]] | None = None,
+        project_ids_override: dict[int, list[int]] | None = None,
     ) -> None:
-        self.members: dict[tuple[int, str], ProjectMember] = {
+        self.members: dict[tuple[int, int], ProjectMember] = {
             (member.project_id, member.user_id): member for member in (members or [])
         }
         self.project_ids_override = project_ids_override or {}
@@ -198,14 +197,14 @@ class FakeProjectMemberRepository:
     async def get_by_project_and_user(
         self,
         project_id: int,
-        user_id: str,
+        user_id: int,
     ) -> ProjectMember | None:
         return self.members.get((project_id, user_id))
 
     async def exists_by_project_and_user(
         self,
         project_id: int,
-        user_id: str,
+        user_id: int,
     ) -> bool:
         return (project_id, user_id) in self.members
 
@@ -216,16 +215,16 @@ class FakeProjectMemberRepository:
     async def delete(self, member: ProjectMember) -> None:
         self.members.pop((member.project_id, member.user_id), None)
 
-    async def is_owner(self, project_id: int, user_id: str) -> bool:
+    async def is_owner(self, project_id: int, user_id: int) -> bool:
         member = self.members.get((project_id, user_id))
         return member is not None and member.role == "OWNER"
 
-    async def has_access(self, project_id: int, user_id: str) -> bool:
+    async def has_access(self, project_id: int, user_id: int) -> bool:
         return (project_id, user_id) in self.members
 
     async def list_project_ids_by_user(
         self,
-        user_id: str,
+        user_id: int,
         limit: int,
         cursor: int | None = None,
     ) -> list[int]:
@@ -242,14 +241,14 @@ class FakeProjectMemberRepository:
             project_ids = [project_id for project_id in project_ids if project_id > cursor]
         return project_ids[:limit]
 
-    async def get_role(self, project_id: int, user_id: str) -> str | None:
+    async def get_role(self, project_id: int, user_id: int) -> str | None:
         member = self.members.get((project_id, user_id))
         return member.role if member is not None else None
 
     async def get_roles_batch(
         self,
         project_ids: list[int],
-        user_id: str,
+        user_id: int,
     ) -> dict[int, str]:
         return {
             project_id: member.role
@@ -260,7 +259,7 @@ class FakeProjectMemberRepository:
     async def update_role(
         self,
         project_id: int,
-        user_id: str,
+        user_id: int,
         role: str,
     ) -> ProjectMember | None:
         member = self.members.get((project_id, user_id))
@@ -431,21 +430,22 @@ class FakeProjectResourceClient:
     def _record(self, name: str, **kwargs: Any) -> None:
         self.calls.append((name, kwargs))
 
-    async def create(self, user_id: str, project: Project) -> None:
-        self._record("create", user_id=user_id, project=project)
+    async def create(self, user_id: int, role: str, project: Project) -> None:
+        self._record("create", user_id=user_id, role=role, project=project)
 
-    async def delete(self, user_id: str, project: Project) -> None:
-        self._record("delete", user_id=user_id, project=project)
+    async def delete(self, user_id: int, role: str, project: Project) -> None:
+        self._record("delete", user_id=user_id, role=role, project=project)
 
-    async def open_port(self, user_id: str, project: Project, port: Port) -> None:
-        self._record("open_port", user_id=user_id, project=project, port=port)
+    async def open_port(self, user_id: int, role: str, project: Project, port: Port) -> None:
+        self._record("open_port", user_id=user_id, role=role, project=project, port=port)
 
-    async def close_port(self, user_id: str, project: Project, port: Port) -> None:
-        self._record("close_port", user_id=user_id, project=project, port=port)
+    async def close_port(self, user_id: int, role: str, project: Project, port: Port) -> None:
+        self._record("close_port", user_id=user_id, role=role, project=project, port=port)
 
     async def update_port(
         self,
-        user_id: str,
+        user_id: int,
+        role: str,
         project: Project,
         original_port: Port,
         updated_port: Port,
@@ -453,13 +453,14 @@ class FakeProjectResourceClient:
         self._record(
             "update_port",
             user_id=user_id,
+            role=role,
             project=project,
             original_port=original_port,
             updated_port=updated_port,
         )
 
-    async def allocate(self, user_id: str, project: Project) -> None:
-        self._record("allocate", user_id=user_id, project=project)
+    async def allocate(self, user_id: int, role: str, project: Project) -> None:
+        self._record("allocate", user_id=user_id, role=role, project=project)
 
     async def get_usage(
         self,
@@ -488,23 +489,24 @@ class FakeProjectResourceClient:
         self._record("mapping_dns_and_port")
 
 
-@dataclass
-class FakeDeploymentClient:
-    deployments_by_project: dict[int, list[ApplicationItemData]]
-
-    async def list_by_project(self, project_id: int) -> list[ApplicationItemData]:
-        return list(self.deployments_by_project.get(project_id, []))
-
-
-class FakeDeploymentSummaryClient:
-    def __init__(self, summaries: list[DeploymentSummaryItem] | None = None) -> None:
+class FakeApplicationClient:
+    def __init__(
+        self,
+        deployments_by_project: dict[int, list[ApplicationItemData]] | None = None,
+        summaries: list[DeploymentSummaryItem] | None = None,
+    ) -> None:
+        self.deployments_by_project = deployments_by_project or {}
         self.summary_map = {
             summary.project_id: summary for summary in (summaries or [])
         }
-        self.requests: list[list[int]] = []
+        self.summary_requests: list[list[int]] = []
+        self.requests = self.summary_requests  # 하위 호환 별칭
 
-    async def get_summary_batch(self, project_ids: list[int]) -> list[DeploymentSummaryItem]:
-        self.requests.append(list(project_ids))
+    async def list_by_project(self, project_id: int, user_id: int = 0, role: str = "") -> list[ApplicationItemData]:
+        return list(self.deployments_by_project.get(project_id, []))
+
+    async def get_summary_batch(self, project_ids: list[int], user_id: int = 0, role: str = "") -> list[DeploymentSummaryItem]:
+        self.summary_requests.append(list(project_ids))
         return [
             self.summary_map[project_id]
             for project_id in project_ids
@@ -516,10 +518,10 @@ class FakeUserClient:
     def __init__(self, users: list[UserInfo] | None = None) -> None:
         self.users = {user.user_id: user for user in (users or [])}
 
-    async def get_user(self, user_id: str) -> UserInfo | None:
+    async def get_user(self, user_id: int) -> UserInfo | None:
         return self.users.get(user_id)
 
-    async def exists(self, user_id: str) -> bool:
+    async def exists(self, user_id: int) -> bool:
         return user_id in self.users
 
 

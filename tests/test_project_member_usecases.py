@@ -34,12 +34,12 @@ async def test_add_project_member_raises_when_project_not_found() -> None:
     usecase = AddProjectMemberUseCase(uow=FakeUnitOfWork(), user_client=FakeUserClient())
 
     with pytest.raises(ProjectNotFound):
-        await usecase("missing", ProjectMemberAdd(user_id="target"), user_id="owner")
+        await usecase("missing", ProjectMemberAdd(user_id=3), user_id=1)
 
 
 async def test_add_project_member_raises_when_requester_not_owner() -> None:
     project = make_project(1)
-    members = [make_member(1, "member", role="MEMBER")]
+    members = [make_member(1, 2, role="MEMBER")]
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
         project_member_repo=FakeProjectMemberRepository(members),
@@ -47,14 +47,14 @@ async def test_add_project_member_raises_when_requester_not_owner() -> None:
     usecase = AddProjectMemberUseCase(uow=uow, user_client=FakeUserClient())
 
     with pytest.raises(OnlyOwnerCanAddMembers):
-        await usecase(1, ProjectMemberAdd(user_id="target"), user_id="member")
+        await usecase(1, ProjectMemberAdd(user_id=3), user_id=2)
 
 
 async def test_add_project_member_raises_when_member_already_exists() -> None:
     project = make_project(1)
     members = [
-        make_member(1, "owner", role="OWNER"),
-        make_member(1, "target", role="MEMBER"),
+        make_member(1, 1, role="OWNER"),
+        make_member(1, 3, role="MEMBER"),
     ]
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
@@ -63,12 +63,12 @@ async def test_add_project_member_raises_when_member_already_exists() -> None:
     usecase = AddProjectMemberUseCase(uow=uow, user_client=FakeUserClient())
 
     with pytest.raises(MemberAlreadyExists):
-        await usecase(1, ProjectMemberAdd(user_id="target"), user_id="owner")
+        await usecase(1, ProjectMemberAdd(user_id=3), user_id=1)
 
 
 async def test_add_project_member_raises_when_user_not_found() -> None:
     project = make_project(1)
-    members = [make_member(1, "owner", role="OWNER")]
+    members = [make_member(1, 1, role="OWNER")]
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
         project_member_repo=FakeProjectMemberRepository(members),
@@ -76,14 +76,14 @@ async def test_add_project_member_raises_when_user_not_found() -> None:
     usecase = AddProjectMemberUseCase(uow=uow, user_client=FakeUserClient())
 
     with pytest.raises(UserNotFound):
-        await usecase(1, ProjectMemberAdd(user_id="target"), user_id="owner")
+        await usecase(1, ProjectMemberAdd(user_id=3), user_id=1)
 
 
 async def test_add_project_member_success() -> None:
     project = make_project(1)
-    members = [make_member(1, "owner", role="OWNER")]
+    members = [make_member(1, 1, role="OWNER")]
     user_client = FakeUserClient(
-        [UserInfo(user_id="target", username="Target", profile_image="profile")]
+        [UserInfo(user_id=3, username="Target", profile_image="profile")]
     )
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
@@ -91,9 +91,9 @@ async def test_add_project_member_success() -> None:
     )
     usecase = AddProjectMemberUseCase(uow=uow, user_client=user_client)
 
-    response = await usecase(1, ProjectMemberAdd(user_id="target"), user_id="owner")
+    response = await usecase(1, ProjectMemberAdd(user_id=3), user_id=1)
 
-    assert response.user_id == "target"
+    assert response.user_id == 3
     assert response.role == "MEMBER"
     assert response.username == "Target"
 
@@ -102,12 +102,12 @@ async def test_remove_project_member_raises_when_project_not_found() -> None:
     usecase = RemoveProjectMemberUseCase(uow=FakeUnitOfWork(), user_client=FakeUserClient())
 
     with pytest.raises(ProjectNotFound):
-        await usecase("missing", target_user_id="target", user_id="owner")
+        await usecase("missing", target_user_id=3, user_id=1)
 
 
 async def test_remove_project_member_raises_when_requester_not_owner() -> None:
     project = make_project(1)
-    members = [make_member(1, "member", role="MEMBER")]
+    members = [make_member(1, 2, role="MEMBER")]
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
         project_member_repo=FakeProjectMemberRepository(members),
@@ -115,12 +115,12 @@ async def test_remove_project_member_raises_when_requester_not_owner() -> None:
     usecase = RemoveProjectMemberUseCase(uow=uow, user_client=FakeUserClient())
 
     with pytest.raises(OnlyOwnerCanRemoveMembers):
-        await usecase(1, target_user_id="target", user_id="member")
+        await usecase(1, target_user_id=3, user_id=2)
 
 
 async def test_remove_project_member_raises_when_member_not_found() -> None:
     project = make_project(1)
-    members = [make_member(1, "owner", role="OWNER")]
+    members = [make_member(1, 1, role="OWNER")]
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
         project_member_repo=FakeProjectMemberRepository(members),
@@ -128,14 +128,14 @@ async def test_remove_project_member_raises_when_member_not_found() -> None:
     usecase = RemoveProjectMemberUseCase(uow=uow, user_client=FakeUserClient())
 
     with pytest.raises(MemberNotFound):
-        await usecase(1, target_user_id="target", user_id="owner")
+        await usecase(1, target_user_id=3, user_id=1)
 
 
 async def test_remove_project_member_raises_when_target_is_owner() -> None:
     project = make_project(1)
     members = [
-        make_member(1, "owner", role="OWNER"),
-        make_member(1, "target", role="OWNER"),
+        make_member(1, 1, role="OWNER"),
+        make_member(1, 3, role="OWNER"),
     ]
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
@@ -144,15 +144,15 @@ async def test_remove_project_member_raises_when_target_is_owner() -> None:
     usecase = RemoveProjectMemberUseCase(uow=uow, user_client=FakeUserClient())
 
     with pytest.raises(CannotRemoveOwner):
-        await usecase(1, target_user_id="target", user_id="owner")
+        await usecase(1, target_user_id=3, user_id=1)
 
 
 async def test_remove_project_member_success_with_user_info() -> None:
     project = make_project(1)
-    target = make_member(1, "target", role="MEMBER")
-    members = [make_member(1, "owner", role="OWNER"), target]
+    target = make_member(1, 3, role="MEMBER")
+    members = [make_member(1, 1, role="OWNER"), target]
     user_client = FakeUserClient(
-        [UserInfo(user_id="target", username="Target", profile_image="img")]
+        [UserInfo(user_id=3, username="Target", profile_image="img")]
     )
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
@@ -160,26 +160,24 @@ async def test_remove_project_member_success_with_user_info() -> None:
     )
     usecase = RemoveProjectMemberUseCase(uow=uow, user_client=user_client)
 
-    response = await usecase(1, target_user_id="target", user_id="owner")
+    response = await usecase(1, target_user_id=3, user_id=1)
 
     assert response.username == "Target"
-    assert (1, "target") not in uow.project_member.members
+    assert (1, 3) not in uow.project_member.members
 
 
-async def test_remove_project_member_success_fallback_without_user_info() -> None:
+async def test_remove_project_member_raises_when_user_info_not_found() -> None:
     project = make_project(1)
-    target = make_member(1, "target", role="MEMBER")
-    members = [make_member(1, "owner", role="OWNER"), target]
+    target = make_member(1, 3, role="MEMBER")
+    members = [make_member(1, 1, role="OWNER"), target]
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
         project_member_repo=FakeProjectMemberRepository(members),
     )
     usecase = RemoveProjectMemberUseCase(uow=uow, user_client=FakeUserClient())
 
-    response = await usecase(1, target_user_id="target", user_id="owner")
-
-    assert response.username == "target"
-    assert response.profile_image is None
+    with pytest.raises(UserNotFound):
+        await usecase(1, target_user_id=3, user_id=1)
 
 
 async def test_transfer_ownership_raises_when_project_not_found() -> None:
@@ -189,12 +187,12 @@ async def test_transfer_ownership_raises_when_project_not_found() -> None:
     )
 
     with pytest.raises(ProjectNotFound):
-        await usecase("missing", target_user_id="target", user_id="owner")
+        await usecase("missing", target_user_id=3, user_id=1)
 
 
 async def test_transfer_ownership_raises_when_target_is_self() -> None:
     project = make_project(1)
-    members = [make_member(1, "owner", role="OWNER")]
+    members = [make_member(1, 1, role="OWNER")]
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
         project_member_repo=FakeProjectMemberRepository(members),
@@ -202,14 +200,14 @@ async def test_transfer_ownership_raises_when_target_is_self() -> None:
     usecase = TransferProjectOwnershipUseCase(uow=uow, user_client=FakeUserClient())
 
     with pytest.raises(CannotTransferOwnershipToSelf):
-        await usecase(1, target_user_id="owner", user_id="owner")
+        await usecase(1, target_user_id=1, user_id=1)
 
 
 async def test_transfer_ownership_raises_when_requester_not_owner() -> None:
     project = make_project(1)
     members = [
-        make_member(1, "owner", role="OWNER"),
-        make_member(1, "member", role="MEMBER"),
+        make_member(1, 1, role="OWNER"),
+        make_member(1, 2, role="MEMBER"),
     ]
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
@@ -218,12 +216,12 @@ async def test_transfer_ownership_raises_when_requester_not_owner() -> None:
     usecase = TransferProjectOwnershipUseCase(uow=uow, user_client=FakeUserClient())
 
     with pytest.raises(OnlyOwnerCanTransferOwnership):
-        await usecase(1, target_user_id="owner", user_id="member")
+        await usecase(1, target_user_id=1, user_id=2)
 
 
 async def test_transfer_ownership_raises_when_target_member_not_found() -> None:
     project = make_project(1)
-    members = [make_member(1, "owner", role="OWNER")]
+    members = [make_member(1, 1, role="OWNER")]
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
         project_member_repo=FakeProjectMemberRepository(members),
@@ -231,14 +229,14 @@ async def test_transfer_ownership_raises_when_target_member_not_found() -> None:
     usecase = TransferProjectOwnershipUseCase(uow=uow, user_client=FakeUserClient())
 
     with pytest.raises(MemberNotFound):
-        await usecase(1, target_user_id="target", user_id="owner")
+        await usecase(1, target_user_id=3, user_id=1)
 
 
 async def test_transfer_ownership_raises_when_target_not_member_role() -> None:
     project = make_project(1)
     members = [
-        make_member(1, "owner", role="OWNER"),
-        make_member(1, "target", role="OWNER"),
+        make_member(1, 1, role="OWNER"),
+        make_member(1, 3, role="OWNER"),
     ]
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
@@ -247,19 +245,19 @@ async def test_transfer_ownership_raises_when_target_not_member_role() -> None:
     usecase = TransferProjectOwnershipUseCase(uow=uow, user_client=FakeUserClient())
 
     with pytest.raises(OwnershipTransferTargetMustBeMember):
-        await usecase(1, target_user_id="target", user_id="owner")
+        await usecase(1, target_user_id=3, user_id=1)
 
 
 async def test_transfer_ownership_raises_when_updated_owner_missing() -> None:
     project = make_project(1)
-    owner = make_member(1, "owner", role="OWNER")
-    target = make_member(1, "target", role="MEMBER")
+    owner = make_member(1, 1, role="OWNER")
+    target = make_member(1, 3, role="MEMBER")
     repo = FakeProjectMemberRepository([owner, target])
     original_update_role = repo.update_role
 
     calls = {"count": 0}
 
-    async def flaky_update_role(project_id: int, user_id: str, role: str):
+    async def flaky_update_role(project_id: int, user_id: int, role: str):
         calls["count"] += 1
         if calls["count"] == 2:
             return None
@@ -274,17 +272,17 @@ async def test_transfer_ownership_raises_when_updated_owner_missing() -> None:
     usecase = TransferProjectOwnershipUseCase(uow=uow, user_client=FakeUserClient())
 
     with pytest.raises(MemberNotFound):
-        await usecase(1, target_user_id="target", user_id="owner")
+        await usecase(1, target_user_id=3, user_id=1)
 
 
 async def test_transfer_ownership_success_with_user_info() -> None:
     project = make_project(1)
     members = [
-        make_member(1, "owner", role="OWNER"),
-        make_member(1, "target", role="MEMBER"),
+        make_member(1, 1, role="OWNER"),
+        make_member(1, 3, role="MEMBER"),
     ]
     user_client = FakeUserClient(
-        [UserInfo(user_id="target", username="Target", profile_image="img")]
+        [UserInfo(user_id=3, username="Target", profile_image="img")]
     )
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
@@ -292,18 +290,18 @@ async def test_transfer_ownership_success_with_user_info() -> None:
     )
     usecase = TransferProjectOwnershipUseCase(uow=uow, user_client=user_client)
 
-    new_owner = await usecase(1, target_user_id="target", user_id="owner")
+    new_owner = await usecase(1, target_user_id=3, user_id=1)
 
-    assert new_owner.user_id == "target"
+    assert new_owner.user_id == 3
     assert new_owner.role == "OWNER"
-    assert uow.project_member.members[(1, "owner")].role == "MEMBER"
+    assert uow.project_member.members[(1, 1)].role == "MEMBER"
 
 
-async def test_transfer_ownership_success_fallback_without_user_info() -> None:
+async def test_transfer_ownership_raises_when_user_info_not_found() -> None:
     project = make_project(1)
     members = [
-        make_member(1, "owner", role="OWNER"),
-        make_member(1, "target", role="MEMBER"),
+        make_member(1, 1, role="OWNER"),
+        make_member(1, 3, role="MEMBER"),
     ]
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
@@ -311,7 +309,5 @@ async def test_transfer_ownership_success_fallback_without_user_info() -> None:
     )
     usecase = TransferProjectOwnershipUseCase(uow=uow, user_client=FakeUserClient())
 
-    new_owner = await usecase(1, target_user_id="target", user_id="owner")
-
-    assert new_owner.username == "target"
-    assert new_owner.profile_image is None
+    with pytest.raises(UserNotFound):
+        await usecase(1, target_user_id=3, user_id=1)

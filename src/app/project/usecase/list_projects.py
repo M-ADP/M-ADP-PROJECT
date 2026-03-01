@@ -5,13 +5,12 @@ from src.app.project.schemas import (
     DeploymentSummary,
     ProjectListItemResponse,
 )
-from src.core.client.deployment_summary import DeploymentSummaryItem
+from src.core.client.application import ApplicationClient, DeploymentSummaryItem
 from src.common.schemas import CursorPage
 from src.app.base_usecase import BaseUseCase
 from src.core.uow import UnitOfWork
-from src.core.client.deployment_summary import DeploymentSummaryClient
 from src.dependencies.uow import get_uow
-from src.dependencies.client.deployment_summary import get_deployment_summary_client
+from src.dependencies.client.application import get_deployment_client
 
 
 class ListProjectsUseCase(BaseUseCase):
@@ -20,14 +19,15 @@ class ListProjectsUseCase(BaseUseCase):
     def __init__(
         self,
         uow: UnitOfWork = Depends(get_uow),
-        deployment_summary_client: DeploymentSummaryClient = Depends(get_deployment_summary_client),
+        application_client: ApplicationClient = Depends(get_deployment_client),
     ):
         self.uow = uow
-        self.deployment_summary_client = deployment_summary_client
+        self.application_client = application_client
 
     async def __call__(
         self,
         user_id: int,
+        role: str,
         limit: int,
         cursor: int | None = None,
     ) -> CursorPage[ProjectListItemResponse]:
@@ -47,7 +47,7 @@ class ListProjectsUseCase(BaseUseCase):
             project_map = {p.id: p for p in projects}
             ordered_projects = [project_map[pid] for pid in project_ids if pid in project_map]
 
-            summary_map = await self._get_summary_map(project_ids)
+            summary_map = await self._get_summary_map(project_ids, user_id=user_id, role=role)
             role_map = await self.uow.project_member.get_roles_batch(project_ids, user_id)
 
             return CursorPage(
@@ -86,17 +86,21 @@ class ListProjectsUseCase(BaseUseCase):
             ),
             deployment_status=DeploymentStatus(
                 state=state,
-                message=summary_item.message,
+                message="",
             ),
         )
 
     async def _get_summary_map(
         self,
         project_ids: list[int],
+        user_id: int,
+        role: str,
     ) -> dict[int, DeploymentSummaryItem]:
         if not project_ids:
             return {}
-        summaries = await self.deployment_summary_client.get_summary_batch(
+        summaries = await self.application_client.get_summary_batch(
             project_ids=project_ids,
+            user_id=user_id,
+            role=role,
         )
         return {summary.project_id: summary for summary in summaries}
