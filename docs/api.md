@@ -24,7 +24,7 @@
 - [Project Members (프로젝트 멤버)](#project-members)
   - [GET /v1/projects/{project_id}/members (멤버 목록 조회)](#get-v1projectsproject_idmembers)
   - [POST /v1/projects/{project_id}/members (멤버 추가)](#post-v1projectsproject_idmembers)
-  - [DELETE /v1/projects/{project_id}/members/{nickname} (멤버 제거)](#delete-v1projectsproject_idmembersnickname)
+  - [DELETE /v1/projects/{project_id}/members/{target_user_id} (멤버 제거)](#delete-v1projectsproject_idmemberstarget_user_id)
   - [PATCH /v1/projects/{project_id}/owner (소유권 이전)](#patch-v1projectsproject_idowner)
 - [Ports (포트)](#ports)
   - [POST /v1/projects/{project_id}/ports (포트 공개)](#post-v1projectsproject_idports)
@@ -122,7 +122,7 @@
 ```json
 {
   "id": 1234567890123,
-  "user_id": "string",
+  "user_id": 1234567890123,
   "name": "string",
   "max_cpu": 0.1,
   "max_memory": 32.0,
@@ -298,7 +298,7 @@
 {
   "items": [
     {
-      "user_id": "string",
+      "user_id": 1234567890123,
       "username": "string",
       "profile_image": "string|null",
       "role": "OWNER|MEMBER",
@@ -327,17 +327,17 @@
 요청 바디:
 ```json
 {
-  "nickname": "string"
+  "user_id": 1234567890123
 }
 ```
 
 필드:
-- `nickname` (string, 필수): 초대할 사용자의 닉네임
+- `user_id` (integer, 필수): 초대할 사용자의 ID
 
 응답 데이터: `ProjectMemberResponse`
 ```json
 {
-  "user_id": "string",
+  "user_id": 1234567890123,
   "username": "string",
   "profile_image": "string|null",
   "role": "MEMBER",
@@ -356,7 +356,7 @@
 
 ---
 
-### DELETE /v1/projects/{project_id}/members/{nickname}
+### DELETE /v1/projects/{project_id}/members/{target_user_id}
 프로젝트에서 멤버 제거
 
 응답 데이터: `ProjectMemberResponse`
@@ -375,12 +375,12 @@
 요청 바디:
 ```json
 {
-  "target_nickname": "string"
+  "target_user_id": 1234567890123
 }
 ```
 
 필드:
-- `target_nickname` (string, 필수): 소유권을 이전할 대상 MEMBER 멤버의 닉네임
+- `target_user_id` (integer, 필수): 소유권을 이전할 대상 MEMBER 멤버의 ID
 
 응답 데이터: `ProjectMemberResponse` (새 OWNER 정보 반환)
 
