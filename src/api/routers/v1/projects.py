@@ -9,6 +9,7 @@ from src.app.project.schemas import (
     ProjectMemberAdd,
     ProjectMemberResponse,
     ProjectNameUpdate,
+    ProjectOwnerResponse,
     ProjectOwnerTransfer,
     ProjectResourceUpdate,
     ProjectResponse,
@@ -25,6 +26,7 @@ from src.app.project.usecase import (
     RemoveProjectMemberUseCase,
     TransferProjectOwnershipUseCase,
     CheckProjectAvailableUseCase,
+    CheckProjectOwnerUseCase,
 )
 from src.dependencies.auth import UserInfo, get_user_info
 from src.common.schemas import CursorPage, SuccessResponse
@@ -89,6 +91,23 @@ async def check_project_available_endpoint(
     return JSONResponse(
         status_code=status.HTTP_403_FORBIDDEN,
         content=ProjectAvailableResponse(status=False).model_dump(),
+    )
+
+
+@router.get(
+    "/owner",
+    status_code=status.HTTP_200_OK,
+    response_model=ProjectOwnerResponse,
+)
+async def check_project_owner_endpoint(
+    project_id: int = Query(..., description="확인할 프로젝트 ID"),
+    user_id: int = Query(..., description="소유자 여부를 확인할 사용자 ID"),
+    usecase: CheckProjectOwnerUseCase = Depends(CheckProjectOwnerUseCase),
+) -> JSONResponse:
+    is_owner = await usecase(project_id=project_id, user_id=user_id)
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content=ProjectOwnerResponse(status=is_owner).model_dump(),
     )
 
 
