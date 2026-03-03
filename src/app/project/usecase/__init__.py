@@ -7,10 +7,9 @@ from src.app.project.usecase.update_project_resource import UpdateProjectResourc
 from src.app.project.usecase.list_project_members import ListProjectMembersUseCase
 from src.app.project.usecase.add_project_member import AddProjectMemberUseCase
 from src.app.project.usecase.remove_project_member import RemoveProjectMemberUseCase
-from src.app.project.usecase.transfer_project_ownership import (
-    TransferProjectOwnershipUseCase,
-)
+from src.app.project.usecase.transfer_project_ownership import TransferProjectOwnershipUseCase
 from src.app.project.usecase.check_project_available import CheckProjectAvailableUseCase
+from src.app.project.usecase.check_project_owner import CheckProjectOwnerUseCase
 
 __all__ = [
     "CreateProjectUseCase",
@@ -24,4 +23,5 @@ __all__ = [
     "RemoveProjectMemberUseCase",
     "TransferProjectOwnershipUseCase",
     "CheckProjectAvailableUseCase",
+    "CheckProjectOwnerUseCase",
 ]
