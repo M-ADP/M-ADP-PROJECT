@@ -11,6 +11,7 @@ from src.app.project.schemas import (
     ProjectNameUpdate,
     ProjectOwnerResponse,
     ProjectOwnerTransfer,
+    ProjectResourceLimitResponse,
     ProjectResourceUpdate,
     ProjectResponse,
 )
@@ -27,6 +28,7 @@ from src.app.project.usecase import (
     TransferProjectOwnershipUseCase,
     CheckProjectAvailableUseCase,
     CheckProjectOwnerUseCase,
+    GetProjectResourceLimitUseCase,
 )
 from src.dependencies.auth import UserInfo, get_user_info
 from src.common.schemas import CursorPage, SuccessResponse
@@ -108,6 +110,23 @@ async def check_project_owner_endpoint(
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content=ProjectOwnerResponse(status=is_owner).model_dump(),
+    )
+
+
+@router.get(
+    "/resource-limit",
+    status_code=status.HTTP_200_OK,
+    response_model=ProjectResourceLimitResponse,
+)
+async def get_project_resource_limit_endpoint(
+    project_id: int = Query(..., description="확인할 프로젝트 ID"),
+    user: UserInfo = Depends(get_user_info),
+    usecase: GetProjectResourceLimitUseCase = Depends(GetProjectResourceLimitUseCase),
+) -> JSONResponse:
+    resource_limit = await usecase(project_id=project_id, user_id=user.user_id)
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content=resource_limit.model_dump(),
     )
 
 
