@@ -1,6 +1,6 @@
 import pytest
 
-from src.api.routers.v1.ports import (
+from src.api.routers.routes.ports import (
     create_project_port_endpoint,
     delete_project_port_endpoint,
     list_project_ports_endpoint,
