@@ -132,6 +132,13 @@ class ProjectAvailableResponse(BaseModel):
     )
 
 
+class ProjectOwnerResponse(BaseModel):
+    status: bool = Field(
+        ...,
+        description="해당 사용자가 프로젝트 소유자(OWNER)인지 여부",
+    )
+
+
 class MetricPoint(BaseModel):
     timestamp: str
     value: float
