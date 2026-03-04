@@ -1,9 +1,8 @@
-import json
 from datetime import datetime, timezone
 
 import pytest
 
-from src.api.routers.v1.projects import (
+from src.api.routers.routes.projects import (
     add_project_member_endpoint,
     create_project_endpoint,
     delete_project_endpoint,
@@ -113,13 +112,11 @@ async def test_get_project_resource_limit_endpoint_contract() -> None:
         usecase=usecase,
     )
 
-    assert response.status_code == 200
-    assert json.loads(response.body) == {
-        "project_id": 1,
-        "max_cpu": 2.0,
-        "max_memory": 1024.0,
-        "max_disk": 2048.0,
-    }
+    assert response.message == "프로젝트 최대 리소스 한도를 조회했습니다."
+    assert response.data.project_id == 1
+    assert response.data.max_cpu == 2.0
+    assert response.data.max_memory == 1024.0
+    assert response.data.max_disk == 2048.0
     assert usecase.calls == [
         ((), {"project_id": 1, "user_id": 1})
     ]
