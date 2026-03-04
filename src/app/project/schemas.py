@@ -139,6 +139,25 @@ class ProjectOwnerResponse(BaseModel):
     )
 
 
+class ProjectResourceLimitResponse(BaseModel):
+    project_id: int = Field(
+        ...,
+        description="조회한 프로젝트 ID",
+    )
+    max_cpu: float = Field(
+        ...,
+        description="프로젝트 최대 vCPU",
+    )
+    max_memory: float = Field(
+        ...,
+        description="프로젝트 최대 메모리(MB)",
+    )
+    max_disk: float = Field(
+        ...,
+        description="프로젝트 최대 디스크(MB)",
+    )
+
+
 class MetricPoint(BaseModel):
     timestamp: str
     value: float
