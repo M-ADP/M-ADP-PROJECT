@@ -16,10 +16,10 @@ class ListPortsUseCase(BaseUseCase):
 
     async def __call__(
         self,
-        project_id: str,
-        user_id: str,
+        project_id: int,
+        user_id: int,
         limit: int,
-        cursor: str | None = None,
+        cursor: int | None = None,
     ) -> CursorPage[PortResponse]:
         async with self.uow:
             project = await self.uow.project.get_by_id(project_id)

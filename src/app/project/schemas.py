@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Literal, Optional
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, constr
 
@@ -8,7 +8,7 @@ from src.app.port.schemas import PortResponse
 
 class ProjectMemberRole(str):
     OWNER = "OWNER"
-    VIEWER = "VIEWER"
+    MEMBER = "MEMBER"
 
 
 class ProjectCreate(BaseModel):
@@ -40,8 +40,8 @@ class ProjectCreate(BaseModel):
 class ProjectResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
-    user_id: str
+    id: int
+    user_id: int
     name: str
     max_cpu: float
     max_memory: float
@@ -111,9 +111,9 @@ class DeploymentStatus(BaseModel):
 class ProjectListItemResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
+    id: int
     name: str
-    my_role: Literal["OWNER", "VIEWER"] = Field(
+    my_role: Literal["OWNER", "MEMBER"] = Field(
         ...,
         description="현재 사용자의 프로젝트 내 역할",
     )
@@ -125,13 +125,27 @@ class ProjectListItemResponse(BaseModel):
     deployment_status: DeploymentStatus
 
 
+class ProjectAvailableResponse(BaseModel):
+    status: bool = Field(
+        ...,
+        description="요청 사용자의 프로젝트 접근 가능 여부",
+    )
+
+
+class ProjectOwnerResponse(BaseModel):
+    status: bool = Field(
+        ...,
+        description="해당 사용자가 프로젝트 소유자(OWNER)인지 여부",
+    )
+
+
 class MetricPoint(BaseModel):
     timestamp: str
     value: float
 
 
-class DeploymentItem(BaseModel):
-    id: str
+class ApplicationItem(BaseModel):
+    id: int
     name: str
     runtime: str | None = None
     pod_count: int = Field(0, ge=0)
@@ -144,13 +158,13 @@ class DeploymentItem(BaseModel):
 class ProjectDetailResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
+    id: int
     name: str
-    my_role: Literal["OWNER", "VIEWER"] = Field(
+    my_role: Literal["OWNER", "MEMBER"] = Field(
         ...,
         description="현재 사용자의 프로젝트 내 역할",
     )
-    deployments: list[DeploymentItem]
+    deployments: list[ApplicationItem]
     cpu_usage: list[MetricPoint]
     memory_usage: list[MetricPoint]
     disk_usage: list[MetricPoint]
@@ -163,7 +177,7 @@ class ProjectDetailResponse(BaseModel):
 
 
 class ProjectMemberAdd(BaseModel):
-    user_id: str = Field(
+    user_id: int = Field(
         ...,
         description="초대할 사용자의 ID",
         examples=["windeath44"],
@@ -171,9 +185,9 @@ class ProjectMemberAdd(BaseModel):
 
 
 class ProjectOwnerTransfer(BaseModel):
-    target_user_id: str = Field(
+    target_user_id: int = Field(
         ...,
-        description="소유권을 이전할 대상 VIEWER 멤버의 ID",
+        description="소유권을 이전할 대상 MEMBER 멤버의 ID",
         examples=["windeath44"],
     )
 
@@ -181,8 +195,8 @@ class ProjectOwnerTransfer(BaseModel):
 class ProjectMemberResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    user_id: str = Field(..., description="멤버의 사용자 식별자")
+    user_id: int = Field(..., description="멤버의 사용자 식별자")
     username: str = Field(..., description="멤버의 표시 이름")
     profile_image: str | None = Field(None, description="프로필 이미지 URL")
-    role: Literal["OWNER", "VIEWER"] = Field(..., description="프로젝트 내 역할")
+    role: Literal["OWNER", "MEMBER"] = Field(..., description="프로젝트 내 역할")
     joined_at: datetime = Field(..., description="프로젝트 참여 일시")

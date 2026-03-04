@@ -30,7 +30,8 @@ class CreateProjectUseCase(BaseUseCase):
     async def __call__(
         self,
         request: ProjectCreate,
-        user_id: str,
+        user_id: int,
+        role: str,
     ) -> Project:
         async with self.uow:
             project_count = await self.uow.project.count_by_user(user_id)
@@ -53,14 +54,13 @@ class CreateProjectUseCase(BaseUseCase):
             owner_member = ProjectMember(
                 project_id=project.id,
                 user_id=user_id,
-                username=user_id,  # TODO: 실제 환경에서는 사용자 서비스에서 조회
-                profile_image=None,
                 role="OWNER",
             )
             await self.uow.project_member.insert(owner_member)
 
             await self.project_resource_client.create(
                 user_id=user_id,
+                role=role,
                 project=project,
             )
             return project

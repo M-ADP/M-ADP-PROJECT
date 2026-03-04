@@ -14,9 +14,9 @@ class PortRepositoryImpl(PortRepository):
 
     async def exists_by_from_port(
         self,
-        project_id: str,
+        project_id: int,
         from_port: int,
-        exclude_port_id: str | None = None,
+        exclude_port_id: int | None = None,
     ) -> bool:
         """포트 중복 여부를 확인합니다."""
         conditions = [
@@ -46,9 +46,9 @@ class PortRepositoryImpl(PortRepository):
 
     async def list_by_project(
         self,
-        project_id: str,
+        project_id: int,
         limit: int,
-        cursor: str | None = None,
+        cursor: int | None = None,
     ) -> list[Port]:
         """프로젝트의 포트 목록을 조회합니다."""
         conditions = [PortModel.project_id == project_id]
@@ -67,8 +67,8 @@ class PortRepositoryImpl(PortRepository):
 
     async def get_by_id_for_project(
         self,
-        project_id: str,
-        port_id: str,
+        project_id: int,
+        port_id: int,
     ) -> Port | None:
         """프로젝트의 포트를 ID로 조회합니다."""
         stmt = select(PortModel).where(
@@ -91,8 +91,8 @@ class PortRepositoryImpl(PortRepository):
 
     async def update(
         self,
-        project_id: str,
-        port_id: str,
+        project_id: int,
+        port_id: int,
         from_ip: str,
         from_port: int,
         port_number: int,

@@ -1,6 +1,6 @@
 from typing import Optional
 
-from sqlalchemy import Enum, ForeignKey, String
+from sqlalchemy import BigInteger, Enum, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.core.domain.dns import DNS as DNSEntity
@@ -12,13 +12,13 @@ from src.core.db import BaseEntity
 class DNS(BaseEntity):
     __tablename__ = "dns"
 
-    id: Mapped[str] = mapped_column(
-        String(64),
+    id: Mapped[int] = mapped_column(
+        BigInteger,
         primary_key=True,
         default=IdGenerator.generate_sonyflake_id,
     )
-    project_id: Mapped[str] = mapped_column(
-        String(64),
+    project_id: Mapped[int] = mapped_column(
+        BigInteger,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
         unique=True,
@@ -37,8 +37,8 @@ class DNS(BaseEntity):
     )
 
     # Port binding - reference to existing Port
-    port_id: Mapped[Optional[str]] = mapped_column(
-        String(64),
+    port_id: Mapped[Optional[int]] = mapped_column(
+        BigInteger,
         ForeignKey("port.id", ondelete="SET NULL"),
         nullable=True,
         index=True,

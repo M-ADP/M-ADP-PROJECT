@@ -5,26 +5,34 @@ from src.app.project.exceptions import (
     CannotTransferOwnershipToSelf,
     MemberNotFound,
     OnlyOwnerCanTransferOwnership,
-    OwnershipTransferTargetMustBeViewer,
+    OwnershipTransferTargetMustBeMember,
     ProjectNotFound,
+    UserNotFound,
 )
-from src.core.domain.project import ProjectMember
+from src.app.project.schemas import ProjectMemberResponse
 from src.core.uow import UnitOfWork
+from src.core.client.user import UserClient
 from src.dependencies.uow import get_uow
+from src.dependencies.client.user import get_user_client
 
 
 class TransferProjectOwnershipUseCase(BaseUseCase):
-    """프로젝트 소유권을 다른 VIEWER 멤버에게 이전하는 유즈케이스"""
+    """프로젝트 소유권을 다른 MEMBER 멤버에게 이전하는 유즈케이스"""
 
-    def __init__(self, uow: UnitOfWork = Depends(get_uow)):
+    def __init__(
+        self,
+        uow: UnitOfWork = Depends(get_uow),
+        user_client: UserClient = Depends(get_user_client),
+    ):
         self.uow = uow
+        self.user_client = user_client
 
     async def __call__(
         self,
-        project_id: str,
-        target_user_id: str,
-        user_id: str,
-    ) -> ProjectMember:
+        project_id: int,
+        target_user_id: int,
+        user_id: int,
+    ) -> ProjectMemberResponse:
         async with self.uow:
             project = await self.uow.project.get_by_id(project_id)
             if project is None:
@@ -44,13 +52,13 @@ class TransferProjectOwnershipUseCase(BaseUseCase):
             if target_member is None:
                 raise MemberNotFound()
 
-            if target_member.role != "VIEWER":
-                raise OwnershipTransferTargetMustBeViewer()
+            if target_member.role != "MEMBER":
+                raise OwnershipTransferTargetMustBeMember()
 
             await self.uow.project_member.update_role(
                 project_id=project_id,
                 user_id=user_id,
-                role="VIEWER",
+                role="MEMBER",
             )
             new_owner = await self.uow.project_member.update_role(
                 project_id=project_id,
@@ -60,4 +68,14 @@ class TransferProjectOwnershipUseCase(BaseUseCase):
 
             if new_owner is None:
                 raise MemberNotFound()
-            return new_owner
+
+            user_info = await self.user_client.get_user(target_user_id)
+            if user_info is None:
+                raise UserNotFound()
+            return ProjectMemberResponse(
+                user_id=new_owner.user_id,
+                username=user_info.username,
+                profile_image=user_info.profile_image,
+                role=new_owner.role,
+                joined_at=new_owner.joined_at,
+            )

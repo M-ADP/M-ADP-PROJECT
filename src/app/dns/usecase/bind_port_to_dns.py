@@ -25,10 +25,10 @@ class BindPortToDNSUseCase(BaseUseCase):
 
     async def __call__(
         self,
-        project_id: str,
-        dns_id: str,
+        project_id: int,
+        dns_id: int,
         request: DNSPortBinding,
-        user_id: str,
+        user_id: int,
     ) -> DNS:
         async with self.uow:
             # 프로젝트 확인
