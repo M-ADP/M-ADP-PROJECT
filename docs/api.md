@@ -17,6 +17,7 @@
 - [Projects (프로젝트)](#projects)
   - [POST /v1/projects (프로젝트 생성)](#post-v1projects)
   - [GET /v1/projects (프로젝트 목록 조회)](#get-v1projects)
+  - [GET /v1/projects/resource-limit (프로젝트 최대 리소스 조회)](#get-v1projectsresource-limit)
   - [GET /v1/projects/{project_id} (프로젝트 상세 조회)](#get-v1projectsproject_id)
   - [PATCH /v1/projects/{project_id}/name (프로젝트 이름 변경)](#patch-v1projectsproject_idname)
   - [PATCH /v1/projects/{project_id}/resource (프로젝트 리소스 변경)](#patch-v1projectsproject_idresource)
@@ -217,6 +218,31 @@
 내부 요청 API:
 - ProjectResourceClient.get_usage: 최근 7일 리소스 사용량 조회
 - ApplicationClient.list_by_project: 프로젝트 배포 목록 조회
+
+---
+
+### GET /v1/projects/resource-limit
+프로젝트 최대 리소스 한도 조회 (App SVC 내부 연동용)
+
+쿼리 파라미터:
+- `project_id` (integer, 필수): 조회할 프로젝트 ID
+
+권한:
+- 프로젝트 OWNER만 조회 가능
+
+응답 데이터:
+```json
+{
+  "project_id": 1234567890123,
+  "max_cpu": 2.0,
+  "max_memory": 1024.0,
+  "max_disk": 2048.0
+}
+```
+
+에러:
+- 404: "프로젝트를 찾을 수 없습니다."
+- 403: "프로젝트 소유자만 리소스 한도를 조회할 수 있습니다."
 
 ---
 
