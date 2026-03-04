@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timezone
 
 import pytest
@@ -6,6 +7,7 @@ from src.api.routers.v1.projects import (
     add_project_member_endpoint,
     create_project_endpoint,
     delete_project_endpoint,
+    get_project_resource_limit_endpoint,
     get_project_endpoint,
     list_project_members_endpoint,
     list_projects_endpoint,
@@ -25,6 +27,7 @@ from src.app.project.schemas import (
     ProjectMemberResponse,
     ProjectNameUpdate,
     ProjectOwnerTransfer,
+    ProjectResourceLimitResponse,
     ProjectResourceUpdate,
 )
 from src.common.schemas import CursorPage
@@ -92,6 +95,33 @@ async def test_list_projects_endpoint_contract() -> None:
     assert response.data.items[0].deployment_status.state == "RUNNING"
     assert usecase.calls == [
         ((), {"user_id": 1, "role": "MEMBER", "limit": 10, "cursor": 0})
+    ]
+
+
+async def test_get_project_resource_limit_endpoint_contract() -> None:
+    limits = ProjectResourceLimitResponse(
+        project_id=1,
+        max_cpu=2.0,
+        max_memory=1024.0,
+        max_disk=2048.0,
+    )
+    usecase = AsyncUseCaseStub(limits)
+
+    response = await get_project_resource_limit_endpoint(
+        project_id=1,
+        user=UserInfo(user_id=1, role="OWNER"),
+        usecase=usecase,
+    )
+
+    assert response.status_code == 200
+    assert json.loads(response.body) == {
+        "project_id": 1,
+        "max_cpu": 2.0,
+        "max_memory": 1024.0,
+        "max_disk": 2048.0,
+    }
+    assert usecase.calls == [
+        ((), {"project_id": 1, "user_id": 1})
     ]
 
 
