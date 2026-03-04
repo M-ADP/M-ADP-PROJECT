@@ -3,6 +3,7 @@ import pytest
 from src.app.project.exceptions import (
     DiskCannotBeReduced,
     OnlyOwnerCanDeleteProject,
+    OnlyOwnerCanGetResourceLimit,
     OnlyOwnerCanUpdateProjectName,
     OnlyOwnerCanUpdateResource,
     ProjectLimitExceeded,
@@ -14,6 +15,7 @@ from src.app.project.usecase.check_project_available import CheckProjectAvailabl
 from src.app.project.usecase.create_project import CreateProjectUseCase
 from src.app.project.usecase.delete_project import DeleteProjectUseCase
 from src.app.project.usecase.get_project import GetProjectUseCase
+from src.app.project.usecase.get_project_resource_limit import GetProjectResourceLimitUseCase
 from src.app.project.usecase.list_project_members import ListProjectMembersUseCase
 from src.app.project.usecase.list_projects import ListProjectsUseCase
 from src.app.project.usecase.update_project_name import UpdateProjectNameUseCase
@@ -403,6 +405,43 @@ async def test_check_project_available_returns_member_access(
     result = await usecase(project_id=1, user_id=1)
 
     assert result is expected
+
+
+async def test_get_project_resource_limit_raises_when_project_not_found() -> None:
+    usecase = GetProjectResourceLimitUseCase(uow=FakeUnitOfWork())
+
+    with pytest.raises(ProjectNotFound):
+        await usecase(project_id=999, user_id=1)
+
+
+async def test_get_project_resource_limit_raises_when_requester_not_owner() -> None:
+    project = make_project(1)
+    members = [make_member(1, 2, role="MEMBER")]
+    uow = FakeUnitOfWork(
+        project_repo=FakeProjectRepository([project]),
+        project_member_repo=FakeProjectMemberRepository(members),
+    )
+    usecase = GetProjectResourceLimitUseCase(uow=uow)
+
+    with pytest.raises(OnlyOwnerCanGetResourceLimit):
+        await usecase(project_id=1, user_id=2)
+
+
+async def test_get_project_resource_limit_returns_project_limits() -> None:
+    project = make_project(1, max_cpu=2.0, max_memory=1024.0, max_disk=2048.0)
+    members = [make_member(1, 1, role="OWNER")]
+    uow = FakeUnitOfWork(
+        project_repo=FakeProjectRepository([project]),
+        project_member_repo=FakeProjectMemberRepository(members),
+    )
+    usecase = GetProjectResourceLimitUseCase(uow=uow)
+
+    result = await usecase(project_id=1, user_id=1)
+
+    assert result.project_id == 1
+    assert result.max_cpu == 2.0
+    assert result.max_memory == 1024.0
+    assert result.max_disk == 2048.0
 
 
 async def test_list_project_members_raises_when_project_not_found() -> None:
