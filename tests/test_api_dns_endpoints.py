@@ -1,6 +1,6 @@
 import pytest
 
-from src.api.routers.v1.dns import (
+from src.api.routers.routes.dns import (
     bind_port_to_dns_endpoint,
     create_dns_endpoint,
     delete_dns_endpoint,
