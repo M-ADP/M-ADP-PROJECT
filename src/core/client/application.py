@@ -27,8 +27,6 @@ class ApplicationClient(ABC):
     async def list_by_project(
         self,
         project_id: int,
-        user_id: int,
-        role: str,
     ) -> list[ApplicationItemData]:
         """프로젝트의 앱 배포 목록을 조회합니다."""
         ...
@@ -37,8 +35,6 @@ class ApplicationClient(ABC):
     async def get_summary_batch(
         self,
         project_ids: list[int],
-        user_id: int,
-        role: str,
     ) -> list[DeploymentSummaryItem]:
         """프로젝트 배포 요약 정보를 배치로 조회합니다."""
         ...

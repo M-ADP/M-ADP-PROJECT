@@ -27,7 +27,6 @@ class GetProjectUseCase(BaseUseCase):
         self,
         project_id: int,
         user_id: int,
-        role: str,
     ) -> ProjectDetailResponse:
         async with self.uow:
             # 프로젝트 존재 여부 확인
@@ -51,7 +50,7 @@ class GetProjectUseCase(BaseUseCase):
                 days=7,
                 interval_minutes=60,
             )
-            deployments = await self.deployment_client.list_by_project(project_id, user_id=user_id, role=role)
+            deployments = await self.deployment_client.list_by_project(project_id)
 
             return ProjectDetailResponse(
                 id=project.id,

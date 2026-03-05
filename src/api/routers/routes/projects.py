@@ -41,7 +41,7 @@ async def create_project_endpoint(
     user: UserInfo = Depends(get_user_info),
     usecase: CreateProjectUseCase = Depends(CreateProjectUseCase),
 ) -> SuccessResponse[ProjectResponse]:
-    project = await usecase(payload, user_id=user.user_id, role=user.role)
+    project = await usecase(payload, user_id=user.user_id)
     return SuccessResponse(
         message="프로젝트가 생성되었습니다.",
         data=ProjectResponse.model_validate(project),
@@ -66,7 +66,7 @@ async def list_projects_endpoint(
     user: UserInfo = Depends(get_user_info),
     usecase: ListProjectsUseCase = Depends(ListProjectsUseCase),
 ) -> SuccessResponse[CursorPage[ProjectListItemResponse]]:
-    projects = await usecase(user_id=user.user_id, role=user.role, limit=limit, cursor=cursor)
+    projects = await usecase(user_id=user.user_id, limit=limit, cursor=cursor)
     return SuccessResponse(
         message="프로젝트 목록을 조회했습니다.",
         data=projects,
@@ -134,7 +134,7 @@ async def get_project_endpoint(
     user: UserInfo = Depends(get_user_info),
     usecase: GetProjectUseCase = Depends(GetProjectUseCase),
 ) -> SuccessResponse[ProjectDetailResponse]:
-    project = await usecase(project_id, user_id=user.user_id, role=user.role)
+    project = await usecase(project_id, user_id=user.user_id)
     return SuccessResponse(
         message="프로젝트를 조회했습니다.",
         data=project,
@@ -169,7 +169,7 @@ async def delete_project_endpoint(
     user: UserInfo = Depends(get_user_info),
     usecase: DeleteProjectUseCase = Depends(DeleteProjectUseCase),
 ) -> SuccessResponse[ProjectResponse]:
-    project = await usecase(project_id, user_id=user.user_id, role=user.role)
+    project = await usecase(project_id, user_id=user.user_id)
     return SuccessResponse(
         message="프로젝트가 삭제되었습니다.",
         data=ProjectResponse.model_validate(project),
@@ -187,7 +187,7 @@ async def update_project_resource_endpoint(
     user: UserInfo = Depends(get_user_info),
     usecase: UpdateProjectResourceUseCase = Depends(UpdateProjectResourceUseCase),
 ) -> SuccessResponse[ProjectResponse]:
-    project = await usecase(project_id, request=payload, user_id=user.user_id, role=user.role)
+    project = await usecase(project_id, request=payload, user_id=user.user_id)
     return SuccessResponse(
         message="프로젝트 리소스가 변경되었습니다.",
         data=ProjectResponse.model_validate(project),

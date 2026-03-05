@@ -24,30 +24,28 @@ class ResourceUsageData:
 
 class ProjectResourceClient(ABC):
     @abstractmethod
-    async def create(self, user_id: int, role: str, project: "Project") -> None:
+    async def create(self, project: "Project") -> None:
         """프로젝트(namespace) 생성"""
         ...
 
     @abstractmethod
-    async def delete(self, user_id: int, role: str, project: "Project") -> None:
+    async def delete(self, project: "Project") -> None:
         """프로젝트(namespace) 삭제"""
         ...
 
     @abstractmethod
-    async def open_port(self, user_id: int, role: str, project: "Project", port: "Port") -> None:
+    async def open_port(self, project: "Project", port: "Port") -> None:
         """포트 오픈 (gateway 자원 생성)"""
         ...
 
     @abstractmethod
-    async def close_port(self, user_id: int, role: str, project: "Project", port: "Port") -> None:
+    async def close_port(self, project: "Project", port: "Port") -> None:
         """포트 닫기 (gateway 자원 삭제)"""
         ...
 
     @abstractmethod
     async def update_port(
         self,
-        user_id: int,
-        role: str,
         project: "Project",
         original_port: "Port",
         updated_port: "Port",
@@ -56,7 +54,7 @@ class ProjectResourceClient(ABC):
         ...
 
     @abstractmethod
-    async def allocate(self, user_id: int, role: str, project: "Project") -> None:
+    async def allocate(self, project: "Project") -> None:
         """가용 자원 할당 (Resource Quota)"""
         ...
 

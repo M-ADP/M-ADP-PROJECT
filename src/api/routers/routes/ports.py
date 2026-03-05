@@ -24,7 +24,7 @@ async def create_project_port_endpoint(
     user: UserInfo = Depends(get_user_info),
     usecase: CreatePortUseCase = Depends(CreatePortUseCase),
 ) -> SuccessResponse[PortResponse]:
-    port = await usecase(project_id=project_id, request=payload, user_id=user.user_id, role=user.role)
+    port = await usecase(project_id=project_id, request=payload, user_id=user.user_id)
     return SuccessResponse(
         message="포트가 공개되었습니다.",
         data=PortResponse.model_validate(port),
@@ -80,7 +80,6 @@ async def update_project_port_endpoint(
         port_id=port_id,
         request=payload,
         user_id=user.user_id,
-        role=user.role,
     )
     return SuccessResponse(
         message="포트가 수정되었습니다.",
@@ -99,7 +98,7 @@ async def delete_project_port_endpoint(
     user: UserInfo = Depends(get_user_info),
     usecase: DeletePortUseCase = Depends(DeletePortUseCase),
 ) -> SuccessResponse[PortResponse]:
-    port = await usecase(project_id=project_id, port_id=port_id, user_id=user.user_id, role=user.role)
+    port = await usecase(project_id=project_id, port_id=port_id, user_id=user.user_id)
     return SuccessResponse(
         message="포트가 삭제되었습니다.",
         data=PortResponse.model_validate(port),

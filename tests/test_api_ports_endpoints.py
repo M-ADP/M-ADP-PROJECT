@@ -42,7 +42,7 @@ async def test_create_project_port_endpoint_contract() -> None:
     assert response.data.id == 1
     assert response.data.from_port == 80
     assert usecase.calls == [
-        ((), {"project_id": 1, "request": payload, "user_id": 1, "role": "OWNER"})
+        ((), {"project_id": 1, "request": payload, "user_id": 1})
     ]
 
 
@@ -93,7 +93,7 @@ async def test_update_project_port_endpoint_contract() -> None:
     assert response.message == "포트가 수정되었습니다."
     assert response.data.from_port == 8080
     assert usecase.calls == [
-        ((), {"project_id": 1, "port_id": 1, "request": payload, "user_id": 1, "role": "OWNER"})
+        ((), {"project_id": 1, "port_id": 1, "request": payload, "user_id": 1})
     ]
 
 
@@ -111,5 +111,5 @@ async def test_delete_project_port_endpoint_contract() -> None:
     assert response.message == "포트가 삭제되었습니다."
     assert response.data.id == 1
     assert usecase.calls == [
-        ((), {"project_id": 1, "port_id": 1, "user_id": 1, "role": "OWNER"})
+        ((), {"project_id": 1, "port_id": 1, "user_id": 1})
     ]

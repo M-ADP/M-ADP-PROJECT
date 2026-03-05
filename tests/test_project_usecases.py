@@ -54,7 +54,7 @@ async def test_create_project_raises_when_project_limit_exceeded() -> None:
     usecase = CreateProjectUseCase(uow=uow, project_resource_client=resource_client)
 
     with pytest.raises(ProjectLimitExceeded):
-        await usecase(build_project_create("new"), user_id=1, role="OWNER")
+        await usecase(build_project_create("new"), user_id=1)
 
     assert resource_client.calls == []
 
@@ -66,7 +66,7 @@ async def test_create_project_raises_when_project_name_exists() -> None:
     usecase = CreateProjectUseCase(uow=uow, project_resource_client=resource_client)
 
     with pytest.raises(ProjectNameAlreadyExists):
-        await usecase(build_project_create("duplicate"), user_id=1, role="OWNER")
+        await usecase(build_project_create("duplicate"), user_id=1)
 
     assert len(uow.project.projects) == 1
 
@@ -76,7 +76,7 @@ async def test_create_project_success_creates_owner_member_and_resource() -> Non
     resource_client = FakeProjectResourceClient()
     usecase = CreateProjectUseCase(uow=uow, project_resource_client=resource_client)
 
-    created = await usecase(build_project_create("backend"), user_id=1, role="OWNER")
+    created = await usecase(build_project_create("backend"), user_id=1)
 
     assert created.name == "backend"
     assert uow.project.projects[created.id].name == "backend"
@@ -90,7 +90,7 @@ async def test_delete_project_raises_when_project_not_found() -> None:
     usecase = DeleteProjectUseCase(uow=uow, project_resource_client=FakeProjectResourceClient())
 
     with pytest.raises(ProjectNotFound):
-        await usecase(project_id="missing", user_id=1, role="OWNER")
+        await usecase(project_id="missing", user_id=1)
 
 
 async def test_delete_project_raises_when_requester_is_not_owner() -> None:
@@ -103,7 +103,7 @@ async def test_delete_project_raises_when_requester_is_not_owner() -> None:
     usecase = DeleteProjectUseCase(uow=uow, project_resource_client=FakeProjectResourceClient())
 
     with pytest.raises(OnlyOwnerCanDeleteProject):
-        await usecase(project_id=1, user_id=2, role="MEMBER")
+        await usecase(project_id=1, user_id=2)
 
 
 async def test_delete_project_success() -> None:
@@ -116,7 +116,7 @@ async def test_delete_project_success() -> None:
     )
     usecase = DeleteProjectUseCase(uow=uow, project_resource_client=resource_client)
 
-    deleted = await usecase(project_id=1, user_id=1, role="OWNER")
+    deleted = await usecase(project_id=1, user_id=1)
 
     assert deleted.id == 1
     assert 1 not in uow.project.projects
@@ -185,7 +185,6 @@ async def test_update_project_resource_raises_when_project_not_found() -> None:
             project_id="missing",
             request=ProjectResourceUpdate(max_cpu=1.0),
             user_id=1,
-            role="OWNER",
         )
 
 
@@ -206,7 +205,6 @@ async def test_update_project_resource_raises_when_requester_not_owner() -> None
             project_id=1,
             request=ProjectResourceUpdate(max_disk=300),
             user_id=2,
-            role="MEMBER",
         )
 
 
@@ -227,7 +225,6 @@ async def test_update_project_resource_raises_when_disk_is_reduced() -> None:
             project_id=1,
             request=ProjectResourceUpdate(max_disk=100),
             user_id=1,
-            role="OWNER",
         )
 
 
@@ -248,7 +245,6 @@ async def test_update_project_resource_success_allocates_resource() -> None:
         project_id=1,
         request=ProjectResourceUpdate(max_cpu=2.0, max_memory=256.0, max_disk=300.0),
         user_id=1,
-        role="OWNER",
     )
 
     assert updated.max_cpu == 2.0
@@ -265,7 +261,7 @@ async def test_get_project_raises_when_project_not_found() -> None:
     )
 
     with pytest.raises(ProjectNotFound):
-        await usecase(project_id="missing", user_id=1, role="OWNER")
+        await usecase(project_id="missing", user_id=1)
 
 
 async def test_get_project_raises_when_user_has_no_role() -> None:
@@ -278,7 +274,7 @@ async def test_get_project_raises_when_user_has_no_role() -> None:
     )
 
     with pytest.raises(ProjectNotFound):
-        await usecase(project_id=1, user_id=99, role="USER")
+        await usecase(project_id=1, user_id=99)
 
 
 async def test_get_project_success_maps_all_fields() -> None:
@@ -323,7 +319,7 @@ async def test_get_project_success_maps_all_fields() -> None:
         deployment_client=deployment_client,
     )
 
-    detail = await usecase(project_id=1, user_id=1, role="OWNER")
+    detail = await usecase(project_id=1, user_id=1)
 
     assert detail.id == 1
     assert detail.name == "api-project"
@@ -366,7 +362,7 @@ async def test_list_projects_applies_order_default_role_and_state_fallback() -> 
     )
     usecase = ListProjectsUseCase(uow=uow, application_client=summary_client)
 
-    result = await usecase(user_id=1, role="USER", limit=3)
+    result = await usecase(user_id=1, limit=3)
 
     assert result.has_next is True
     assert [item.id for item in result.items] == [10, 20, 30]
@@ -381,7 +377,7 @@ async def test_list_projects_empty_ids_skips_summary_lookup() -> None:
     uow = FakeUnitOfWork(project_member_repo=project_member_repo)
     usecase = ListProjectsUseCase(uow=uow, application_client=summary_client)
 
-    result = await usecase(user_id=1, role="USER", limit=20)
+    result = await usecase(user_id=1, limit=20)
 
     assert result.items == []
     assert result.has_next is False

@@ -28,7 +28,6 @@ class UpdatePortUseCase(BaseUseCase):
         port_id: int,
         request: PortUpdate,
         user_id: int,
-        role: str,
     ) -> Port:
         async with self.uow:
             project = await self.uow.project.get_by_id(project_id)
@@ -63,8 +62,6 @@ class UpdatePortUseCase(BaseUseCase):
                 protocol=request.protocol,
             )
             await self.project_resource_client.update_port(
-                user_id=user_id,
-                role=role,
                 project=project,
                 original_port=original_port,
                 updated_port=port,

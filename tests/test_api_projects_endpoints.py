@@ -61,7 +61,7 @@ async def test_create_project_endpoint_contract() -> None:
     assert response.message == "프로젝트가 생성되었습니다."
     assert response.data.id == 1
     assert response.data.name == "alpha"
-    assert usecase.calls == [((ProjectCreate(name="alpha", max_cpu=1.0, max_memory=128.0, max_disk=256.0),), {"user_id": 1, "role": "MEMBER"})]
+    assert usecase.calls == [((ProjectCreate(name="alpha", max_cpu=1.0, max_memory=128.0, max_disk=256.0),), {"user_id": 1})]
 
 
 async def test_list_projects_endpoint_contract() -> None:
@@ -93,7 +93,7 @@ async def test_list_projects_endpoint_contract() -> None:
     assert response.data.items[0].id == 1
     assert response.data.items[0].deployment_status.state == "RUNNING"
     assert usecase.calls == [
-        ((), {"user_id": 1, "role": "MEMBER", "limit": 10, "cursor": 0})
+        ((), {"user_id": 1, "limit": 10, "cursor": 0})
     ]
 
 
@@ -155,7 +155,7 @@ async def test_get_project_endpoint_contract() -> None:
     assert response.message == "프로젝트를 조회했습니다."
     assert response.data.id == 1
     assert response.data.deployments[0].id == 1
-    assert usecase.calls == [((1,), {"user_id": 1, "role": "MEMBER"})]
+    assert usecase.calls == [((1,), {"user_id": 1})]
 
 
 async def test_update_project_name_endpoint_contract() -> None:
@@ -187,7 +187,7 @@ async def test_delete_project_endpoint_contract() -> None:
 
     assert response.message == "프로젝트가 삭제되었습니다."
     assert response.data.id == 1
-    assert usecase.calls == [((1,), {"user_id": 1, "role": "OWNER"})]
+    assert usecase.calls == [((1,), {"user_id": 1})]
 
 
 async def test_update_project_resource_endpoint_contract() -> None:
@@ -207,7 +207,7 @@ async def test_update_project_resource_endpoint_contract() -> None:
     assert response.data.max_memory == 256.0
     assert response.data.max_disk == 512.0
     assert usecase.calls == [
-        ((1,), {"request": payload, "user_id": 1, "role": "OWNER"})
+        ((1,), {"request": payload, "user_id": 1})
     ]
 
 

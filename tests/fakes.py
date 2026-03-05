@@ -430,37 +430,33 @@ class FakeProjectResourceClient:
     def _record(self, name: str, **kwargs: Any) -> None:
         self.calls.append((name, kwargs))
 
-    async def create(self, user_id: int, role: str, project: Project) -> None:
-        self._record("create", user_id=user_id, role=role, project=project)
+    async def create(self, project: Project) -> None:
+        self._record("create", project=project)
 
-    async def delete(self, user_id: int, role: str, project: Project) -> None:
-        self._record("delete", user_id=user_id, role=role, project=project)
+    async def delete(self, project: Project) -> None:
+        self._record("delete", project=project)
 
-    async def open_port(self, user_id: int, role: str, project: Project, port: Port) -> None:
-        self._record("open_port", user_id=user_id, role=role, project=project, port=port)
+    async def open_port(self, project: Project, port: Port) -> None:
+        self._record("open_port", project=project, port=port)
 
-    async def close_port(self, user_id: int, role: str, project: Project, port: Port) -> None:
-        self._record("close_port", user_id=user_id, role=role, project=project, port=port)
+    async def close_port(self, project: Project, port: Port) -> None:
+        self._record("close_port", project=project, port=port)
 
     async def update_port(
         self,
-        user_id: int,
-        role: str,
         project: Project,
         original_port: Port,
         updated_port: Port,
     ) -> None:
         self._record(
             "update_port",
-            user_id=user_id,
-            role=role,
             project=project,
             original_port=original_port,
             updated_port=updated_port,
         )
 
-    async def allocate(self, user_id: int, role: str, project: Project) -> None:
-        self._record("allocate", user_id=user_id, role=role, project=project)
+    async def allocate(self, project: Project) -> None:
+        self._record("allocate", project=project)
 
     async def get_usage(
         self,

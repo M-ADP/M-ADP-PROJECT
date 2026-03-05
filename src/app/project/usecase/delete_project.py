@@ -25,7 +25,6 @@ class DeleteProjectUseCase(BaseUseCase):
         self,
         project_id: int,
         user_id: int,
-        role: str,
     ) -> Project:
         async with self.uow:
             project = await self.uow.project.get_by_id(project_id)
@@ -36,10 +35,6 @@ class DeleteProjectUseCase(BaseUseCase):
             if not is_owner:
                 raise OnlyOwnerCanDeleteProject()
 
-            await self.project_resource_client.delete(
-                user_id=user_id,
-                role=role,
-                project=project,
-            )
+            await self.project_resource_client.delete(project=project)
             await self.uow.project.delete(project)
             return project

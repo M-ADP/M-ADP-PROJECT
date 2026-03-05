@@ -27,7 +27,6 @@ class ListProjectsUseCase(BaseUseCase):
     async def __call__(
         self,
         user_id: int,
-        role: str,
         limit: int,
         cursor: int | None = None,
     ) -> CursorPage[ProjectListItemResponse]:
@@ -47,7 +46,7 @@ class ListProjectsUseCase(BaseUseCase):
             project_map = {p.id: p for p in projects}
             ordered_projects = [project_map[pid] for pid in project_ids if pid in project_map]
 
-            summary_map = await self._get_summary_map(project_ids, user_id=user_id, role=role)
+            summary_map = await self._get_summary_map(project_ids)
             role_map = await self.uow.project_member.get_roles_batch(project_ids, user_id)
 
             return CursorPage(
@@ -93,14 +92,10 @@ class ListProjectsUseCase(BaseUseCase):
     async def _get_summary_map(
         self,
         project_ids: list[int],
-        user_id: int,
-        role: str,
     ) -> dict[int, DeploymentSummaryItem]:
         if not project_ids:
             return {}
         summaries = await self.application_client.get_summary_batch(
             project_ids=project_ids,
-            user_id=user_id,
-            role=role,
         )
         return {summary.project_id: summary for summary in summaries}

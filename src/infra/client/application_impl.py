@@ -24,12 +24,9 @@ class ApplicationClientImpl(ApplicationClient):
     async def list_by_project(
         self,
         project_id: int,
-        user_id: int,
-        role: str,
     ) -> list[ApplicationItemData]:
         response = await self.http_client.get(
             ApplicationAPIUrls.LIST_BY_PROJECT.format(project_id=project_id),
-            headers={"X-User-Id": str(user_id), "X-User-Role": role},
         )
         try:
             if response.status != 200:
@@ -57,13 +54,10 @@ class ApplicationClientImpl(ApplicationClient):
     async def get_summary_batch(
         self,
         project_ids: list[int],
-        user_id: int,
-        role: str,
     ) -> list[DeploymentSummaryItem]:
         response = await self.http_client.post(
             ApplicationAPIUrls.GET_SUMMARY_BATCH,
             json={"project_ids": project_ids},
-            headers={"X-User-Id": str(user_id), "X-User-Role": role},
         )
         try:
             if response.status != 200:
@@ -83,4 +77,3 @@ class ApplicationClientImpl(ApplicationClient):
             return []
         finally:
             response.release()
-
