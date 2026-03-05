@@ -13,9 +13,7 @@ from src.core.uow import UnitOfWork
 from src.core.client.project_resource import ProjectResourceClient
 from src.dependencies.uow import get_uow
 from src.dependencies.client.project_resource import get_project_resource_client
-
-PROJECT_LIMIT = 3
-# 이거 config로 뭉쳐서 환경변수로 하는게 나을 듯
+from src.common.config.settings import ProjectConfig
 
 
 class CreateProjectUseCase(BaseUseCase):
@@ -37,7 +35,7 @@ class CreateProjectUseCase(BaseUseCase):
     ) -> Project:
         async with self.uow:
             project_count = await self.uow.project.count_by_user(user_id)
-            if project_count >= PROJECT_LIMIT:
+            if project_count >= ProjectConfig.LIMIT:
                 raise ProjectLimitExceeded()
 
             if await self.uow.project.exists_by_name(user_id, request.name):
