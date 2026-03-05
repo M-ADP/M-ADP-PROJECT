@@ -1,8 +1,8 @@
 # MADP Project Service API 문서
 
 ## 요약
-- Base Path는 `/v1`이며 Health Check는 `/health`입니다.
-- `/v1` 이하 모든 엔드포인트는 헤더 `user-id`, `role`이 필요합니다.
+- Base Path는 `/`이며 Health Check는 `/health`입니다.
+- `/` 이하 모든 엔드포인트는 헤더 `user-id`, `role`이 필요합니다.
 - 주요 리소스는 Projects, Ports, DNS이며 공통 응답 형식과 페이지네이션 규칙을 공유합니다.
 - 공통 에러는 422(Validation)와 500(Internal Server Error)입니다.
 
@@ -15,33 +15,35 @@
 - [Health (상태 확인)](#health)
   - [GET /health (서비스 상태)](#get-health)
 - [Projects (프로젝트)](#projects)
-  - [POST /v1/projects (프로젝트 생성)](#post-v1projects)
-  - [GET /v1/projects (프로젝트 목록 조회)](#get-v1projects)
-  - [GET /v1/projects/{project_id} (프로젝트 상세 조회)](#get-v1projectsproject_id)
-  - [PATCH /v1/projects/{project_id}/name (프로젝트 이름 변경)](#patch-v1projectsproject_idname)
-  - [PATCH /v1/projects/{project_id}/resource (프로젝트 리소스 변경)](#patch-v1projectsproject_idresource)
-  - [DELETE /v1/projects/{project_id} (프로젝트 삭제)](#delete-v1projectsproject_id)
+  - [POST /projects (프로젝트 생성)](#post-projects)
+  - [GET /projects (프로젝트 목록 조회)](#get-projects)
+  - [GET /projects/owner (프로젝트 소유자 여부 조회)](#get-projectsowner)
+  - [GET /projects/resource-limit (프로젝트 최대 리소스 조회)](#get-projectsresource-limit)
+  - [GET /projects/{project_id} (프로젝트 상세 조회)](#get-projectsproject_id)
+  - [PATCH /projects/{project_id}/name (프로젝트 이름 변경)](#patch-projectsproject_idname)
+  - [PATCH /projects/{project_id}/resource (프로젝트 리소스 변경)](#patch-projectsproject_idresource)
+  - [DELETE /projects/{project_id} (프로젝트 삭제)](#delete-projectsproject_id)
 - [Project Members (프로젝트 멤버)](#project-members)
-  - [GET /v1/projects/{project_id}/members (멤버 목록 조회)](#get-v1projectsproject_idmembers)
-  - [POST /v1/projects/{project_id}/members (멤버 추가)](#post-v1projectsproject_idmembers)
-  - [DELETE /v1/projects/{project_id}/members/{target_user_id} (멤버 제거)](#delete-v1projectsproject_idmemberstarget_user_id)
-  - [PATCH /v1/projects/{project_id}/owner (소유권 이전)](#patch-v1projectsproject_idowner)
+  - [GET /projects/{project_id}/members (멤버 목록 조회)](#get-projectsproject_idmembers)
+  - [POST /projects/{project_id}/members (멤버 추가)](#post-projectsproject_idmembers)
+  - [DELETE /projects/{project_id}/members/{target_user_id} (멤버 제거)](#delete-projectsproject_idmemberstarget_user_id)
+  - [PATCH /projects/{project_id}/owner (소유권 이전)](#patch-projectsproject_idowner)
 - [Ports (포트)](#ports)
-  - [POST /v1/projects/{project_id}/ports (포트 공개)](#post-v1projectsproject_idports)
-  - [GET /v1/projects/{project_id}/ports (포트 목록 조회)](#get-v1projectsproject_idports)
-  - [PUT /v1/projects/{project_id}/ports/{port_id} (포트 수정)](#put-v1projectsproject_idportsport_id)
-  - [DELETE /v1/projects/{project_id}/ports/{port_id} (포트 삭제)](#delete-v1projectsproject_idportsport_id)
+  - [POST /projects/{project_id}/ports (포트 공개)](#post-projectsproject_idports)
+  - [GET /projects/{project_id}/ports (포트 목록 조회)](#get-projectsproject_idports)
+  - [PUT /projects/{project_id}/ports/{port_id} (포트 수정)](#put-projectsproject_idportsport_id)
+  - [DELETE /projects/{project_id}/ports/{port_id} (포트 삭제)](#delete-projectsproject_idportsport_id)
 - [DNS (도메인)](#dns)
-  - [POST /v1/projects/{project_id}/dns (DNS 생성)](#post-v1projectsproject_iddns)
-  - [GET /v1/projects/{project_id}/dns-records (DNS 조회)](#get-v1projectsproject_iddns-records)
-  - [DELETE /v1/projects/{project_id}/dns-records/{dns_id} (DNS 삭제)](#delete-v1projectsproject_iddns-recordsdns_id)
-  - [PATCH /v1/projects/{project_id}/dns-records/{dns_id} (DNS 서브도메인 변경)](#patch-v1projectsproject_iddns-recordsdns_id)
-  - [PATCH /v1/projects/{project_id}/dns-records/{dns_id}/port (DNS에 포트 바인딩)](#patch-v1projectsproject_iddns-recordsdns_idport)
+  - [POST /projects/{project_id}/dns (DNS 생성)](#post-projectsproject_iddns)
+  - [GET /projects/{project_id}/dns-records (DNS 조회)](#get-projectsproject_iddns-records)
+  - [DELETE /projects/{project_id}/dns-records/{dns_id} (DNS 삭제)](#delete-projectsproject_iddns-recordsdns_id)
+  - [PATCH /projects/{project_id}/dns-records/{dns_id} (DNS 서브도메인 변경)](#patch-projectsproject_iddns-recordsdns_id)
+  - [PATCH /projects/{project_id}/dns-records/{dns_id}/port (DNS에 포트 바인딩)](#patch-projectsproject_iddns-recordsdns_idport)
 
 ## 개요
-- Base Path: `/v1`
+- Base Path: `/`
 - Health Check: `/health`
-- 인증/인가: `/v1` 이하 모든 엔드포인트는 헤더 `user-id`, `role` 필요
+- 인증/인가: `/` 이하 모든 엔드포인트는 헤더 `user-id`, `role` 필요
 
 ## 공통 응답 형식
 
@@ -99,7 +101,7 @@
 
 ## Projects
 
-### POST /v1/projects
+### POST /projects
 프로젝트 생성
 
 요청 바디:
@@ -139,7 +141,7 @@
 
 ---
 
-### GET /v1/projects
+### GET /projects
 프로젝트 목록 조회
 
 쿼리 파라미터: `cursor`, `limit`
@@ -169,7 +171,7 @@
 
 ---
 
-### GET /v1/projects/{project_id}
+### GET /projects/{project_id}
 프로젝트 상세 조회
 
 응답 데이터: `ProjectDetailResponse`
@@ -220,7 +222,56 @@
 
 ---
 
-### PATCH /v1/projects/{project_id}/name
+### GET /projects/owner
+프로젝트 소유자 여부 조회
+
+쿼리 파라미터:
+- `project_id` (integer, 필수): 확인할 프로젝트 ID
+
+권한:
+- 요청 사용자(`X-User-Id`) 기준으로 소유자 여부 확인
+
+응답 데이터:
+```json
+{
+  "message": "프로젝트 소유자 여부를 조회했습니다.",
+  "data": {
+    "status": true
+  }
+}
+```
+
+---
+
+### GET /projects/resource-limit
+프로젝트 최대 리소스 한도 조회 (App SVC 내부 연동용)
+
+쿼리 파라미터:
+- `project_id` (integer, 필수): 조회할 프로젝트 ID
+
+권한:
+- 프로젝트 OWNER만 조회 가능
+
+응답 데이터:
+```json
+{
+  "message": "프로젝트 최대 리소스 한도를 조회했습니다.",
+  "data": {
+    "project_id": 1234567890123,
+    "max_cpu": 2.0,
+    "max_memory": 1024.0,
+    "max_disk": 2048.0
+  }
+}
+```
+
+에러:
+- 404: "프로젝트를 찾을 수 없습니다."
+- 403: "프로젝트 소유자만 리소스 한도를 조회할 수 있습니다."
+
+---
+
+### PATCH /projects/{project_id}/name
 프로젝트 이름 변경
 
 요청 바디:
@@ -241,7 +292,7 @@
 
 ---
 
-### PATCH /v1/projects/{project_id}/resource
+### PATCH /projects/{project_id}/resource
 프로젝트 리소스 변경
 
 요청 바디 (모두 선택):
@@ -269,7 +320,7 @@
 
 ---
 
-### DELETE /v1/projects/{project_id}
+### DELETE /projects/{project_id}
 프로젝트 삭제
 
 응답 데이터: `ProjectResponse`
@@ -288,7 +339,7 @@
 - 소유권은 기존 OWNER가 같은 프로젝트의 MEMBER에게만 이전할 수 있습니다.
 - 프로젝트 내 OWNER는 항상 1명입니다.
 
-### GET /v1/projects/{project_id}/members
+### GET /projects/{project_id}/members
 프로젝트 멤버 목록 조회
 
 쿼리 파라미터: `cursor`, `limit`
@@ -321,7 +372,7 @@
 
 ---
 
-### POST /v1/projects/{project_id}/members
+### POST /projects/{project_id}/members
 프로젝트에 멤버 추가 (사용자 초대)
 
 요청 바디:
@@ -356,7 +407,7 @@
 
 ---
 
-### DELETE /v1/projects/{project_id}/members/{target_user_id}
+### DELETE /projects/{project_id}/members/{target_user_id}
 프로젝트에서 멤버 제거
 
 응답 데이터: `ProjectMemberResponse`
@@ -369,7 +420,7 @@
 
 ---
 
-### PATCH /v1/projects/{project_id}/owner
+### PATCH /projects/{project_id}/owner
 프로젝트 소유권 이전
 
 요청 바디:
@@ -395,7 +446,7 @@
 
 ## Ports
 
-### POST /v1/projects/{project_id}/ports
+### POST /projects/{project_id}/ports
 포트 공개
 
 요청 바디:
@@ -425,7 +476,7 @@
 
 ---
 
-### GET /v1/projects/{project_id}/ports
+### GET /projects/{project_id}/ports
 포트 목록 조회
 
 쿼리 파라미터: `cursor`, `limit`
@@ -437,7 +488,7 @@
 
 ---
 
-### PUT /v1/projects/{project_id}/ports/{port_id}
+### PUT /projects/{project_id}/ports/{port_id}
 포트 수정
 
 요청 바디 (`PortCreate`와 동일):
@@ -468,7 +519,7 @@
 
 ---
 
-### DELETE /v1/projects/{project_id}/ports/{port_id}
+### DELETE /projects/{project_id}/ports/{port_id}
 포트 삭제
 
 응답 데이터: `PortResponse`
@@ -484,7 +535,7 @@
 
 ## DNS
 
-### POST /v1/projects/{project_id}/dns
+### POST /projects/{project_id}/dns
 DNS 생성
 
 요청 바디:
@@ -518,7 +569,7 @@ DNS 생성
 
 ---
 
-### GET /v1/projects/{project_id}/dns-records
+### GET /projects/{project_id}/dns-records
 DNS 조회
 
 응답 데이터: `DNSResponse | null`
@@ -528,7 +579,7 @@ DNS 조회
 
 ---
 
-### DELETE /v1/projects/{project_id}/dns-records/{dns_id}
+### DELETE /projects/{project_id}/dns-records/{dns_id}
 DNS 삭제
 
 응답 데이터: `DNSResponse`
@@ -542,7 +593,7 @@ DNS 삭제
 
 ---
 
-### PATCH /v1/projects/{project_id}/dns-records/{dns_id}
+### PATCH /projects/{project_id}/dns-records/{dns_id}
 DNS 서브도메인 변경
 
 요청 바디:
@@ -567,7 +618,7 @@ DNS 서브도메인 변경
 
 ---
 
-### PATCH /v1/projects/{project_id}/dns-records/{dns_id}/port
+### PATCH /projects/{project_id}/dns-records/{dns_id}/port
 DNS에 포트 바인딩
 
 요청 바디:

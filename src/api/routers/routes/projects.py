@@ -1,5 +1,4 @@
-from fastapi import APIRouter, Depends, Query, status
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, Query
 
 from src.app.project.schemas import (
     ProjectAvailableResponse,
@@ -11,6 +10,7 @@ from src.app.project.schemas import (
     ProjectNameUpdate,
     ProjectOwnerResponse,
     ProjectOwnerTransfer,
+    ProjectResourceLimitResponse,
     ProjectResourceUpdate,
     ProjectResponse,
 )
@@ -27,6 +27,7 @@ from src.app.project.usecase import (
     TransferProjectOwnershipUseCase,
     CheckProjectAvailableUseCase,
     CheckProjectOwnerUseCase,
+    GetProjectResourceLimitUseCase,
 )
 from src.dependencies.auth import UserInfo, get_user_info
 from src.common.schemas import CursorPage, SuccessResponse
@@ -74,40 +75,52 @@ async def list_projects_endpoint(
 
 @router.get(
     "/available",
-    status_code=status.HTTP_200_OK,
-    response_model=ProjectAvailableResponse,
+    status_code=200,
+    response_model=SuccessResponse[ProjectAvailableResponse],
 )
 async def check_project_available_endpoint(
     project_id: int = Query(..., description="확인할 프로젝트 ID"),
     user: UserInfo = Depends(get_user_info),
     usecase: CheckProjectAvailableUseCase = Depends(CheckProjectAvailableUseCase),
-) -> JSONResponse:
+) -> SuccessResponse[ProjectAvailableResponse]:
     is_member = await usecase(project_id=project_id, user_id=user.user_id)
-    if is_member:
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content=ProjectAvailableResponse(status=True).model_dump(),
-        )
-    return JSONResponse(
-        status_code=status.HTTP_403_FORBIDDEN,
-        content=ProjectAvailableResponse(status=False).model_dump(),
+    return SuccessResponse(
+        message="프로젝트 접근 가능 여부를 조회했습니다.",
+        data=ProjectAvailableResponse(status=is_member),
     )
 
 
 @router.get(
     "/owner",
-    status_code=status.HTTP_200_OK,
-    response_model=ProjectOwnerResponse,
+    status_code=200,
+    response_model=SuccessResponse[ProjectOwnerResponse],
 )
 async def check_project_owner_endpoint(
     project_id: int = Query(..., description="확인할 프로젝트 ID"),
-    user_id: int = Query(..., description="소유자 여부를 확인할 사용자 ID"),
+    user: UserInfo = Depends(get_user_info),
     usecase: CheckProjectOwnerUseCase = Depends(CheckProjectOwnerUseCase),
-) -> JSONResponse:
-    is_owner = await usecase(project_id=project_id, user_id=user_id)
-    return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content=ProjectOwnerResponse(status=is_owner).model_dump(),
+) -> SuccessResponse[ProjectOwnerResponse]:
+    is_owner = await usecase(project_id=project_id, user_id=user.user_id)
+    return SuccessResponse(
+        message="프로젝트 소유자 여부를 조회했습니다.",
+        data=ProjectOwnerResponse(status=is_owner),
+    )
+
+
+@router.get(
+    "/resource-limit",
+    status_code=200,
+    response_model=SuccessResponse[ProjectResourceLimitResponse],
+)
+async def get_project_resource_limit_endpoint(
+    project_id: int = Query(..., description="확인할 프로젝트 ID"),
+    user: UserInfo = Depends(get_user_info),
+    usecase: GetProjectResourceLimitUseCase = Depends(GetProjectResourceLimitUseCase),
+) -> SuccessResponse[ProjectResourceLimitResponse]:
+    resource_limit = await usecase(project_id=project_id, user_id=user.user_id)
+    return SuccessResponse(
+        message="프로젝트 최대 리소스 한도를 조회했습니다.",
+        data=resource_limit,
     )
 
 

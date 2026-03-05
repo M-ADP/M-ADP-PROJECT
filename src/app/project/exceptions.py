@@ -53,6 +53,15 @@ class OnlyOwnerCanUpdateResource(AppException):
         )
 
 
+class OnlyOwnerCanGetResourceLimit(AppException):
+    def __init__(self) -> None:
+        super().__init__(
+            "프로젝트 소유자만 리소스 한도를 조회할 수 있습니다.",
+            code="ONLY_OWNER_CAN_GET_RESOURCE_LIMIT",
+            status_code=403,
+        )
+
+
 class OnlyOwnerCanUpdateProjectName(AppException):
     def __init__(self) -> None:
         super().__init__(

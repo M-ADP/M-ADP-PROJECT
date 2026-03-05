@@ -25,7 +25,7 @@ class AppConfig(BaseSettings):
     )
 
     app_name: str = "MADP Project Service"
-    app_version: str = "v1"
+    app_version: str = "0.0.1"
     cors: CorsSettings = CorsSettings()
 
 
