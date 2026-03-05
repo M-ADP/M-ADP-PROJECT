@@ -1,5 +1,6 @@
 from functools import lru_cache
 from typing import List
+from urllib.parse import quote_plus
 
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -47,7 +48,7 @@ class DatabaseConfig(BaseSettings):
 
     @property
     def url(self) -> str:
-        return f"mysql+aiomysql://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
+        return f"mysql+aiomysql://{quote_plus(self.user)}:{quote_plus(self.password)}@{self.host}:{self.port}/{self.name}"
 
 
 class SonyflakeConfig(BaseSettings):
