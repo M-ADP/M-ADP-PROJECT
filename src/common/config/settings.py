@@ -4,6 +4,8 @@ from typing import List
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from src.common.const.vault import VAULT_ENV_FILE
+
 
 class CorsSettings(BaseModel):
     allow_origins: List[str] = [
@@ -18,7 +20,7 @@ class CorsSettings(BaseModel):
 class AppConfig(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="MADP_",
-        env_file="/vault/secrets/.env",
+        env_file=VAULT_ENV_FILE,
         env_file_encoding="utf-8",
         env_nested_delimiter="__",
         extra="ignore",
@@ -32,7 +34,7 @@ class AppConfig(BaseSettings):
 class DatabaseConfig(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="DB_",
-        env_file="/vault/secrets/.env",
+        env_file=VAULT_ENV_FILE,
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -51,7 +53,7 @@ class DatabaseConfig(BaseSettings):
 class SonyflakeConfig(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="SONYFLAKE_",
-        env_file="/vault/secrets/.env",
+        env_file=VAULT_ENV_FILE,
         env_file_encoding="utf-8",
         extra="ignore",
     )

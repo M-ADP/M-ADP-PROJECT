@@ -1,12 +1,15 @@
-from anyio.functools import lru_cache
+from functools import lru_cache
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from src.common.const.vault import VAULT_ENV_FILE
 
 
 class ResourceServerConfig(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="RESOURCE_",
         extra="ignore",
-        env_file="/vault/secrets/.env",
+        env_file=VAULT_ENV_FILE,
         env_file_encoding="utf-8",
     )
 
