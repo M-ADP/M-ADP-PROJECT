@@ -22,28 +22,30 @@ async def get_session() -> AsyncIterator[AsyncSession]:
         yield session
 
 
-_MIGRATIONS: list[tuple[str, str]] = [
+_MIGRATIONS: list[tuple[str, list[str]]] = [
     (
         "001_init_role",
-        """
-        UPDATE project_member
-        SET role = 'MEMBER'
-        WHERE role NOT IN ('OWNER', 'MEMBER')
-        """,
+        [
+            """
+            UPDATE project_member
+            SET role = 'MEMBER'
+            WHERE role NOT IN ('OWNER', 'MEMBER')
+            """,
+        ],
     ),
     (
         "002_user_id_to_bigint",
-        """
-        ALTER TABLE project
-        MODIFY COLUMN user_id BIGINT NOT NULL
-        """,
+        [
+            "DELETE FROM project WHERE user_id REGEXP '[^0-9]'",
+            "ALTER TABLE project MODIFY COLUMN user_id BIGINT NOT NULL",
+        ],
     ),
     (
         "003_member_user_id_to_bigint",
-        """
-        ALTER TABLE project_member
-        MODIFY COLUMN user_id BIGINT NOT NULL
-        """,
+        [
+            "DELETE FROM project_member WHERE user_id REGEXP '[^0-9]'",
+            "ALTER TABLE project_member MODIFY COLUMN user_id BIGINT NOT NULL",
+        ],
     ),
 ]
 
@@ -59,13 +61,14 @@ async def create_all_tables() -> None:
             )
             """
         ))
-        for version, sql in _MIGRATIONS:
+        for version, sqls in _MIGRATIONS:
             result = await conn.execute(
                 text("SELECT 1 FROM schema_migrations WHERE version = :v"),
                 {"v": version},
             )
             if result.fetchone() is None:
-                await conn.execute(text(sql))
+                for sql in sqls:
+                    await conn.execute(text(sql))
                 await conn.execute(
                     text("INSERT INTO schema_migrations (version) VALUES (:v)"),
                     {"v": version},

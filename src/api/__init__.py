@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
 from src.api.routers import api_router
-from src.common.config.settings import get_app_config
+from src.common.config.settings import get_app_config, load_all_configs
 from src.core.db import create_all_tables
 from src.core.exceptions import register_exception_handlers
 
@@ -14,6 +14,7 @@ def create_app() -> FastAPI:
 
     @application.on_event("startup")
     async def startup_event() -> None:
+        load_all_configs()
         await create_all_tables()
 
     return application

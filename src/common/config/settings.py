@@ -1,11 +1,36 @@
+import logging
 from functools import lru_cache
-from typing import List
+from typing import Any, Callable, List
 from urllib.parse import quote_plus
 
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from src.common.const.vault import VAULT_ENV_FILE
+
+logger = logging.getLogger(__name__)
+
+_CONFIG_GETTERS: list[Callable] = []
+
+
+def register_config(fn: Callable) -> Callable:
+    _CONFIG_GETTERS.append(fn)
+    return fn
+
+
+def load_all_configs() -> None:
+    for getter in _CONFIG_GETTERS:
+        getter()
+
+
+class LoggedSettings(BaseSettings):
+    def model_post_init(self, __context: Any) -> None:
+        prefix = self.model_config.get("env_prefix", "").upper()
+        fields_info = {
+            f"{prefix}{name.upper()}": getattr(self, name)
+            for name in self.model_fields
+        }
+        logger.info("[Config Loaded] %s → %s", self.__class__.__name__, fields_info)
 
 
 class CorsSettings(BaseModel):
@@ -18,7 +43,7 @@ class CorsSettings(BaseModel):
     allow_headers: List[str] = ["*"]
 
 
-class AppConfig(BaseSettings):
+class AppConfig(LoggedSettings):
     model_config = SettingsConfigDict(
         env_prefix="MADP_",
         env_file=VAULT_ENV_FILE,
@@ -32,7 +57,7 @@ class AppConfig(BaseSettings):
     cors: CorsSettings = CorsSettings()
 
 
-class DatabaseConfig(BaseSettings):
+class DatabaseConfig(LoggedSettings):
     model_config = SettingsConfigDict(
         env_prefix="DB_",
         env_file=VAULT_ENV_FILE,
@@ -51,7 +76,7 @@ class DatabaseConfig(BaseSettings):
         return f"mysql+aiomysql://{quote_plus(self.user)}:{quote_plus(self.password)}@{self.host}:{self.port}/{self.name}"
 
 
-class SonyflakeConfig(BaseSettings):
+class SonyflakeConfig(LoggedSettings):
     model_config = SettingsConfigDict(
         env_prefix="SONYFLAKE_",
         env_file=VAULT_ENV_FILE,
@@ -67,16 +92,19 @@ class ProjectConfig:
     DNS_DOMAIN: str = "mdeveloper.platform"
 
 
+@register_config
 @lru_cache
 def get_app_config() -> AppConfig:
     return AppConfig()
 
 
+@register_config
 @lru_cache
 def get_db_config() -> DatabaseConfig:
     return DatabaseConfig()
 
 
+@register_config
 @lru_cache
 def get_sonyflake_config() -> SonyflakeConfig:
     return SonyflakeConfig()
