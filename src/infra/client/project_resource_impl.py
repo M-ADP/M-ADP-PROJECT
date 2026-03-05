@@ -4,6 +4,7 @@ from src.core.domain.port import Port
 from src.core.domain.project import Project
 from src.core.client.http import HttpClient
 from src.core.client.project_resource import ProjectResourceClient, ResourceUsageData
+from src.core.exceptions import ResourceServerException
 from src.common.config.resource_server import ResourceServerConfig
 from src.infra.client.asyncio_http import AioHttpClient
 from src.infra.client.schemas import (
@@ -33,6 +34,16 @@ class ProjectResourceClientImpl(ProjectResourceClient):
         self.base_url = resource_server_config.SERVER_BASE_URL
         self.http_client = http_client
 
+    async def _request(self, coro) -> None:
+        try:
+            response = await coro
+        except Exception as e:
+            raise ResourceServerException() from e
+        if not response.ok:
+            raise ResourceServerException(
+                f"리소스 서버 응답 오류: {response.status}"
+            )
+
     def _convert_cpu(self, val: float | None) -> str | None:
         if val is None:
             return None
@@ -51,19 +62,19 @@ class ProjectResourceClientImpl(ProjectResourceClient):
             memory=self._convert_memory(project.max_memory),
             disk=self._convert_memory(project.max_disk),
         )
-        await self.http_client.post(
+        await self._request(self.http_client.post(
             self.base_url + ProjectResourceAPIUrls.CREATE_PROJECT,
             headers={"X-User-Id": str(user_id), "X-User-Role": role},
             json=payload.model_dump(exclude_none=True),
-        )
+        ))
 
     async def delete(self, user_id: int, role: str, project: Project) -> None:
-        await self.http_client.delete(
+        await self._request(self.http_client.delete(
             self.base_url + ProjectResourceAPIUrls.DELETE_PROJECT.format(
                 project_id=project.id
             ),
             headers={"X-User-Id": str(user_id), "X-User-Role": role},
-        )
+        ))
 
     async def open_port(self, user_id: int, role: str, project: Project, port: Port) -> None:
         service_id = f"svc-{project.id}-{port.id}"
@@ -76,22 +87,22 @@ class ProjectResourceClientImpl(ProjectResourceClient):
             protocol=port.protocol.upper(),
             service_type="ClusterIP",
         )
-        await self.http_client.post(
+        await self._request(self.http_client.post(
             self.base_url + ProjectResourceAPIUrls.OPEN_PROJECT_PORT.format(
                 project_id=project.id
             ),
             headers={"X-User-Id": str(user_id), "X-User-Role": role},
             json=payload.model_dump(),
-        )
+        ))
 
     async def close_port(self, user_id: int, role: str, project: Project, port: Port) -> None:
         service_id = f"svc-{project.id}-{port.id}"
-        await self.http_client.delete(
+        await self._request(self.http_client.delete(
             self.base_url + ProjectResourceAPIUrls.CLOSE_PROJECT_PORT.format(
                 project_id=project.id, port_id=service_id
             ),
             headers={"X-User-Id": str(user_id), "X-User-Role": role},
-        )
+        ))
 
     async def update_port(
         self,
@@ -110,13 +121,13 @@ class ProjectResourceClientImpl(ProjectResourceClient):
             protocol=updated_port.protocol.upper(),
             service_type="ClusterIP",
         )
-        await self.http_client.put(
+        await self._request(self.http_client.put(
             self.base_url + ProjectResourceAPIUrls.UPDATE_PROJECT_PORT.format(
                 project_id=project.id, port_id=original_port.from_port
             ),
             headers={"X-User-Id": str(user_id), "X-User-Role": role},
             json=payload.model_dump(exclude_none=True),
-        )
+        ))
 
     async def allocate(self, user_id: int, role: str, project: Project) -> None:
         payload = ExternalResourceUpdate(
@@ -124,13 +135,13 @@ class ProjectResourceClientImpl(ProjectResourceClient):
             memory=self._convert_memory(project.max_memory),
             disk=self._convert_memory(project.max_disk),
         )
-        await self.http_client.patch(
+        await self._request(self.http_client.patch(
             self.base_url + ProjectResourceAPIUrls.UPDATE_PROJECT_RESOURCES.format(
                 project_id=project.id
             ),
             headers={"X-User-Id": str(user_id), "X-User-Role": role},
             json=payload.model_dump(exclude_none=True),
-        )
+        ))
 
     async def get_usage(
         self,

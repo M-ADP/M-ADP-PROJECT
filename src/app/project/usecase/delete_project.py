@@ -3,7 +3,9 @@ from fastapi import Depends
 from src.app.project.exceptions import (
     ProjectNotFound,
     OnlyOwnerCanDeleteProject,
+    ProjectDeletionFailed,
 )
+from src.core.exceptions import ResourceServerException
 from src.core.domain.project import Project
 from src.app.base_usecase import BaseUseCase
 from src.core.uow import UnitOfWork
@@ -36,10 +38,13 @@ class DeleteProjectUseCase(BaseUseCase):
             if not is_owner:
                 raise OnlyOwnerCanDeleteProject()
 
-            await self.project_resource_client.delete(
-                user_id=user_id,
-                role=role,
-                project=project,
-            )
+            try:
+                await self.project_resource_client.delete(
+                    user_id=user_id,
+                    role=role,
+                    project=project,
+                )
+            except ResourceServerException as e:
+                raise ProjectDeletionFailed() from e
             await self.uow.project.delete(project)
             return project

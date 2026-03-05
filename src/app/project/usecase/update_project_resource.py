@@ -4,7 +4,9 @@ from src.app.project.exceptions import (
     ProjectNotFound,
     DiskCannotBeReduced,
     OnlyOwnerCanUpdateResource,
+    ProjectResourceUpdateFailed,
 )
+from src.core.exceptions import ResourceServerException
 from src.core.domain.project import Project
 from src.app.project.schemas import ProjectResourceUpdate
 from src.app.base_usecase import BaseUseCase
@@ -48,9 +50,12 @@ class UpdateProjectResourceUseCase(BaseUseCase):
                 max_memory=request.max_memory,
                 max_disk=request.max_disk
             )
-            await self.project_resource_client.allocate(
-                user_id=user_id,
-                role=role,
-                project=project,
-            )
+            try:
+                await self.project_resource_client.allocate(
+                    user_id=user_id,
+                    role=role,
+                    project=project,
+                )
+            except ResourceServerException as e:
+                raise ProjectResourceUpdateFailed() from e
             return project

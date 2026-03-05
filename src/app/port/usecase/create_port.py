@@ -1,6 +1,7 @@
 from fastapi import Depends
 
-from src.app.port.exceptions import PortAlreadyExists
+from src.app.port.exceptions import PortAlreadyExists, PortCreationFailed
+from src.core.exceptions import ResourceServerException
 from src.core.domain.port import Port
 from src.app.port.schemas import PortCreate
 from src.app.project.exceptions import ProjectNotFound, OnlyOwnerCanManagePorts
@@ -53,10 +54,13 @@ class CreatePortUseCase(BaseUseCase):
                 protocol=request.protocol,
             )
             port = await self.uow.port.insert(port_row)
-            await self.project_resource_client.open_port(
-                user_id=user_id,
-                role=role,
-                project=project,
-                port=port,
-            )
+            try:
+                await self.project_resource_client.open_port(
+                    user_id=user_id,
+                    role=role,
+                    project=project,
+                    port=port,
+                )
+            except ResourceServerException as e:
+                raise PortCreationFailed() from e
             return port

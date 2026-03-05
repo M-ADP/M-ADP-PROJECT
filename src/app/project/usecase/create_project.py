@@ -4,7 +4,9 @@ from src.app.project.schemas import ProjectCreate
 from src.app.project.exceptions import (
     ProjectLimitExceeded,
     ProjectNameAlreadyExists,
+    ProjectCreationFailed,
 )
+from src.core.exceptions import ResourceServerException
 from src.core.domain.project import Project, ProjectMember
 from src.app.base_usecase import BaseUseCase
 from src.core.uow import UnitOfWork
@@ -58,9 +60,12 @@ class CreateProjectUseCase(BaseUseCase):
             )
             await self.uow.project_member.insert(owner_member)
 
-            await self.project_resource_client.create(
-                user_id=user_id,
-                role=role,
-                project=project,
-            )
+            try:
+                await self.project_resource_client.create(
+                    user_id=user_id,
+                    role=role,
+                    project=project,
+                )
+            except ResourceServerException as e:
+                raise ProjectCreationFailed() from e
             return project

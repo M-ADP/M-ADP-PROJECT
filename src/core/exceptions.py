@@ -7,6 +7,12 @@ from starlette.responses import JSONResponse
 from src.common.schemas import ErrorResponse
 
 
+class ResourceServerException(Exception):
+    def __init__(self, message: str = "리소스 서버와 통신 중 오류가 발생했습니다.") -> None:
+        super().__init__(message)
+        self.message = message
+
+
 class AppException(Exception):
     def __init__(
         self,

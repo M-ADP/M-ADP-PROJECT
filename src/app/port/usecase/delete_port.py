@@ -1,6 +1,7 @@
 from fastapi import Depends
 
-from src.app.port.exceptions import PortNotFound
+from src.app.port.exceptions import PortNotFound, PortDeletionFailed
+from src.core.exceptions import ResourceServerException
 from src.core.domain.port import Port
 from src.app.project.exceptions import ProjectNotFound, OnlyOwnerCanManagePorts
 from src.app.base_usecase import BaseUseCase
@@ -44,11 +45,14 @@ class DeletePortUseCase(BaseUseCase):
             if port is None:
                 raise PortNotFound()
 
-            await self.project_resource_client.close_port(
-                user_id=user_id,
-                role=role,
-                project=project,
-                port=port,
-            )
+            try:
+                await self.project_resource_client.close_port(
+                    user_id=user_id,
+                    role=role,
+                    project=project,
+                    port=port,
+                )
+            except ResourceServerException as e:
+                raise PortDeletionFailed() from e
             await self.uow.port.delete(port)
             return port

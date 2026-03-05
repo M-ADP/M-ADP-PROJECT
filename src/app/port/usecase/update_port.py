@@ -1,6 +1,7 @@
 from fastapi import Depends
 
-from src.app.port.exceptions import PortAlreadyExists, PortNotFound
+from src.app.port.exceptions import PortAlreadyExists, PortNotFound, PortUpdateFailed
+from src.core.exceptions import ResourceServerException
 from src.core.domain.port import Port
 from src.app.port.schemas import PortUpdate
 from src.app.project.exceptions import ProjectNotFound, OnlyOwnerCanManagePorts
@@ -62,11 +63,14 @@ class UpdatePortUseCase(BaseUseCase):
                 port_number=request.port_number,
                 protocol=request.protocol,
             )
-            await self.project_resource_client.update_port(
-                user_id=user_id,
-                role=role,
-                project=project,
-                original_port=original_port,
-                updated_port=port,
-            )
+            try:
+                await self.project_resource_client.update_port(
+                    user_id=user_id,
+                    role=role,
+                    project=project,
+                    original_port=original_port,
+                    updated_port=port,
+                )
+            except ResourceServerException as e:
+                raise PortUpdateFailed() from e
             return port

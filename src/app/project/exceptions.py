@@ -171,3 +171,33 @@ class CannotTransferOwnershipToSelf(AppException):
             code="CANNOT_TRANSFER_OWNERSHIP_TO_SELF",
             status_code=400,
         )
+
+
+# ===== Resource Server Exceptions =====
+
+
+class ProjectCreationFailed(AppException):
+    def __init__(self) -> None:
+        super().__init__(
+            "리소스 서버 오류로 프로젝트를 생성할 수 없습니다.",
+            code="PROJECT_CREATION_FAILED",
+            status_code=502,
+        )
+
+
+class ProjectDeletionFailed(AppException):
+    def __init__(self) -> None:
+        super().__init__(
+            "리소스 서버 오류로 프로젝트를 삭제할 수 없습니다.",
+            code="PROJECT_DELETION_FAILED",
+            status_code=502,
+        )
+
+
+class ProjectResourceUpdateFailed(AppException):
+    def __init__(self) -> None:
+        super().__init__(
+            "리소스 서버 오류로 프로젝트 리소스를 변경할 수 없습니다.",
+            code="PROJECT_RESOURCE_UPDATE_FAILED",
+            status_code=502,
+        )
