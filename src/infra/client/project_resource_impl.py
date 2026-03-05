@@ -53,7 +53,7 @@ class ProjectResourceClientImpl(ProjectResourceClient):
         )
         await self.http_client.post(
             self.base_url + ProjectResourceAPIUrls.CREATE_PROJECT,
-            headers={"X-User-Id": user_id, "X-User-Role": role},
+            headers={"X-User-Id": str(user_id), "X-User-Role": role},
             json=payload.model_dump(exclude_none=True),
         )
 
@@ -62,7 +62,7 @@ class ProjectResourceClientImpl(ProjectResourceClient):
             self.base_url + ProjectResourceAPIUrls.DELETE_PROJECT.format(
                 project_id=project.id
             ),
-            headers={"X-User-Id": user_id, "X-User-Role": role},
+            headers={"X-User-Id": str(user_id), "X-User-Role": role},
         )
 
     async def open_port(self, user_id: int, role: str, project: Project, port: Port) -> None:
@@ -80,7 +80,7 @@ class ProjectResourceClientImpl(ProjectResourceClient):
             self.base_url + ProjectResourceAPIUrls.OPEN_PROJECT_PORT.format(
                 project_id=project.id
             ),
-            headers={"X-User-Id": user_id, "X-User-Role": role},
+            headers={"X-User-Id": str(user_id), "X-User-Role": role},
             json=payload.model_dump(),
         )
 
@@ -90,7 +90,7 @@ class ProjectResourceClientImpl(ProjectResourceClient):
             self.base_url + ProjectResourceAPIUrls.CLOSE_PROJECT_PORT.format(
                 project_id=project.id, port_id=service_id
             ),
-            headers={"X-User-Id": user_id, "X-User-Role": role},
+            headers={"X-User-Id": str(user_id), "X-User-Role": role},
         )
 
     async def update_port(
@@ -114,7 +114,7 @@ class ProjectResourceClientImpl(ProjectResourceClient):
             self.base_url + ProjectResourceAPIUrls.UPDATE_PROJECT_PORT.format(
                 project_id=project.id, port_id=original_port.from_port
             ),
-            headers={"X-User-Id": user_id, "X-User-Role": role},
+            headers={"X-User-Id": str(user_id), "X-User-Role": role},
             json=payload.model_dump(exclude_none=True),
         )
 
@@ -128,7 +128,7 @@ class ProjectResourceClientImpl(ProjectResourceClient):
             self.base_url + ProjectResourceAPIUrls.UPDATE_PROJECT_RESOURCES.format(
                 project_id=project.id
             ),
-            headers={"X-User-Id": user_id, "X-User-Role": role},
+            headers={"X-User-Id": str(user_id), "X-User-Role": role},
             json=payload.model_dump(exclude_none=True),
         )
 
