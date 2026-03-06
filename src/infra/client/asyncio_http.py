@@ -37,6 +37,7 @@ class AioHttpClient(HttpClient):
             headers=self._merge_headers(headers),
         ) as session:
             response = await session.get(url, params=params)
+            await response.read()
             return response
 
     async def post(
@@ -52,6 +53,7 @@ class AioHttpClient(HttpClient):
             headers=self._merge_headers(headers),
         ) as session:
             response = await session.post(url, data=data, json=json)
+            await response.read()
             return response
 
     async def delete(
@@ -66,6 +68,7 @@ class AioHttpClient(HttpClient):
             headers=self._merge_headers(headers),
         ) as session:
             response = await session.delete(url, params=params)
+            await response.read()
             return response
 
     async def put(
@@ -81,6 +84,7 @@ class AioHttpClient(HttpClient):
             headers=self._merge_headers(headers),
         ) as session:
             response = await session.put(url, data=data, json=json)
+            await response.read()
             return response
 
     async def patch(
@@ -96,4 +100,5 @@ class AioHttpClient(HttpClient):
             headers=self._merge_headers(headers),
         ) as session:
             response = await session.patch(url, data=data, json=json)
+            await response.read()
             return response
