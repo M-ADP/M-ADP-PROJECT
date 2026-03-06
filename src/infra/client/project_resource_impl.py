@@ -56,7 +56,7 @@ class ProjectResourceClientImpl(ProjectResourceClient):
 
     async def create(self, user_id: int, role: str, project: Project) -> None:
         payload = ExternalProjectCreate(
-            id=project.id,
+            id=str(project.id),
             name=str(project.id),
             cpu=self._convert_cpu(project.max_cpu),
             memory=self._convert_memory(project.max_memory),

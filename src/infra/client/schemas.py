@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 
 
 class ExternalProjectCreate(BaseModel):
-    id: int = Field(..., description="프로젝트 ID")
+    id: str = Field(..., description="프로젝트 ID")
     name: str = Field(..., description="프로젝트 이름")
     cpu: str | None = Field("100m", description="CPU Quota (예: 100m)")
     memory: str | None = Field("32Mi", description="Memory Quota (예: 32Mi)")
