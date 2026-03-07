@@ -181,7 +181,7 @@ class ProjectCreationFailed(AppException):
         super().__init__(
             "리소스 서버 오류로 프로젝트를 생성할 수 없습니다.",
             code="PROJECT_CREATION_FAILED",
-            status_code=502,
+            status_code=500,
         )
 
 
@@ -190,7 +190,7 @@ class ProjectDeletionFailed(AppException):
         super().__init__(
             "리소스 서버 오류로 프로젝트를 삭제할 수 없습니다.",
             code="PROJECT_DELETION_FAILED",
-            status_code=502,
+            status_code=500,
         )
 
 
@@ -199,5 +199,5 @@ class ProjectResourceUpdateFailed(AppException):
         super().__init__(
             "리소스 서버 오류로 프로젝트 리소스를 변경할 수 없습니다.",
             code="PROJECT_RESOURCE_UPDATE_FAILED",
-            status_code=502,
+            status_code=500,
         )
