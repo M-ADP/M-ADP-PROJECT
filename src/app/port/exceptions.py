@@ -26,7 +26,7 @@ class PortCreationFailed(AppException):
         super().__init__(
             "리소스 서버 오류로 포트를 생성할 수 없습니다.",
             code="PORT_CREATION_FAILED",
-            status_code=502,
+            status_code=500,
         )
 
 
@@ -35,7 +35,7 @@ class PortDeletionFailed(AppException):
         super().__init__(
             "리소스 서버 오류로 포트를 삭제할 수 없습니다.",
             code="PORT_DELETION_FAILED",
-            status_code=502,
+            status_code=500,
         )
 
 
@@ -44,5 +44,5 @@ class PortUpdateFailed(AppException):
         super().__init__(
             "리소스 서버 오류로 포트를 변경할 수 없습니다.",
             code="PORT_UPDATE_FAILED",
-            status_code=502,
+            status_code=500,
         )
