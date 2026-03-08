@@ -52,7 +52,7 @@ class ProjectResourceClientImpl(ProjectResourceClient):
     def _convert_memory(self, val: float | None) -> str | None:
         if val is None:
             return None
-        return f"{int(val)}Mi"
+        return f"{int(val * 1024)}Mi"
 
     async def create(self, user_id: int, role: str, project: Project) -> None:
         payload = ExternalProjectCreate(
