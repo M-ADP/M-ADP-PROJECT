@@ -27,7 +27,10 @@ class UserClientImpl(UserClient):
     async def get_user(self, user_id: int) -> UserInfo | None:
         url = UserAPIUrls.GET_USER_BY_ID.format(user_id=user_id)
         logger.error(f"[GET_USER] 요청: url={self.base_url + url} user_id={user_id!r}")  # 임시
-        response = await self.http_client.get(url)
+        response = await self.http_client.get(
+            url,
+            headers={"X-User-Id": str(user_id), "X-User-Role": "ADMIN"},
+        )
         try:
             logger.error(f"[GET_USER] 응답: status={response.status} user_id={user_id!r}")  # 임시
             if response.status != 200:
@@ -48,7 +51,8 @@ class UserClientImpl(UserClient):
 
     async def exists(self, user_id: int) -> bool:
         response = await self.http_client.get(
-            UserAPIUrls.GET_USER_BY_ID.format(user_id=user_id)
+            UserAPIUrls.GET_USER_BY_ID.format(user_id=user_id),
+            headers={"X-User-Id": str(user_id), "X-User-Role": "ADMIN"},
         )
         try:
             return response.status == 200
