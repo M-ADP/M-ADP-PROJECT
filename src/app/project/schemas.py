@@ -24,16 +24,16 @@ class ProjectCreate(BaseModel):
         description="vCPU 기준 (기본 0.1v)",
     )
     max_memory: float = Field(
-        32.0,
-        ge=32.0,
-        le=4096.0,
-        description="MB 단위 (기본 32MB)",
+        0.032,
+        ge=0.032,
+        le=4.0,
+        description="GB 단위 (기본 0.032GB)",
     )
     max_disk: float = Field(
-        32.0,
-        ge=32.0,
-        le=51200.0,
-        description="MB 단위 (기본 32MB)",
+        0.032,
+        ge=0.032,
+        le=50.0,
+        description="GB 단위 (기본 0.032GB)",
     )
 
 
@@ -64,15 +64,15 @@ class ProjectResourceUpdate(BaseModel):
     )
     max_memory: float | None = Field(
         None,
-        ge=32.0,
-        le=4096.0,
-        description="MB 단위 (32MB ~ 4GB)",
+        ge=0.032,
+        le=4.0,
+        description="GB 단위 (0.032GB ~ 4GB)",
     )
     max_disk: float | None = Field(
         None,
-        ge=32.0,
-        le=51200.0,
-        description="MB 단위 (32MB ~ 50GB, 늘리기만 가능)",
+        ge=0.032,
+        le=50.0,
+        description="GB 단위 (0.032GB ~ 50GB, 늘리기만 가능)",
     )
 
 
@@ -150,11 +150,11 @@ class ProjectResourceLimitResponse(BaseModel):
     )
     max_memory: float = Field(
         ...,
-        description="프로젝트 최대 메모리(MB)",
+        description="프로젝트 최대 메모리(GB)",
     )
     max_disk: float = Field(
         ...,
-        description="프로젝트 최대 디스크(MB)",
+        description="프로젝트 최대 디스크(GB)",
     )
 
 
