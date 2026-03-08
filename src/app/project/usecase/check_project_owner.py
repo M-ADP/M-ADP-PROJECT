@@ -1,6 +1,9 @@
+import logging
 from fastapi import Depends
 
 from src.app.base_usecase import BaseUseCase
+
+logger = logging.getLogger(__name__)
 from src.core.uow import UnitOfWork
 from src.dependencies.uow import get_uow
 
@@ -19,8 +22,11 @@ class CheckProjectOwnerUseCase(BaseUseCase):
         project_id: int,
         user_id: int,
     ) -> bool:
+        logger.error(f"[CHECK_OWNER] project_id={project_id!r} user_id={user_id!r}")  # 임시
         async with self.uow:
-            return await self.uow.project_member.is_owner(
+            result = await self.uow.project_member.is_owner(
                 project_id=project_id,
                 user_id=user_id,
             )
+            logger.error(f"[CHECK_OWNER] is_owner={result} project_id={project_id!r} user_id={user_id!r}")  # 임시
+            return result
