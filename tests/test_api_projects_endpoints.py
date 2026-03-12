@@ -49,11 +49,11 @@ pytestmark = pytest.mark.anyio
 
 
 async def test_create_project_endpoint_contract() -> None:
-    created = make_project(1, user_id=1, name="alpha", max_cpu=1.0, max_memory=128.0, max_disk=256.0)
+    created = make_project(1, user_id=1, name="alpha", max_cpu=1.0, max_memory=0.5, max_disk=2.0)
     usecase = AsyncUseCaseStub(created)
 
     response = await create_project_endpoint(
-        payload=ProjectCreate(name="alpha", max_cpu=1.0, max_memory=128.0, max_disk=256.0),
+        payload=ProjectCreate(name="alpha", max_cpu=1.0, max_memory=0.5, max_disk=2.0),
         user=UserInfo(user_id=1, role="MEMBER"),
         usecase=usecase,
     )
@@ -61,7 +61,7 @@ async def test_create_project_endpoint_contract() -> None:
     assert response.message == "프로젝트가 생성되었습니다."
     assert response.data.id == 1
     assert response.data.name == "alpha"
-    assert usecase.calls == [((ProjectCreate(name="alpha", max_cpu=1.0, max_memory=128.0, max_disk=256.0),), {"user_id": 1, "role": "MEMBER"})]
+    assert usecase.calls == [((ProjectCreate(name="alpha", max_cpu=1.0, max_memory=0.5, max_disk=2.0),), {"user_id": 1, "role": "MEMBER"})]
 
 
 async def test_list_projects_endpoint_contract() -> None:
@@ -191,9 +191,9 @@ async def test_delete_project_endpoint_contract() -> None:
 
 
 async def test_update_project_resource_endpoint_contract() -> None:
-    updated = make_project(1, user_id=1, name="alpha", max_cpu=2.0, max_memory=256.0, max_disk=512.0)
+    updated = make_project(1, user_id=1, name="alpha", max_cpu=2.0, max_memory=1.0, max_disk=3.0)
     usecase = AsyncUseCaseStub(updated)
-    payload = ProjectResourceUpdate(max_cpu=2.0, max_memory=256.0, max_disk=512.0)
+    payload = ProjectResourceUpdate(max_cpu=2.0, max_memory=1.0, max_disk=3.0)
 
     response = await update_project_resource_endpoint(
         project_id=1,
@@ -204,8 +204,8 @@ async def test_update_project_resource_endpoint_contract() -> None:
 
     assert response.message == "프로젝트 리소스가 변경되었습니다."
     assert response.data.max_cpu == 2.0
-    assert response.data.max_memory == 256.0
-    assert response.data.max_disk == 512.0
+    assert response.data.max_memory == 1.0
+    assert response.data.max_disk == 3.0
     assert usecase.calls == [
         ((1,), {"request": payload, "user_id": 1, "role": "OWNER"})
     ]

@@ -1,9 +1,6 @@
-import logging
 from fastapi import Depends
 
 from src.app.project.exceptions import ProjectNotFound, UserNotFound
-
-logger = logging.getLogger(__name__)
 from src.app.project.schemas import ProjectMemberResponse
 from src.common.schemas import CursorPage
 from src.app.base_usecase import BaseUseCase
@@ -31,17 +28,14 @@ class ListProjectMembersUseCase(BaseUseCase):
         limit: int = 20,
         cursor: int | None = None,
     ) -> CursorPage[ProjectMemberResponse]:
-        logger.error(f"[LIST_MEMBERS] project_id={project_id!r} user_id={user_id!r}")  # 임시
         async with self.uow:
             # 프로젝트 존재 여부 확인 (소유자 또는 멤버만 조회 가능)
             project = await self.uow.project.get_by_id(project_id)
             if project is None:
-                logger.error(f"[LIST_MEMBERS] 프로젝트 없음: project_id={project_id!r}")  # 임시
                 raise ProjectNotFound()
 
             # 프로젝트 접근 권한 확인
             has_access = await self.uow.project_member.has_access(project_id, user_id)
-            logger.error(f"[LIST_MEMBERS] has_access={has_access} project_id={project_id!r} user_id={user_id!r}")  # 임시
             if not has_access:
                 raise ProjectNotFound()
 

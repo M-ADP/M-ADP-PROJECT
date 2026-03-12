@@ -44,7 +44,7 @@ pytestmark = pytest.mark.anyio
 
 
 def build_project_create(name: str = "my-project") -> ProjectCreate:
-    return ProjectCreate(name=name, max_cpu=0.5, max_memory=64.0, max_disk=128.0)
+    return ProjectCreate(name=name, max_cpu=0.5, max_memory=0.5, max_disk=2.0)
 
 
 async def test_create_project_raises_when_project_limit_exceeded() -> None:
@@ -190,7 +190,7 @@ async def test_update_project_resource_raises_when_project_not_found() -> None:
 
 
 async def test_update_project_resource_raises_when_requester_not_owner() -> None:
-    project = make_project(1, user_id=1, max_disk=200)
+    project = make_project(1, user_id=1, max_disk=2.0)
     members = [make_member(1, 2, role="MEMBER")]
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
@@ -204,14 +204,14 @@ async def test_update_project_resource_raises_when_requester_not_owner() -> None
     with pytest.raises(OnlyOwnerCanUpdateResource):
         await usecase(
             project_id=1,
-            request=ProjectResourceUpdate(max_disk=300),
+            request=ProjectResourceUpdate(max_disk=3.0),
             user_id=2,
             role="MEMBER",
         )
 
 
 async def test_update_project_resource_raises_when_disk_is_reduced() -> None:
-    project = make_project(1, user_id=1, max_disk=200)
+    project = make_project(1, user_id=1, max_disk=3.0)
     members = [make_member(1, 1, role="OWNER")]
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
@@ -225,14 +225,14 @@ async def test_update_project_resource_raises_when_disk_is_reduced() -> None:
     with pytest.raises(DiskCannotBeReduced):
         await usecase(
             project_id=1,
-            request=ProjectResourceUpdate(max_disk=100),
+            request=ProjectResourceUpdate(max_disk=2.5),
             user_id=1,
             role="OWNER",
         )
 
 
 async def test_update_project_resource_success_allocates_resource() -> None:
-    project = make_project(1, user_id=1, max_cpu=1.0, max_memory=128.0, max_disk=200)
+    project = make_project(1, user_id=1, max_cpu=1.0, max_memory=0.5, max_disk=2.0)
     members = [make_member(1, 1, role="OWNER")]
     resource_client = FakeProjectResourceClient()
     uow = FakeUnitOfWork(
@@ -246,14 +246,14 @@ async def test_update_project_resource_success_allocates_resource() -> None:
 
     updated = await usecase(
         project_id=1,
-        request=ProjectResourceUpdate(max_cpu=2.0, max_memory=256.0, max_disk=300.0),
+        request=ProjectResourceUpdate(max_cpu=2.0, max_memory=1.0, max_disk=3.0),
         user_id=1,
         role="OWNER",
     )
 
     assert updated.max_cpu == 2.0
-    assert updated.max_memory == 256.0
-    assert updated.max_disk == 300.0
+    assert updated.max_memory == 1.0
+    assert updated.max_disk == 3.0
     assert resource_client.calls[-1][0] == "allocate"
 
 

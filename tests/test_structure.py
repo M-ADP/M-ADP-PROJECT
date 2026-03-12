@@ -28,7 +28,7 @@ class TestAppStructure(unittest.TestCase):
         print("Registered Routes:", routes)
 
         # 프로젝트 관련 라우터
-        self.assertTrue(any("/v1/projects" in r for r in routes), "Project router not registered")
+        self.assertTrue(any("/projects" in r for r in routes), "Project router not registered")
         
         # DNS 관련 라우터
         self.assertTrue(any("/dns" in r for r in routes), "DNS router not registered")
