@@ -26,7 +26,7 @@ def build_port_create() -> PortCreate:
         port=80,
         target_port=8080,
         protocol="TCP",
-        service_type="LoadBalancer",
+        service_type="ClusterIP",
     )
 
 

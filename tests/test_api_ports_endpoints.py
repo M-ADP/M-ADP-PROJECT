@@ -30,7 +30,7 @@ async def test_create_project_port_endpoint_contract() -> None:
         port=80,
         target_port=8080,
         protocol="TCP",
-        service_type="LoadBalancer",
+        service_type="ClusterIP",
     )
 
     response = await create_project_port_endpoint(
@@ -58,7 +58,7 @@ async def test_list_project_ports_endpoint_contract() -> None:
                 port=80,
                 target_port=8080,
                 protocol="TCP",
-                                service_type="LoadBalancer",
+                service_type="ClusterIP",
             )
         ],
         has_next=False,
