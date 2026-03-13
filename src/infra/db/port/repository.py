@@ -12,16 +12,16 @@ class PortRepositoryImpl(PortRepository):
     def __init__(self, session: AsyncSession):
         super().__init__(session)
 
-    async def exists_by_from_port(
+    async def exists_by_service_id(
         self,
         project_id: int,
-        from_port: int,
+        service_id: str,
         exclude_port_id: int | None = None,
     ) -> bool:
-        """포트 중복 여부를 확인합니다."""
+        """서비스 ID 중복 여부를 확인합니다."""
         conditions = [
             PortModel.project_id == project_id,
-            PortModel.from_port == from_port,
+            PortModel.service_id == service_id,
         ]
         if exclude_port_id:
             conditions.append(PortModel.id != exclude_port_id)
@@ -35,10 +35,13 @@ class PortRepositoryImpl(PortRepository):
         model = PortModel(
             id=port.id,
             project_id=port.project_id,
-            from_ip=port.from_ip,
-            from_port=port.from_port,
-            port_number=port.port_number,
+            service_id=port.service_id,
+            service_name=port.service_name,
+            target_deployment_name=port.target_deployment_name,
+            port=port.port,
+            target_port=port.target_port,
             protocol=port.protocol,
+            service_type=port.service_type,
         )
         self._session.add(model)
         await self._session.flush()
@@ -93,10 +96,13 @@ class PortRepositoryImpl(PortRepository):
         self,
         project_id: int,
         port_id: int,
-        from_ip: str,
-        from_port: int,
-        port_number: int,
+        service_id: str,
+        service_name: str,
+        target_deployment_name: str,
+        port: int,
+        target_port: int,
         protocol: str,
+        service_type: str,
     ) -> Port:
         """포트를 업데이트합니다."""
         stmt = select(PortModel).where(
@@ -107,9 +113,14 @@ class PortRepositoryImpl(PortRepository):
         model = result.scalar_one_or_none()
         if model is None:
             raise ValueError("Port not found")
-        model.from_ip = from_ip
-        model.from_port = from_port
-        model.port_number = port_number
+        
+        model.service_id = service_id
+        model.service_name = service_name
+        model.target_deployment_name = target_deployment_name
+        model.port = port
+        model.target_port = target_port
         model.protocol = protocol
+        model.service_type = service_type
+
         await self._session.flush()
         return model.to_entity()

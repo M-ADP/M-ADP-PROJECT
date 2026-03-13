@@ -77,15 +77,14 @@ class ProjectResourceClientImpl(ProjectResourceClient):
         ))
 
     async def open_port(self, user_id: int, role: str, project: Project, port: Port) -> None:
-        service_id = f"svc-{project.id}-{port.id}"
         payload = ExternalPortCreate(
-            service_id=service_id,
-            service_name=service_id,
-            target_deployment_name=str(project.id),
-            port=port.from_port,
-            target_port=port.from_port,
-            protocol=port.protocol.upper(),
-            service_type="ClusterIP",
+            service_id=port.service_id,
+            service_name=port.service_name,
+            target_deployment_name=port.target_deployment_name,
+            port=port.port,
+            target_port=port.target_port,
+            protocol=port.protocol,
+            service_type=port.service_type,
         )
         await self._request(self.http_client.post(
             self.base_url + ProjectResourceAPIUrls.OPEN_PROJECT_PORT.format(
@@ -96,10 +95,9 @@ class ProjectResourceClientImpl(ProjectResourceClient):
         ))
 
     async def close_port(self, user_id: int, role: str, project: Project, port: Port) -> None:
-        service_id = f"svc-{project.id}-{port.id}"
         await self._request(self.http_client.delete(
             self.base_url + ProjectResourceAPIUrls.CLOSE_PROJECT_PORT.format(
-                project_id=project.id, port_id=service_id
+                project_id=project.id, port_id=port.service_id
             ),
             headers={"X-User-Id": str(user_id), "X-User-Role": role},
         ))
@@ -112,18 +110,17 @@ class ProjectResourceClientImpl(ProjectResourceClient):
         original_port: Port,
         updated_port: Port,
     ) -> None:
-        service_id = f"svc-{project.id}-{original_port.id}"
         payload = ExternalPortUpdate(
-            service_id=service_id,
-            service_name=service_id,
-            target_deployment_name=str(project.id),
-            target_port=updated_port.from_port,
-            protocol=updated_port.protocol.upper(),
-            service_type="ClusterIP",
+            service_id=updated_port.service_id,
+            service_name=updated_port.service_name,
+            target_deployment_name=updated_port.target_deployment_name,
+            target_port=updated_port.target_port,
+            protocol=updated_port.protocol,
+            service_type=updated_port.service_type,
         )
         await self._request(self.http_client.put(
             self.base_url + ProjectResourceAPIUrls.UPDATE_PROJECT_PORT.format(
-                project_id=project.id, port_id=original_port.from_port
+                project_id=project.id, port_id=original_port.service_id
             ),
             headers={"X-User-Id": str(user_id), "X-User-Role": role},
             json=payload.model_dump(exclude_none=True),

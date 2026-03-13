@@ -11,8 +11,8 @@ class Port(BaseEntity):
     __table_args__ = (
         UniqueConstraint(
             "project_id",
-            "from_port",
-            name="uq_port_project_from_port",
+            "service_id",
+            name="uq_port_project_service_id",
         ),
     )
 
@@ -27,17 +27,23 @@ class Port(BaseEntity):
         nullable=False,
         index=True,
     )
-    from_ip: Mapped[str] = mapped_column(String(255), nullable=False)
-    from_port: Mapped[int] = mapped_column(BigInteger, nullable=False)
-    port_number: Mapped[int] = mapped_column(Integer, nullable=False)
-    protocol: Mapped[str] = mapped_column(String(16), nullable=False)
+    service_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    service_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    target_deployment_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    port: Mapped[int] = mapped_column(Integer, nullable=False)
+    target_port: Mapped[int] = mapped_column(Integer, nullable=False)
+    protocol: Mapped[str] = mapped_column(String(16), nullable=False, default="TCP")
+    service_type: Mapped[str] = mapped_column(String(32), nullable=False, default="ClusterIP")
 
     def to_entity(self) -> PortEntity:
         return PortEntity(
             id=self.id,
             project_id=self.project_id,
-            from_ip=self.from_ip,
-            from_port=self.from_port,
-            port_number=self.port_number,
+            service_id=self.service_id,
+            service_name=self.service_name,
+            target_deployment_name=self.target_deployment_name,
+            port=self.port,
+            target_port=self.target_port,
             protocol=self.protocol,
+            service_type=self.service_type,
         )

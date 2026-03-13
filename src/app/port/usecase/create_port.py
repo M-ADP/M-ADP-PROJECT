@@ -39,20 +39,26 @@ class CreatePortUseCase(BaseUseCase):
             if not is_owner:
                 raise OnlyOwnerCanManagePorts()
 
-            if await self.uow.port.exists_by_from_port(
+            # 신규 Port 객체 생성 (port_id 선발급)
+            port_row = Port(
+                project_id=project_id,
+                target_deployment_name=request.target_deployment_name,
+                port=request.port,
+                target_port=request.target_port,
+                protocol=request.protocol,
+                service_type=request.service_type,
+            )
+            # 프로젝트 ID와 발급된 Port ID를 조합하여 service_id 자동 생성
+            port_row.service_id = f"svc-{project_id}-{port_row.id}"
+            port_row.service_name = port_row.service_id
+
+            if await self.uow.port.exists_by_service_id(
                 project_id,
-                request.from_port,
+                port_row.service_id,
                 exclude_port_id=None,
             ):
                 raise PortAlreadyExists()
 
-            port_row = Port(
-                project_id=project_id,
-                from_ip=request.from_ip,
-                from_port=request.from_port,
-                port_number=request.port_number,
-                protocol=request.protocol,
-            )
             port = await self.uow.port.insert(port_row)
             try:
                 await self.project_resource_client.open_port(

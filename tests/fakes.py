@@ -52,18 +52,24 @@ def make_port(
     project_id: int,
     port_id: int,
     *,
-    from_ip: str = "0.0.0.0/0",
-    from_port: int = 80,
-    port_number: int = 6,
-    protocol: str = "tcp",
+    service_id: str = "web-svc",
+    service_name: str = "web-svc-name",
+    target_deployment_name: str = "app",
+    port: int = 80,
+    target_port: int = 8080,
+    protocol: str = "TCP",
+    service_type: str = "ClusterIP",
 ) -> Port:
     return Port(
         id=port_id,
         project_id=project_id,
-        from_ip=from_ip,
-        from_port=from_port,
-        port_number=port_number,
+        service_id=service_id,
+        service_name=service_name,
+        target_deployment_name=target_deployment_name,
+        port=port,
+        target_port=target_port,
         protocol=protocol,
+        service_type=service_type,
     )
 
 
@@ -275,15 +281,15 @@ class FakePortRepository:
             (port.project_id, port.id): port for port in (ports or [])
         }
 
-    async def exists_by_from_port(
+    async def exists_by_service_id(
         self,
         project_id: int,
-        from_port: int,
+        service_id: str,
         exclude_port_id: int | None = None,
     ) -> bool:
         return any(
             port.project_id == project_id
-            and port.from_port == from_port
+            and port.service_id == service_id
             and port.id != exclude_port_id
             for port in self.ports.values()
         )
@@ -318,17 +324,25 @@ class FakePortRepository:
         self,
         project_id: int,
         port_id: int,
-        from_ip: str,
-        from_port: int,
-        port_number: int,
+        service_id: str,
+        service_name: str,
+        target_deployment_name: str,
+        port: int,
+        target_port: int,
         protocol: str,
+        service_type: str,
     ) -> Port:
-        port = self.ports[(project_id, port_id)]
-        port.from_ip = from_ip
-        port.from_port = from_port
-        port.port_number = port_number
-        port.protocol = protocol
-        return port
+        p = self.ports[(project_id, port_id)]
+        p.update(
+            service_id=service_id,
+            service_name=service_name,
+            target_deployment_name=target_deployment_name,
+            port=port,
+            target_port=target_port,
+            protocol=protocol,
+            service_type=service_type,
+        )
+        return p
 
 
 class FakeDNSRepository:

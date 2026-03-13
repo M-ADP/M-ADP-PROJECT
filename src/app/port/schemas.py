@@ -4,29 +4,34 @@ from pydantic import BaseModel, ConfigDict, Field, constr
 
 
 class PortCreate(BaseModel):
-    from_ip: constr(strip_whitespace=True, min_length=1) = Field(
+    target_deployment_name: constr(strip_whitespace=True, min_length=1) = Field(
         ...,
-        description="허용할 출발지 IP 또는 CIDR",
-        examples=["0.0.0.0/0", "10.0.0.1"],
+        description="연결할 앱(Deployment) 이름",
+        examples=["my-app"],
     )
-    from_port: int = Field(
+    port: int = Field(
         ...,
         ge=1,
         le=65535,
-        description="공개할 포트 번호",
-        examples=[80, 443],
+        description="외부 노출 포트",
+        examples=[80],
     )
-    port_number: int = Field(
+    target_port: int = Field(
         ...,
-        ge=0,
-        le=255,
-        description="IANA protocol number",
-        examples=[6, 17],
+        ge=1,
+        le=65535,
+        description="컨테이너 내부 포트",
+        examples=[8080],
     )
-    protocol: Literal["tcp", "udp", "icmp"] = Field(
-        ...,
+    protocol: Literal["TCP", "UDP", "SCTP"] = Field(
+        "TCP",
         description="통신 프로토콜",
-        examples=["tcp"],
+        examples=["TCP"],
+    )
+    service_type: Literal["ClusterIP", "NodePort", "LoadBalancer"] = Field(
+        "ClusterIP",
+        description="서비스 타입",
+        examples=["ClusterIP"],
     )
 
 
@@ -39,7 +44,10 @@ class PortResponse(BaseModel):
 
     id: int
     project_id: int
-    from_ip: str
-    from_port: int
-    port_number: int
+    service_id: str
+    service_name: str
+    target_deployment_name: str
+    port: int
+    target_port: int
     protocol: str
+    service_type: str

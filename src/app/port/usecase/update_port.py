@@ -48,20 +48,17 @@ class UpdatePortUseCase(BaseUseCase):
             if original_port is None:
                 raise PortNotFound()
 
-            if await self.uow.port.exists_by_from_port(
-                project_id,
-                request.from_port,
-                exclude_port_id=port_id,
-            ):
-                raise PortAlreadyExists()
-
+            # service_id는 기존 것을 유지하되, 이름과 다른 속성들만 업데이트합니다.
             port = await self.uow.port.update(
                 project_id=project_id,
                 port_id=port_id,
-                from_ip=request.from_ip,
-                from_port=request.from_port,
-                port_number=request.port_number,
+                service_id=original_port.service_id,
+                service_name=original_port.service_name,
+                target_deployment_name=request.target_deployment_name,
+                port=request.port,
+                target_port=request.target_port,
                 protocol=request.protocol,
+                service_type=request.service_type,
             )
             try:
                 await self.project_resource_client.update_port(

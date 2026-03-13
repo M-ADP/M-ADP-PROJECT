@@ -8,13 +8,13 @@ class PortRepository(Repository[Port], ABC):
     """포트 Repository 추상 클래스"""
 
     @abstractmethod
-    async def exists_by_from_port(
+    async def exists_by_service_id(
         self,
         project_id: int,
-        from_port: int,
+        service_id: str,
         exclude_port_id: int | None = None,
     ) -> bool:
-        """포트 중복 여부를 확인합니다."""
+        """서비스 ID 중복 여부를 확인합니다."""
         pass
 
     @abstractmethod
@@ -51,10 +51,13 @@ class PortRepository(Repository[Port], ABC):
         self,
         project_id: int,
         port_id: int,
-        from_ip: str,
-        from_port: int,
-        port_number: int,
+        service_id: str,
+        service_name: str,
+        target_deployment_name: str,
+        port: int,
+        target_port: int,
         protocol: str,
+        service_type: str,
     ) -> Port:
         """포트를 업데이트합니다."""
         pass
