@@ -89,7 +89,6 @@ class SonyflakeConfig(LoggedSettings):
 
 class ProjectConfig:
     LIMIT: int = 3
-    DNS_DOMAIN: str = "mdeveloper.platform"
 
 
 @register_config

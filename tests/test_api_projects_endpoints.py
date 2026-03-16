@@ -15,7 +15,6 @@ from src.api.routers.routes.projects import (
     update_project_name_endpoint,
     update_project_resource_endpoint,
 )
-from src.app.port.schemas import PortResponse
 from src.app.project.schemas import (
     ApplicationItem,
     MetricPoint,
@@ -133,16 +132,6 @@ async def test_get_project_endpoint_contract() -> None:
         disk_usage=[MetricPoint(timestamp="2026-01-01T00:00:00Z", value=20.0)],
         network_usage=[MetricPoint(timestamp="2026-01-01T00:00:00Z", value=30.0)],
         traffic_per_hour=[MetricPoint(timestamp="2026-01-01T00:00:00Z", value=40.0)],
-        ports=[
-            PortResponse(
-                id=1,
-                project_id=1,
-                from_ip="0.0.0.0/0",
-                from_port=80,
-                port_number=6,
-                protocol="tcp",
-            )
-        ],
     )
     usecase = AsyncUseCaseStub(detail)
 

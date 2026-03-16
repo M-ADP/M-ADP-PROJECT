@@ -7,8 +7,6 @@ from typing import Any
 from src.core.client.application import ApplicationItemData, DeploymentSummaryItem
 from src.core.client.project_resource import MetricPointData, ResourceUsageData
 from src.core.client.user import UserInfo
-from src.core.domain.dns import DNS, DNSState
-from src.core.domain.port import Port
 from src.core.domain.project import Project, ProjectMember
 
 
@@ -45,48 +43,6 @@ def make_member(
         user_id=user_id,
         role=role,
         joined_at=joined_at or datetime(2024, 1, 1, tzinfo=timezone.utc),
-    )
-
-
-def make_port(
-    project_id: int,
-    port_id: int,
-    *,
-    service_id: str = "web-svc",
-    service_name: str = "web-svc-name",
-    target_deployment_name: str = "app",
-    port: int = 80,
-    target_port: int = 8080,
-    protocol: str = "TCP",
-    service_type: str = "ClusterIP",
-) -> Port:
-    return Port(
-        id=port_id,
-        project_id=project_id,
-        service_id=service_id,
-        service_name=service_name,
-        target_deployment_name=target_deployment_name,
-        port=port,
-        target_port=target_port,
-        protocol=protocol,
-        service_type=service_type,
-    )
-
-
-def make_dns(
-    project_id: int,
-    dns_id: int,
-    *,
-    dns_name: str,
-    state: DNSState = DNSState.PENDING,
-    port_id: int | None = None,
-) -> DNS:
-    return DNS(
-        id=dns_id,
-        project_id=project_id,
-        dns_name=dns_name,
-        state=state,
-        port_id=port_id,
     )
 
 
@@ -275,146 +231,15 @@ class FakeProjectMemberRepository:
         return member
 
 
-class FakePortRepository:
-    def __init__(self, ports: list[Port] | None = None) -> None:
-        self.ports: dict[tuple[int, int], Port] = {
-            (port.project_id, port.id): port for port in (ports or [])
-        }
-
-    async def exists_by_service_id(
-        self,
-        project_id: int,
-        service_id: str,
-        exclude_port_id: int | None = None,
-    ) -> bool:
-        return any(
-            port.project_id == project_id
-            and port.service_id == service_id
-            and port.id != exclude_port_id
-            for port in self.ports.values()
-        )
-
-    async def list_by_project(
-        self,
-        project_id: int,
-        limit: int,
-        cursor: int | None = None,
-    ) -> list[Port]:
-        ports = [port for port in self.ports.values() if port.project_id == project_id]
-        ports.sort(key=lambda port: port.id)
-        if cursor is not None:
-            ports = [port for port in ports if port.id > cursor]
-        return ports[:limit]
-
-    async def get_by_id_for_project(
-        self,
-        project_id: int,
-        port_id: int,
-    ) -> Port | None:
-        return self.ports.get((project_id, port_id))
-
-    async def insert(self, port: Port) -> Port:
-        self.ports[(port.project_id, port.id)] = port
-        return port
-
-    async def delete(self, port: Port) -> None:
-        self.ports.pop((port.project_id, port.id), None)
-
-    async def update(
-        self,
-        project_id: int,
-        port_id: int,
-        service_id: str,
-        service_name: str,
-        target_deployment_name: str,
-        port: int,
-        target_port: int,
-        protocol: str,
-        service_type: str,
-    ) -> Port:
-        p = self.ports[(project_id, port_id)]
-        p.update(
-            service_id=service_id,
-            service_name=service_name,
-            target_deployment_name=target_deployment_name,
-            port=port,
-            target_port=target_port,
-            protocol=protocol,
-            service_type=service_type,
-        )
-        return p
-
-
-class FakeDNSRepository:
-    def __init__(self, dns_records: list[DNS] | None = None) -> None:
-        self.dns_records: dict[tuple[int, int], DNS] = {
-            (dns.project_id, dns.id): dns for dns in (dns_records or [])
-        }
-
-    async def exists_by_dns_name(
-        self,
-        dns_name: str,
-        exclude_dns_id: int | None = None,
-    ) -> bool:
-        return any(
-            dns.dns_name == dns_name and dns.id != exclude_dns_id
-            for dns in self.dns_records.values()
-        )
-
-    async def exists_by_project(self, project_id: int) -> bool:
-        return any(key[0] == project_id for key in self.dns_records)
-
-    async def get_by_project(self, project_id: int) -> DNS | None:
-        records = [dns for dns in self.dns_records.values() if dns.project_id == project_id]
-        if not records:
-            return None
-        records.sort(key=lambda dns: dns.id)
-        return records[0]
-
-    async def get_by_id_for_project(self, dns_id: int, project_id: int) -> DNS | None:
-        return self.dns_records.get((project_id, dns_id))
-
-    async def insert(self, dns: DNS) -> DNS:
-        self.dns_records[(dns.project_id, dns.id)] = dns
-        return dns
-
-    async def delete(self, dns: DNS) -> None:
-        self.dns_records.pop((dns.project_id, dns.id), None)
-
-    async def update_name(
-        self,
-        dns_id: int,
-        project_id: int,
-        dns_name: str,
-    ) -> DNS:
-        dns = self.dns_records[(project_id, dns_id)]
-        dns.dns_name = dns_name
-        return dns
-
-    async def bind_port(
-        self,
-        dns_id: int,
-        project_id: int,
-        port_id: int,
-    ) -> DNS:
-        dns = self.dns_records[(project_id, dns_id)]
-        dns.port_id = port_id
-        return dns
-
-
 class FakeUnitOfWork:
     def __init__(
         self,
         *,
         project_repo: FakeProjectRepository | None = None,
         project_member_repo: FakeProjectMemberRepository | None = None,
-        port_repo: FakePortRepository | None = None,
-        dns_repo: FakeDNSRepository | None = None,
     ) -> None:
         self.project = project_repo or FakeProjectRepository()
         self.project_member = project_member_repo or FakeProjectMemberRepository()
-        self.port = port_repo or FakePortRepository()
-        self.dns = dns_repo or FakeDNSRepository()
         self.enter_count = 0
         self.exit_count = 0
         self.last_exception: BaseException | None = None
@@ -450,29 +275,6 @@ class FakeProjectResourceClient:
     async def delete(self, user_id: int, role: str, project: Project) -> None:
         self._record("delete", user_id=user_id, role=role, project=project)
 
-    async def open_port(self, user_id: int, role: str, project: Project, port: Port) -> None:
-        self._record("open_port", user_id=user_id, role=role, project=project, port=port)
-
-    async def close_port(self, user_id: int, role: str, project: Project, port: Port) -> None:
-        self._record("close_port", user_id=user_id, role=role, project=project, port=port)
-
-    async def update_port(
-        self,
-        user_id: int,
-        role: str,
-        project: Project,
-        original_port: Port,
-        updated_port: Port,
-    ) -> None:
-        self._record(
-            "update_port",
-            user_id=user_id,
-            role=role,
-            project=project,
-            original_port=original_port,
-            updated_port=updated_port,
-        )
-
     async def allocate(self, user_id: int, role: str, project: Project) -> None:
         self._record("allocate", user_id=user_id, role=role, project=project)
 
@@ -489,19 +291,6 @@ class FakeProjectResourceClient:
             interval_minutes=interval_minutes,
         )
         return self.usage
-
-    async def create_dns(self) -> None:
-        self._record("create_dns")
-
-    async def delete_dns(self) -> None:
-        self._record("delete_dns")
-
-    async def update_dns(self) -> None:
-        self._record("update_dns")
-
-    async def mapping_dns_and_port(self) -> None:
-        self._record("mapping_dns_and_port")
-
 
 class FakeApplicationClient:
     def __init__(

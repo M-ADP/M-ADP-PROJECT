@@ -25,17 +25,13 @@ from src.core.client.project_resource import ResourceUsageData
 from src.core.client.user import UserInfo
 
 from tests.fakes import (
-    FakeDNSRepository,
     FakeApplicationClient,
     FakeProjectMemberRepository,
     FakeProjectRepository,
     FakeProjectResourceClient,
     FakeUnitOfWork,
     FakeUserClient,
-    FakePortRepository,
-    make_dns,
     make_member,
-    make_port,
     make_project,
     single_metric,
 )
@@ -284,10 +280,6 @@ async def test_get_project_raises_when_user_has_no_role() -> None:
 async def test_get_project_success_maps_all_fields() -> None:
     project = make_project(1, name="api-project")
     members = [make_member(1, 1, role="OWNER")]
-    ports = [
-        make_port(1, 1, from_port=80, port_number=6, protocol="tcp"),
-        make_port(1, 2, from_port=53, port_number=17, protocol="udp"),
-    ]
     usage = ResourceUsageData(
         cpu=single_metric(0.1),
         memory=single_metric(10.0),
@@ -315,7 +307,6 @@ async def test_get_project_success_maps_all_fields() -> None:
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
         project_member_repo=FakeProjectMemberRepository(members),
-        port_repo=FakePortRepository(ports),
     )
     usecase = GetProjectUseCase(
         uow=uow,
@@ -330,7 +321,6 @@ async def test_get_project_success_maps_all_fields() -> None:
     assert detail.my_role == "OWNER"
     assert detail.deployments[0].name == "web"
     assert detail.cpu_usage[0].value == 0.1
-    assert detail.ports[0].id == 1
     assert resource_client.calls[0][0] == "get_usage"
 
 
@@ -362,7 +352,6 @@ async def test_list_projects_applies_order_default_role_and_state_fallback() -> 
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository(projects, reverse_get_by_ids=True),
         project_member_repo=project_member_repo,
-        dns_repo=FakeDNSRepository([make_dns(10, "dns-1", dns_name="a.mdeveloper.platform")]),
     )
     usecase = ListProjectsUseCase(uow=uow, application_client=summary_client)
 
@@ -370,7 +359,6 @@ async def test_list_projects_applies_order_default_role_and_state_fallback() -> 
 
     assert result.has_next is True
     assert [item.id for item in result.items] == [10, 20, 30]
-    assert result.items[0].domain == "a.mdeveloper.platform"
     assert result.items[1].deployment_status.state == "FAILED"
     assert result.items[2].my_role == "MEMBER"
 

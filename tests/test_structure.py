@@ -29,12 +29,6 @@ class TestAppStructure(unittest.TestCase):
 
         # 프로젝트 관련 라우터
         self.assertTrue(any("/projects" in r for r in routes), "Project router not registered")
-        
-        # DNS 관련 라우터
-        self.assertTrue(any("/dns" in r for r in routes), "DNS router not registered")
-        
-        # 포트 관련 라우터
-        self.assertTrue(any("/ports" in r for r in routes), "Port router not registered")
 
 if __name__ == "__main__":
     unittest.main()
