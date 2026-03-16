@@ -3,9 +3,6 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, constr
 
-from src.app.port.schemas import PortResponse
-
-
 class ProjectMemberRole(str):
     OWNER = "OWNER"
     MEMBER = "MEMBER"
@@ -189,7 +186,6 @@ class ProjectDetailResponse(BaseModel):
     disk_usage: list[MetricPoint]
     network_usage: list[MetricPoint]
     traffic_per_hour: list[MetricPoint]
-    ports: list[PortResponse]
 
 
 # ===== Project Member Schemas =====
