@@ -3,6 +3,7 @@ from src.infra.client.fake_project_resource_impl import FakeProjectResourceClien
 from src.infra.client.application_impl import ApplicationClientImpl
 from src.infra.client.fake_application_impl import FakeApplicationClientImpl
 from src.infra.client.user_impl import UserClientImpl
+from src.infra.client.fake_user_impl import FakeUserClientImpl
 
 __all__ = [
     "ProjectResourceClientImpl",
@@ -10,4 +11,5 @@ __all__ = [
     "ApplicationClientImpl",
     "FakeApplicationClientImpl",
     "UserClientImpl",
+    "FakeUserClientImpl",
 ]
