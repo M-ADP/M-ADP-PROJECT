@@ -3,6 +3,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, constr
 
+from src.core.client.application import ApplicationHealthStatus
+
 class ProjectMemberRole(str):
     OWNER = "OWNER"
     MEMBER = "MEMBER"
@@ -167,17 +169,7 @@ class ApplicationItem(BaseModel):
     exposed_port: int | None = None
     cpu_usage_percent: float | None = None
     ram_usage_percent: float | None = None
-    health_status: Literal[
-        "Healthy",
-        "Unhealthy",
-        "Stopped",
-        "RUNNING",
-        "PENDING",
-        "BUILDING",
-        "DEPLOYING",
-        "STOPPED",
-        "FAILED",
-    ] = "Stopped"
+    health_status: ApplicationHealthStatus = "STOPPED"
 
 
 class ProjectDetailResponse(BaseModel):

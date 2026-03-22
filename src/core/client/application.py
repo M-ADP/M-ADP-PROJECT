@@ -1,5 +1,16 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from typing import Literal, TypeAlias
+
+
+ApplicationHealthStatus: TypeAlias = Literal[
+    "RUNNING",
+    "PENDING",
+    "BUILDING",
+    "DEPLOYING",
+    "STOPPED",
+    "FAILED",
+]
 
 
 @dataclass
@@ -11,7 +22,7 @@ class ApplicationItemData:
     exposed_port: int | None = None
     cpu_usage_percent: float | None = None
     ram_usage_percent: float | None = None
-    health_status: str = "Stopped"
+    health_status: ApplicationHealthStatus = "STOPPED"
 
 
 @dataclass

@@ -67,7 +67,7 @@ class ApplicationClientImpl(ApplicationClient):
                     exposed_port=item.get("exposed_port"),
                     cpu_usage_percent=item.get("cpu_usage_percent"),
                     ram_usage_percent=item.get("ram_usage_percent"),
-                    health_status=item.get("health_status", "Stopped"),
+                    health_status=item.get("health_status", "STOPPED"),
                 )
                 for item in items
             ]
