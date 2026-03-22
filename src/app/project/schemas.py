@@ -163,7 +163,6 @@ class MetricPoint(BaseModel):
 class ApplicationItem(BaseModel):
     id: int
     name: str
-    runtime: str | None = None
     pod_count: int = Field(0, ge=0)
     exposed_port: int | None = None
     cpu_usage_percent: float | None = None

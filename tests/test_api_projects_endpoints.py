@@ -144,6 +144,7 @@ async def test_get_project_endpoint_contract() -> None:
     assert response.message == "프로젝트를 조회했습니다."
     assert response.data.id == 1
     assert response.data.deployments[0].id == 1
+    assert "runtime" not in response.data.deployments[0].model_dump()
     assert usecase.calls == [((1,), {"user_id": 1, "role": "MEMBER"})]
 
 

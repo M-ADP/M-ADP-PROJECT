@@ -320,6 +320,7 @@ async def test_get_project_success_maps_all_fields() -> None:
     assert detail.name == "api-project"
     assert detail.my_role == "OWNER"
     assert detail.deployments[0].name == "web"
+    assert "runtime" not in detail.deployments[0].model_dump()
     assert detail.cpu_usage[0].value == 0.1
     assert resource_client.calls[0][0] == "get_usage"
 

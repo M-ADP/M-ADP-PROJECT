@@ -54,7 +54,6 @@ class GetProjectUseCase(BaseUseCase):
                     ApplicationItem(
                         id=deployment.id,
                         name=deployment.name,
-                        runtime=deployment.runtime,
                         pod_count=deployment.pod_count,
                         exposed_port=deployment.exposed_port,
                         cpu_usage_percent=deployment.cpu_usage_percent,
