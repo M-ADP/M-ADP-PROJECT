@@ -167,7 +167,17 @@ class ApplicationItem(BaseModel):
     exposed_port: int | None = None
     cpu_usage_percent: float | None = None
     ram_usage_percent: float | None = None
-    health_status: Literal["Healthy", "Unhealthy", "Stopped"] = "Stopped"
+    health_status: Literal[
+        "Healthy",
+        "Unhealthy",
+        "Stopped",
+        "RUNNING",
+        "PENDING",
+        "BUILDING",
+        "DEPLOYING",
+        "STOPPED",
+        "FAILED",
+    ] = "Stopped"
 
 
 class ProjectDetailResponse(BaseModel):
