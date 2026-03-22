@@ -325,6 +325,37 @@ async def test_get_project_success_maps_all_fields() -> None:
     assert resource_client.calls[0][0] == "get_usage"
 
 
+async def test_get_project_accepts_upstream_application_status_values() -> None:
+    project = make_project(1, name="api-project")
+    members = [make_member(1, 1, role="OWNER")]
+    resource_client = FakeProjectResourceClient()
+    deployment_client = FakeApplicationClient(
+        {
+            1: [
+                ApplicationItemData(
+                    id=1,
+                    name="web",
+                    pod_count=1,
+                    health_status="PENDING",
+                )
+            ]
+        }
+    )
+    uow = FakeUnitOfWork(
+        project_repo=FakeProjectRepository([project]),
+        project_member_repo=FakeProjectMemberRepository(members),
+    )
+    usecase = GetProjectUseCase(
+        uow=uow,
+        project_resource_client=resource_client,
+        deployment_client=deployment_client,
+    )
+
+    detail = await usecase(project_id=1, user_id=1, role="OWNER")
+
+    assert detail.deployments[0].health_status == "PENDING"
+
+
 async def test_list_projects_applies_order_default_role_and_state_fallback() -> None:
     projects = [
         make_project(10, name="A"),
