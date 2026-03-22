@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 
 
 class ApplicationAPIUrls(str, Enum):
-    LIST_BY_PROJECT = "/application/projects/{project_id}/apps"
-    GET_SUMMARY_BATCH = "/application/projects/summary"
+    LIST_BY_PROJECT = "/apps/projects/{project_id}/apps"
+    GET_SUMMARY_BATCH = "/apps/summary"
 
 
 class ApplicationClientImpl(ApplicationClient):
@@ -131,4 +131,3 @@ class ApplicationClientImpl(ApplicationClient):
             return []
         finally:
             response.release()
-
