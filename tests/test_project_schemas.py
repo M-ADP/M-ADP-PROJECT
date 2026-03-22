@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from src.app.project.schemas import ProjectCreate, ProjectResourceUpdate
+from src.app.project.schemas import ApplicationItem, ProjectCreate, ProjectResourceUpdate
 
 
 def test_project_create_accepts_memory_and_disk_boundaries() -> None:
@@ -66,3 +66,33 @@ def test_project_resource_update_rejects_out_of_range_memory(max_memory: float) 
 def test_project_resource_update_rejects_out_of_range_disk(max_disk: float) -> None:
     with pytest.raises(ValidationError):
         ProjectResourceUpdate(max_disk=max_disk)
+
+
+@pytest.mark.parametrize(
+    "health_status",
+    ["RUNNING", "PENDING", "BUILDING", "DEPLOYING", "STOPPED", "FAILED"],
+)
+def test_application_item_accepts_canonical_application_statuses(
+    health_status: str,
+) -> None:
+    item = ApplicationItem(
+        id=1,
+        name="web",
+        pod_count=1,
+        health_status=health_status,
+    )
+
+    assert item.health_status == health_status
+
+
+@pytest.mark.parametrize("health_status", ["Healthy", "Unhealthy", "Stopped"])
+def test_application_item_rejects_legacy_health_status_values(
+    health_status: str,
+) -> None:
+    with pytest.raises(ValidationError):
+        ApplicationItem(
+            id=1,
+            name="web",
+            pod_count=1,
+            health_status=health_status,
+        )

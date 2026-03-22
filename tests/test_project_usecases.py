@@ -299,7 +299,7 @@ async def test_get_project_success_maps_all_fields() -> None:
                     exposed_port=80,
                     cpu_usage_percent=12.5,
                     ram_usage_percent=45.0,
-                    health_status="Healthy",
+                    health_status="RUNNING",
                 )
             ]
         }
