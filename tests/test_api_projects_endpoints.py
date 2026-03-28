@@ -11,6 +11,7 @@ from src.api.routers.routes.projects import (
     list_project_members_endpoint,
     list_projects_endpoint,
     remove_project_member_endpoint,
+    router,
     transfer_project_ownership_endpoint,
     update_project_name_endpoint,
     update_project_resource_endpoint,
@@ -119,6 +120,17 @@ async def test_get_project_resource_limit_endpoint_contract() -> None:
     assert usecase.calls == [
         ((), {"project_id": 1, "user_id": 1})
     ]
+
+
+def test_get_project_resource_limit_route_uses_path_param() -> None:
+    route_paths = {
+        route.path
+        for route in router.routes
+        if "GET" in getattr(route, "methods", set())
+    }
+
+    assert "/projects/resource-limit/{project_id}" in route_paths
+    assert "/projects/resource-limit" not in route_paths
 
 
 async def test_get_project_endpoint_contract() -> None:

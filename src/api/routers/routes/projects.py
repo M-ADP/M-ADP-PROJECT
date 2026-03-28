@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Path, Query
 
 from src.app.project.schemas import (
     ProjectAvailableResponse,
@@ -108,12 +108,12 @@ async def check_project_owner_endpoint(
 
 
 @router.get(
-    "/resource-limit",
+    "/resource-limit/{project_id}",
     status_code=200,
     response_model=SuccessResponse[ProjectResourceLimitResponse],
 )
 async def get_project_resource_limit_endpoint(
-    project_id: int = Query(..., description="확인할 프로젝트 ID"),
+    project_id: int = Path(..., description="확인할 프로젝트 ID"),
     user: UserInfo = Depends(get_user_info),
     usecase: GetProjectResourceLimitUseCase = Depends(GetProjectResourceLimitUseCase),
 ) -> SuccessResponse[ProjectResourceLimitResponse]:
