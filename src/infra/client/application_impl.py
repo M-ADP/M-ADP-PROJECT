@@ -4,6 +4,7 @@ from enum import Enum
 from src.common.config.application_server import ApplicationServerConfig
 from src.core.client.application import ApplicationClient, ApplicationItemData, DeploymentSummaryItem
 from src.core.client.http import HttpClient
+from src.core.exceptions import ApplicationServerException
 from src.infra.client.asyncio_http import AioHttpClient
 
 logger = logging.getLogger(__name__)
@@ -23,6 +24,53 @@ class ApplicationClientImpl(ApplicationClient):
         http_client: HttpClient | None = None,
     ):
         self.http_client = http_client or AioHttpClient(base_url=config.SERVER_BASE_URL)
+
+    async def delete_by_project(
+        self,
+        project_id: int,
+        user_id: int,
+        role: str,
+    ) -> None:
+        url = ApplicationAPIUrls.LIST_BY_PROJECT.format(project_id=project_id)
+        logger.info(
+            "[ApplicationClient] delete_by_project 요청: project_id=%s, user_id=%s, role=%s, url=%s",
+            project_id, user_id, role, url,
+        )
+        try:
+            response = await self.http_client.delete(
+                url,
+                params=None,
+                headers={"X-User-Id": str(user_id), "X-User-Role": role},
+            )
+        except Exception as exc:
+            logger.exception(
+                "[ApplicationClient] delete_by_project 예외 발생: project_id=%s",
+                project_id,
+            )
+            raise ApplicationServerException(
+                "앱 배포 서비스 호출에 실패했습니다."
+            ) from exc
+
+        try:
+            logger.info(
+                "[ApplicationClient] delete_by_project 응답: status=%s, project_id=%s",
+                response.status, project_id,
+            )
+            if response.status != 204:
+                body = await response.text()
+                logger.warning(
+                    "[ApplicationClient] delete_by_project 비정상 응답: status=%s, project_id=%s, body=%s",
+                    response.status, project_id, body[:500],
+                )
+                raise ApplicationServerException(
+                    f"앱 삭제 실패(status={response.status})"
+                )
+            logger.info(
+                "[ApplicationClient] delete_by_project 성공: project_id=%s, result=deleted",
+                project_id,
+            )
+        finally:
+            response.release()
 
     async def list_by_project(
         self,

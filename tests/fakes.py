@@ -297,6 +297,8 @@ class FakeApplicationClient:
         self,
         deployments_by_project: dict[int, list[ApplicationItemData]] | None = None,
         summaries: list[DeploymentSummaryItem] | None = None,
+        *,
+        delete_error: Exception | None = None,
     ) -> None:
         self.deployments_by_project = deployments_by_project or {}
         self.summary_map = {
@@ -304,6 +306,8 @@ class FakeApplicationClient:
         }
         self.summary_requests: list[list[int]] = []
         self.requests = self.summary_requests  # 하위 호환 별칭
+        self.delete_requests: list[dict[str, int | str]] = []
+        self.delete_error = delete_error
 
     async def list_by_project(self, project_id: int, user_id: int = 0, role: str = "") -> list[ApplicationItemData]:
         return list(self.deployments_by_project.get(project_id, []))
@@ -315,6 +319,13 @@ class FakeApplicationClient:
             for project_id in project_ids
             if project_id in self.summary_map
         ]
+
+    async def delete_by_project(self, project_id: int, user_id: int = 0, role: str = "") -> None:
+        self.delete_requests.append(
+            {"project_id": project_id, "user_id": user_id, "role": role}
+        )
+        if self.delete_error is not None:
+            raise self.delete_error
 
 
 class FakeUserClient:

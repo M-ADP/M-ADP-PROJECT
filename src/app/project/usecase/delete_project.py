@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import Depends
 
 from src.app.project.exceptions import (
@@ -5,23 +7,25 @@ from src.app.project.exceptions import (
     OnlyOwnerCanDeleteProject,
     ProjectDeletionFailed,
 )
-from src.core.exceptions import ResourceServerException
 from src.core.domain.project import Project
 from src.app.base_usecase import BaseUseCase
 from src.core.uow import UnitOfWork
-from src.core.client.project_resource import ProjectResourceClient
+from src.core.client.application import ApplicationClient
+from src.core.exceptions import ApplicationServerException
 from src.dependencies.uow import get_uow
-from src.dependencies.client.project_resource import get_project_resource_client
+from src.dependencies.client.application import get_deployment_client
+
+logger = logging.getLogger(__name__)
 
 
 class DeleteProjectUseCase(BaseUseCase):
     def __init__(
         self,
         uow: UnitOfWork = Depends(get_uow),
-        project_resource_client: ProjectResourceClient = Depends(get_project_resource_client),
+        deployment_client: ApplicationClient = Depends(get_deployment_client),
     ):
         self.uow = uow
-        self.project_resource_client = project_resource_client
+        self.deployment_client = deployment_client
 
     async def __call__(
         self,
@@ -38,13 +42,35 @@ class DeleteProjectUseCase(BaseUseCase):
             if not is_owner:
                 raise OnlyOwnerCanDeleteProject()
 
+            logger.info(
+                "[DeleteProjectUseCase] app-deployment 삭제 시작: project_id=%s",
+                project_id,
+            )
             try:
-                await self.project_resource_client.delete(
+                await self.deployment_client.delete_by_project(
+                    project_id=project_id,
                     user_id=user_id,
                     role=role,
-                    project=project,
                 )
-            except ResourceServerException as e:
-                raise ProjectDeletionFailed() from e
+                logger.info(
+                    "[DeleteProjectUseCase] app-deployment 삭제 성공: project_id=%s, result=204",
+                    project_id,
+                )
+            except ApplicationServerException as exc:
+                logger.warning(
+                    "[DeleteProjectUseCase] app-deployment 삭제 실패: project_id=%s, result=%s",
+                    project_id,
+                    str(exc),
+                )
+                raise ProjectDeletionFailed() from exc
+
+            logger.info(
+                "[DeleteProjectUseCase] 프로젝트 DB 삭제 시작: project_id=%s",
+                project_id,
+            )
             await self.uow.project.delete(project)
+            logger.info(
+                "[DeleteProjectUseCase] 프로젝트 DB 삭제 완료: project_id=%s",
+                project_id,
+            )
             return project

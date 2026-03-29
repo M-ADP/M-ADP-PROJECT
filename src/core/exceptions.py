@@ -13,6 +13,12 @@ class ResourceServerException(Exception):
         self.message = message
 
 
+class ApplicationServerException(Exception):
+    def __init__(self, message: str = "앱 배포 서비스와 통신 중 오류가 발생했습니다.") -> None:
+        super().__init__(message)
+        self.message = message
+
+
 class AppException(Exception):
     def __init__(
         self,

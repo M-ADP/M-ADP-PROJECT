@@ -171,7 +171,7 @@ class ProjectCreationFailed(AppException):
 class ProjectDeletionFailed(AppException):
     def __init__(self) -> None:
         super().__init__(
-            "리소스 서버 오류로 프로젝트를 삭제할 수 없습니다.",
+            "연관 앱 삭제에 실패하여 프로젝트를 삭제할 수 없습니다.",
             code="PROJECT_DELETION_FAILED",
             status_code=500,
         )

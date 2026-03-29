@@ -1,6 +1,7 @@
 import pytest
 
 from src.common.config.application_server import ApplicationServerConfig
+from src.core.exceptions import ApplicationServerException
 from src.infra.client.application_impl import ApplicationClientImpl
 
 
@@ -24,6 +25,8 @@ class RecordingHttpClient:
     def __init__(self) -> None:
         self.get_calls: list[dict] = []
         self.post_calls: list[dict] = []
+        self.delete_calls: list[dict] = []
+        self.delete_response = StubResponse(status=204, payload=None)
 
     async def get(self, path, params=None, headers=None):
         self.get_calls.append(
@@ -63,7 +66,8 @@ class RecordingHttpClient:
         )
 
     async def delete(self, *args, **kwargs):
-        raise NotImplementedError
+        self.delete_calls.append({"args": args, "kwargs": kwargs})
+        return self.delete_response
 
     async def put(self, *args, **kwargs):
         raise NotImplementedError
@@ -112,3 +116,32 @@ async def test_get_summary_batch_uses_latest_application_summary_path() -> None:
             "headers": {"X-User-Id": "7", "X-User-Role": "USER"},
         }
     ]
+
+
+async def test_delete_by_project_uses_latest_application_delete_path_contract() -> None:
+    http_client = RecordingHttpClient()
+    client = ApplicationClientImpl(
+        config=ApplicationServerConfig(),
+        http_client=http_client,
+    )
+
+    await client.delete_by_project(project_id=101, user_id=7, role="USER")
+
+    assert http_client.delete_calls == [
+        {
+            "args": ("/apps/projects/101/apps",),
+            "kwargs": {"params": None, "headers": {"X-User-Id": "7", "X-User-Role": "USER"}},
+        }
+    ]
+
+
+async def test_delete_by_project_raises_when_status_is_not_204() -> None:
+    http_client = RecordingHttpClient()
+    http_client.delete_response = StubResponse(status=200, payload=None, text_body="unexpected")
+    client = ApplicationClientImpl(
+        config=ApplicationServerConfig(),
+        http_client=http_client,
+    )
+
+    with pytest.raises(ApplicationServerException):
+        await client.delete_by_project(project_id=101, user_id=7, role="USER")

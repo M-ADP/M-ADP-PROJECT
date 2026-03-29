@@ -6,6 +6,7 @@ from src.app.project.exceptions import (
     OnlyOwnerCanGetResourceLimit,
     OnlyOwnerCanUpdateProjectName,
     OnlyOwnerCanUpdateResource,
+    ProjectDeletionFailed,
     ProjectLimitExceeded,
     ProjectNameAlreadyExists,
     ProjectNotFound,
@@ -23,6 +24,7 @@ from src.app.project.usecase.update_project_resource import UpdateProjectResourc
 from src.core.client.application import ApplicationItemData, DeploymentSummaryItem
 from src.core.client.project_resource import ResourceUsageData
 from src.core.client.user import UserInfo
+from src.core.exceptions import ApplicationServerException
 
 from tests.fakes import (
     FakeApplicationClient,
@@ -83,7 +85,7 @@ async def test_create_project_success_creates_owner_member_and_resource() -> Non
 
 async def test_delete_project_raises_when_project_not_found() -> None:
     uow = FakeUnitOfWork()
-    usecase = DeleteProjectUseCase(uow=uow, project_resource_client=FakeProjectResourceClient())
+    usecase = DeleteProjectUseCase(uow=uow, deployment_client=FakeApplicationClient({}))
 
     with pytest.raises(ProjectNotFound):
         await usecase(project_id="missing", user_id=1, role="OWNER")
@@ -96,7 +98,7 @@ async def test_delete_project_raises_when_requester_is_not_owner() -> None:
         project_repo=FakeProjectRepository([project]),
         project_member_repo=FakeProjectMemberRepository(members),
     )
-    usecase = DeleteProjectUseCase(uow=uow, project_resource_client=FakeProjectResourceClient())
+    usecase = DeleteProjectUseCase(uow=uow, deployment_client=FakeApplicationClient({}))
 
     with pytest.raises(OnlyOwnerCanDeleteProject):
         await usecase(project_id=1, user_id=2, role="MEMBER")
@@ -105,18 +107,42 @@ async def test_delete_project_raises_when_requester_is_not_owner() -> None:
 async def test_delete_project_success() -> None:
     project = make_project(1, user_id=1)
     members = [make_member(1, 1, role="OWNER")]
-    resource_client = FakeProjectResourceClient()
+    deployment_client = FakeApplicationClient({})
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
         project_member_repo=FakeProjectMemberRepository(members),
     )
-    usecase = DeleteProjectUseCase(uow=uow, project_resource_client=resource_client)
+    usecase = DeleteProjectUseCase(uow=uow, deployment_client=deployment_client)
 
     deleted = await usecase(project_id=1, user_id=1, role="OWNER")
 
     assert deleted.id == 1
     assert 1 not in uow.project.projects
-    assert resource_client.calls[0][0] == "delete"
+    assert deployment_client.delete_requests == [
+        {"project_id": 1, "user_id": 1, "role": "OWNER"}
+    ]
+
+
+async def test_delete_project_raises_when_app_deployment_delete_fails() -> None:
+    project = make_project(1, user_id=1)
+    members = [make_member(1, 1, role="OWNER")]
+    deployment_client = FakeApplicationClient(
+        {},
+        delete_error=ApplicationServerException("app deployment delete failed"),
+    )
+    uow = FakeUnitOfWork(
+        project_repo=FakeProjectRepository([project]),
+        project_member_repo=FakeProjectMemberRepository(members),
+    )
+    usecase = DeleteProjectUseCase(uow=uow, deployment_client=deployment_client)
+
+    with pytest.raises(ProjectDeletionFailed):
+        await usecase(project_id=1, user_id=1, role="OWNER")
+
+    assert 1 in uow.project.projects
+    assert deployment_client.delete_requests == [
+        {"project_id": 1, "user_id": 1, "role": "OWNER"}
+    ]
 
 
 async def test_update_project_name_raises_when_project_not_found() -> None:

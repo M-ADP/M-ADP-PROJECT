@@ -2,6 +2,13 @@ from src.core.client.application import ApplicationClient, ApplicationItemData, 
 
 
 class FakeApplicationClientImpl(ApplicationClient):
+    async def delete_by_project(
+        self,
+        project_id: int,
+        user_id: int,
+        role: str,
+    ) -> None:
+        return None
 
     async def list_by_project(
         self,

@@ -35,6 +35,16 @@ class DeploymentSummaryItem:
 
 class ApplicationClient(ABC):
     @abstractmethod
+    async def delete_by_project(
+        self,
+        project_id: int,
+        user_id: int,
+        role: str,
+    ) -> None:
+        """프로젝트에 속한 앱을 삭제합니다."""
+        ...
+
+    @abstractmethod
     async def list_by_project(
         self,
         project_id: int,
