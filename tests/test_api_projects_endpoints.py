@@ -18,7 +18,6 @@ from src.api.routers.routes.projects import (
 )
 from src.app.project.schemas import (
     ApplicationItem,
-    MetricPoint,
     ProjectCreate,
     ProjectDetailResponse,
     ProjectListItemResponse,
@@ -138,12 +137,14 @@ async def test_get_project_endpoint_contract() -> None:
         id=1,
         name="alpha",
         my_role="OWNER",
-        deployments=[ApplicationItem(id=1, name="web", runtime="python", pod_count=1, health_status="RUNNING")],
-        cpu_usage=[MetricPoint(timestamp="2026-01-01T00:00:00Z", value=0.1)],
-        memory_usage=[MetricPoint(timestamp="2026-01-01T00:00:00Z", value=10.0)],
-        disk_usage=[MetricPoint(timestamp="2026-01-01T00:00:00Z", value=20.0)],
-        network_usage=[MetricPoint(timestamp="2026-01-01T00:00:00Z", value=30.0)],
-        traffic_per_hour=[MetricPoint(timestamp="2026-01-01T00:00:00Z", value=40.0)],
+        deployments=[ApplicationItem(id=1, name="web", pod_count=1, health_status="RUNNING")],
+        resource={
+            "project_id": "1",
+            "cpu": {"limit": "1000m", "used": "250m", "percentage": 25, "unit": "m"},
+            "memory": {"limit": "1024Mi", "used": "512Mi", "percentage": 50, "unit": "Mi"},
+            "disk": {"limit": "10Gi", "used": "2Gi", "percentage": 20, "unit": "Gi"},
+            "instance": {"limit": 10, "used": 2, "percentage": 20},
+        },
     )
     usecase = AsyncUseCaseStub(detail)
 
@@ -156,6 +157,7 @@ async def test_get_project_endpoint_contract() -> None:
     assert response.message == "프로젝트를 조회했습니다."
     assert response.data.id == 1
     assert response.data.deployments[0].id == 1
+    assert response.data.resource.cpu.used == "250m"
     assert "runtime" not in response.data.deployments[0].model_dump()
     assert usecase.calls == [((1,), {"user_id": 1, "role": "MEMBER"})]
 

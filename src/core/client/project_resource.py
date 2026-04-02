@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -7,18 +7,27 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class MetricPointData:
-    timestamp: str
-    value: float
+class ResourceMetricSnapshotData:
+    limit: str
+    used: str
+    percentage: float
+    unit: str
 
 
 @dataclass
-class ResourceUsageData:
-    cpu: list[MetricPointData] = field(default_factory=list)
-    memory: list[MetricPointData] = field(default_factory=list)
-    disk: list[MetricPointData] = field(default_factory=list)
-    network: list[MetricPointData] = field(default_factory=list)
-    traffic_per_hour: list[MetricPointData] = field(default_factory=list)
+class ResourceSnapshotData:
+    limit: int
+    used: int
+    percentage: float
+
+
+@dataclass
+class ProjectResourceSnapshotData:
+    project_id: str
+    cpu: ResourceMetricSnapshotData
+    memory: ResourceMetricSnapshotData
+    disk: ResourceMetricSnapshotData
+    instance: ResourceSnapshotData
 
 
 class ProjectResourceClient(ABC):
@@ -43,6 +52,6 @@ class ProjectResourceClient(ABC):
         project: "Project",
         days: int = 7,
         interval_minutes: int = 60,
-    ) -> ResourceUsageData:
-        """최근 N일의 리소스 사용량 시계열을 조회합니다."""
+    ) -> ProjectResourceSnapshotData:
+        """프로젝트의 현재 리소스 사용량 스냅샷을 조회합니다."""
         ...

@@ -1,7 +1,13 @@
 from fastapi import Depends
 
 from src.app.project.exceptions import ProjectNotFound
-from src.app.project.schemas import ApplicationItem, MetricPoint, ProjectDetailResponse
+from src.app.project.schemas import (
+    ApplicationItem,
+    ProjectDetailResponse,
+    ProjectResourceSnapshot,
+    ResourceMetricSnapshot,
+    ResourceSnapshot,
+)
 from src.app.base_usecase import BaseUseCase
 from src.core.uow import UnitOfWork
 from src.core.client.project_resource import ProjectResourceClient
@@ -62,24 +68,30 @@ class GetProjectUseCase(BaseUseCase):
                     )
                     for deployment in deployments
                 ],
-                cpu_usage=[
-                    MetricPoint(timestamp=point.timestamp, value=point.value)
-                    for point in usage.cpu
-                ],
-                memory_usage=[
-                    MetricPoint(timestamp=point.timestamp, value=point.value)
-                    for point in usage.memory
-                ],
-                disk_usage=[
-                    MetricPoint(timestamp=point.timestamp, value=point.value)
-                    for point in usage.disk
-                ],
-                network_usage=[
-                    MetricPoint(timestamp=point.timestamp, value=point.value)
-                    for point in usage.network
-                ],
-                traffic_per_hour=[
-                    MetricPoint(timestamp=point.timestamp, value=point.value)
-                    for point in usage.traffic_per_hour
-                ],
+                resource=ProjectResourceSnapshot(
+                    project_id=usage.project_id,
+                    cpu=ResourceMetricSnapshot(
+                        limit=usage.cpu.limit,
+                        used=usage.cpu.used,
+                        percentage=usage.cpu.percentage,
+                        unit=usage.cpu.unit,
+                    ),
+                    memory=ResourceMetricSnapshot(
+                        limit=usage.memory.limit,
+                        used=usage.memory.used,
+                        percentage=usage.memory.percentage,
+                        unit=usage.memory.unit,
+                    ),
+                    disk=ResourceMetricSnapshot(
+                        limit=usage.disk.limit,
+                        used=usage.disk.used,
+                        percentage=usage.disk.percentage,
+                        unit=usage.disk.unit,
+                    ),
+                    instance=ResourceSnapshot(
+                        limit=usage.instance.limit,
+                        used=usage.instance.used,
+                        percentage=usage.instance.percentage,
+                    ),
+                ),
             )

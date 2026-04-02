@@ -5,7 +5,11 @@ from datetime import datetime, timezone
 from typing import Any
 
 from src.core.client.application import ApplicationItemData, DeploymentSummaryItem
-from src.core.client.project_resource import MetricPointData, ResourceUsageData
+from src.core.client.project_resource import (
+    ProjectResourceSnapshotData,
+    ResourceMetricSnapshotData,
+    ResourceSnapshotData,
+)
 from src.core.client.user import UserInfo
 from src.core.domain.project import Project, ProjectMember
 
@@ -262,8 +266,33 @@ class FakeUnitOfWork:
 
 
 class FakeProjectResourceClient:
-    def __init__(self, usage: ResourceUsageData | None = None) -> None:
-        self.usage = usage or ResourceUsageData()
+    def __init__(self, usage: ProjectResourceSnapshotData | None = None) -> None:
+        self.usage = usage or ProjectResourceSnapshotData(
+            project_id="",
+            cpu=ResourceMetricSnapshotData(
+                limit="0",
+                used="0",
+                percentage=0,
+                unit="",
+            ),
+            memory=ResourceMetricSnapshotData(
+                limit="0",
+                used="0",
+                percentage=0,
+                unit="",
+            ),
+            disk=ResourceMetricSnapshotData(
+                limit="0",
+                used="0",
+                percentage=0,
+                unit="",
+            ),
+            instance=ResourceSnapshotData(
+                limit=0,
+                used=0,
+                percentage=0,
+            ),
+        )
         self.calls: list[tuple[str, dict[str, Any]]] = []
 
     def _record(self, name: str, **kwargs: Any) -> None:
@@ -283,7 +312,7 @@ class FakeProjectResourceClient:
         project: Project,
         days: int = 7,
         interval_minutes: int = 60,
-    ) -> ResourceUsageData:
+    ) -> ProjectResourceSnapshotData:
         self._record(
             "get_usage",
             project=project,
@@ -338,6 +367,3 @@ class FakeUserClient:
     async def exists(self, user_id: int) -> bool:
         return user_id in self.users
 
-
-def single_metric(value: float, *, ts: str = "2026-01-01T00:00:00Z") -> list[MetricPointData]:
-    return [MetricPointData(timestamp=ts, value=value)]

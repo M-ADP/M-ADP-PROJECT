@@ -157,9 +157,25 @@ class ProjectResourceLimitResponse(BaseModel):
     )
 
 
-class MetricPoint(BaseModel):
-    timestamp: str
-    value: float
+class ResourceMetricSnapshot(BaseModel):
+    limit: str
+    used: str
+    percentage: float
+    unit: str
+
+
+class ResourceSnapshot(BaseModel):
+    limit: int
+    used: int
+    percentage: float
+
+
+class ProjectResourceSnapshot(BaseModel):
+    project_id: str
+    cpu: ResourceMetricSnapshot
+    memory: ResourceMetricSnapshot
+    disk: ResourceMetricSnapshot
+    instance: ResourceSnapshot
 
 
 class ApplicationItem(BaseModel):
@@ -182,11 +198,7 @@ class ProjectDetailResponse(BaseModel):
         description="현재 사용자의 프로젝트 내 역할",
     )
     deployments: list[ApplicationItem]
-    cpu_usage: list[MetricPoint]
-    memory_usage: list[MetricPoint]
-    disk_usage: list[MetricPoint]
-    network_usage: list[MetricPoint]
-    traffic_per_hour: list[MetricPoint]
+    resource: ProjectResourceSnapshot
 
 
 # ===== Project Member Schemas =====

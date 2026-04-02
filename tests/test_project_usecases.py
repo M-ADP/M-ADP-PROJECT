@@ -22,7 +22,11 @@ from src.app.project.usecase.list_projects import ListProjectsUseCase
 from src.app.project.usecase.update_project_name import UpdateProjectNameUseCase
 from src.app.project.usecase.update_project_resource import UpdateProjectResourceUseCase
 from src.core.client.application import ApplicationItemData, DeploymentSummaryItem
-from src.core.client.project_resource import ResourceUsageData
+from src.core.client.project_resource import (
+    ProjectResourceSnapshotData,
+    ResourceMetricSnapshotData,
+    ResourceSnapshotData,
+)
 from src.core.client.user import UserInfo
 from src.core.exceptions import ApplicationServerException
 
@@ -35,7 +39,6 @@ from tests.fakes import (
     FakeUserClient,
     make_member,
     make_project,
-    single_metric,
 )
 
 pytestmark = pytest.mark.anyio
@@ -306,12 +309,31 @@ async def test_get_project_raises_when_user_has_no_role() -> None:
 async def test_get_project_success_maps_all_fields() -> None:
     project = make_project(1, name="api-project")
     members = [make_member(1, 1, role="OWNER")]
-    usage = ResourceUsageData(
-        cpu=single_metric(0.1),
-        memory=single_metric(10.0),
-        disk=single_metric(20.0),
-        network=single_metric(30.0),
-        traffic_per_hour=single_metric(40.0),
+    usage = ProjectResourceSnapshotData(
+        project_id="1",
+        cpu=ResourceMetricSnapshotData(
+            limit="1000m",
+            used="250m",
+            percentage=25,
+            unit="m",
+        ),
+        memory=ResourceMetricSnapshotData(
+            limit="1024Mi",
+            used="512Mi",
+            percentage=50,
+            unit="Mi",
+        ),
+        disk=ResourceMetricSnapshotData(
+            limit="10Gi",
+            used="2Gi",
+            percentage=20,
+            unit="Gi",
+        ),
+        instance=ResourceSnapshotData(
+            limit=10,
+            used=2,
+            percentage=20,
+        ),
     )
     resource_client = FakeProjectResourceClient(usage=usage)
     deployment_client = FakeApplicationClient(
@@ -347,7 +369,8 @@ async def test_get_project_success_maps_all_fields() -> None:
     assert detail.my_role == "OWNER"
     assert detail.deployments[0].name == "web"
     assert "runtime" not in detail.deployments[0].model_dump()
-    assert detail.cpu_usage[0].value == 0.1
+    assert detail.resource.cpu.percentage == 25
+    assert detail.resource.memory.used == "512Mi"
     assert resource_client.calls[0][0] == "get_usage"
 
 

@@ -2,7 +2,12 @@ from enum import Enum
 
 from src.core.domain.project import Project
 from src.core.client.http import HttpClient
-from src.core.client.project_resource import ProjectResourceClient, ResourceUsageData
+from src.core.client.project_resource import (
+    ProjectResourceClient,
+    ProjectResourceSnapshotData,
+    ResourceMetricSnapshotData,
+    ResourceSnapshotData,
+)
 from src.core.exceptions import ResourceServerException
 from src.common.config.resource_server import ResourceServerConfig
 from src.infra.client.asyncio_http import AioHttpClient
@@ -15,6 +20,7 @@ from src.infra.client.schemas import (
 class ProjectResourceAPIUrls(str, Enum):
     CREATE_PROJECT = "/projects"
     DELETE_PROJECT = "/projects/{project_id}"
+    GET_PROJECT_RESOURCES = "/projects/{project_id}/resource"
     UPDATE_PROJECT_RESOURCES = "/projects/{project_id}/resource"
 
 
@@ -89,9 +95,52 @@ class ProjectResourceClientImpl(ProjectResourceClient):
         project: Project,
         days: int = 7,
         interval_minutes: int = 60,
-    ) -> ResourceUsageData:
-        print(
-            f"프로젝트 {project.id} 최근 {days}일 리소스 사용량 조회 "
-            f"(간격 {interval_minutes}분)"
-        )
-        return ResourceUsageData()
+    ) -> ProjectResourceSnapshotData:
+        try:
+            response = await self.http_client.get(
+                self.base_url + ProjectResourceAPIUrls.GET_PROJECT_RESOURCES.format(
+                    project_id=project.id
+                ),
+            )
+        except Exception as e:
+            raise ResourceServerException() from e
+
+        try:
+            if response.status != 200:
+                raise ResourceServerException(
+                    f"리소스 서버 응답 오류: {response.status}"
+                )
+            payload = await response.json(content_type=None)
+            data = payload.get("data", payload)
+            return ProjectResourceSnapshotData(
+                project_id=str(data["project_id"]),
+                cpu=ResourceMetricSnapshotData(
+                    limit=data["cpu"]["limit"],
+                    used=data["cpu"]["used"],
+                    percentage=data["cpu"]["percentage"],
+                    unit=data["cpu"]["unit"],
+                ),
+                memory=ResourceMetricSnapshotData(
+                    limit=data["memory"]["limit"],
+                    used=data["memory"]["used"],
+                    percentage=data["memory"]["percentage"],
+                    unit=data["memory"]["unit"],
+                ),
+                disk=ResourceMetricSnapshotData(
+                    limit=data["disk"]["limit"],
+                    used=data["disk"]["used"],
+                    percentage=data["disk"]["percentage"],
+                    unit=data["disk"]["unit"],
+                ),
+                instance=ResourceSnapshotData(
+                    limit=data["instance"]["limit"],
+                    used=data["instance"]["used"],
+                    percentage=data["instance"]["percentage"],
+                ),
+            )
+        except ResourceServerException:
+            raise
+        except Exception as e:
+            raise ResourceServerException() from e
+        finally:
+            response.release()
