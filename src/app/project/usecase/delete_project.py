@@ -11,9 +11,11 @@ from src.core.domain.project import Project
 from src.app.base_usecase import BaseUseCase
 from src.core.uow import UnitOfWork
 from src.core.client.application import ApplicationClient
-from src.core.exceptions import ApplicationServerException
+from src.core.client.dns import DnsClient
+from src.core.exceptions import ApplicationServerException, DnsServerException
 from src.dependencies.uow import get_uow
 from src.dependencies.client.application import get_deployment_client
+from src.dependencies.client.dns import get_dns_client
 
 logger = logging.getLogger(__name__)
 
@@ -23,9 +25,11 @@ class DeleteProjectUseCase(BaseUseCase):
         self,
         uow: UnitOfWork = Depends(get_uow),
         deployment_client: ApplicationClient = Depends(get_deployment_client),
+        dns_client: DnsClient = Depends(get_dns_client),
     ):
         self.uow = uow
         self.deployment_client = deployment_client
+        self.dns_client = dns_client
 
     async def __call__(
         self,
@@ -62,6 +66,30 @@ class DeleteProjectUseCase(BaseUseCase):
                     project_id,
                     str(exc),
                 )
+                raise ProjectDeletionFailed() from exc
+
+            logger.info(
+                "[DeleteProjectUseCase] DNS 삭제 시작: project_id=%s",
+                project_id,
+            )
+            try:
+                await self.dns_client.delete_by_project(
+                    project_id=project_id,
+                    user_id=user_id,
+                    role=role,
+                )
+                logger.info(
+                    "[DeleteProjectUseCase] DNS 삭제 성공: project_id=%s",
+                    project_id,
+                )
+            except DnsServerException as exc:
+                logger.warning(
+                    "[DeleteProjectUseCase] DNS 삭제 실패: project_id=%s, result=%s",
+                    project_id,
+                    str(exc),
+                )
+                # DNS 삭제 실패가 전체 프로젝트 삭제를 막아야 하는지는 정책에 따라 다를 수 있습니다.
+                # 여기서는 앱 배포 삭제와 마찬가지로 실패 시 예외를 던지도록 합니다.
                 raise ProjectDeletionFailed() from exc
 
             logger.info(

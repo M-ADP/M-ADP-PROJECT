@@ -367,3 +367,21 @@ class FakeUserClient:
     async def exists(self, user_id: int) -> bool:
         return user_id in self.users
 
+
+class FakeDnsClient:
+    def __init__(self, *, delete_error: Exception | None = None) -> None:
+        self.delete_requests: list[dict[str, Any]] = []
+        self.delete_error = delete_error
+
+    async def delete_by_project(
+        self,
+        project_id: int,
+        user_id: int,
+        role: str,
+    ) -> None:
+        self.delete_requests.append(
+            {"project_id": project_id, "user_id": user_id, "role": role}
+        )
+        if self.delete_error is not None:
+            raise self.delete_error
+

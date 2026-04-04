@@ -32,6 +32,7 @@ from src.core.exceptions import ApplicationServerException
 
 from tests.fakes import (
     FakeApplicationClient,
+    FakeDnsClient,
     FakeProjectMemberRepository,
     FakeProjectRepository,
     FakeProjectResourceClient,
@@ -88,7 +89,11 @@ async def test_create_project_success_creates_owner_member_and_resource() -> Non
 
 async def test_delete_project_raises_when_project_not_found() -> None:
     uow = FakeUnitOfWork()
-    usecase = DeleteProjectUseCase(uow=uow, deployment_client=FakeApplicationClient({}))
+    usecase = DeleteProjectUseCase(
+        uow=uow,
+        deployment_client=FakeApplicationClient({}),
+        dns_client=FakeDnsClient(),
+    )
 
     with pytest.raises(ProjectNotFound):
         await usecase(project_id="missing", user_id=1, role="OWNER")
@@ -101,7 +106,11 @@ async def test_delete_project_raises_when_requester_is_not_owner() -> None:
         project_repo=FakeProjectRepository([project]),
         project_member_repo=FakeProjectMemberRepository(members),
     )
-    usecase = DeleteProjectUseCase(uow=uow, deployment_client=FakeApplicationClient({}))
+    usecase = DeleteProjectUseCase(
+        uow=uow,
+        deployment_client=FakeApplicationClient({}),
+        dns_client=FakeDnsClient(),
+    )
 
     with pytest.raises(OnlyOwnerCanDeleteProject):
         await usecase(project_id=1, user_id=2, role="MEMBER")
@@ -111,17 +120,25 @@ async def test_delete_project_success() -> None:
     project = make_project(1, user_id=1)
     members = [make_member(1, 1, role="OWNER")]
     deployment_client = FakeApplicationClient({})
+    dns_client = FakeDnsClient()
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
         project_member_repo=FakeProjectMemberRepository(members),
     )
-    usecase = DeleteProjectUseCase(uow=uow, deployment_client=deployment_client)
+    usecase = DeleteProjectUseCase(
+        uow=uow,
+        deployment_client=deployment_client,
+        dns_client=dns_client,
+    )
 
     deleted = await usecase(project_id=1, user_id=1, role="OWNER")
 
     assert deleted.id == 1
     assert 1 not in uow.project.projects
     assert deployment_client.delete_requests == [
+        {"project_id": 1, "user_id": 1, "role": "OWNER"}
+    ]
+    assert dns_client.delete_requests == [
         {"project_id": 1, "user_id": 1, "role": "OWNER"}
     ]
 
@@ -133,17 +150,53 @@ async def test_delete_project_raises_when_app_deployment_delete_fails() -> None:
         {},
         delete_error=ApplicationServerException("app deployment delete failed"),
     )
+    dns_client = FakeDnsClient()
     uow = FakeUnitOfWork(
         project_repo=FakeProjectRepository([project]),
         project_member_repo=FakeProjectMemberRepository(members),
     )
-    usecase = DeleteProjectUseCase(uow=uow, deployment_client=deployment_client)
+    usecase = DeleteProjectUseCase(
+        uow=uow,
+        deployment_client=deployment_client,
+        dns_client=dns_client,
+    )
 
     with pytest.raises(ProjectDeletionFailed):
         await usecase(project_id=1, user_id=1, role="OWNER")
 
     assert 1 in uow.project.projects
     assert deployment_client.delete_requests == [
+        {"project_id": 1, "user_id": 1, "role": "OWNER"}
+    ]
+    # deployment_client 에서 에러가 나면 dns_client 는 호출되지 않아야 함 (순서상)
+    assert dns_client.delete_requests == []
+
+
+async def test_delete_project_raises_when_dns_delete_fails() -> None:
+    project = make_project(1, user_id=1)
+    members = [make_member(1, 1, role="OWNER")]
+    deployment_client = FakeApplicationClient({})
+    dns_client = FakeDnsClient(
+        delete_error=DnsServerException("dns delete failed"),
+    )
+    uow = FakeUnitOfWork(
+        project_repo=FakeProjectRepository([project]),
+        project_member_repo=FakeProjectMemberRepository(members),
+    )
+    usecase = DeleteProjectUseCase(
+        uow=uow,
+        deployment_client=deployment_client,
+        dns_client=dns_client,
+    )
+
+    with pytest.raises(ProjectDeletionFailed):
+        await usecase(project_id=1, user_id=1, role="OWNER")
+
+    assert 1 in uow.project.projects
+    assert deployment_client.delete_requests == [
+        {"project_id": 1, "user_id": 1, "role": "OWNER"}
+    ]
+    assert dns_client.delete_requests == [
         {"project_id": 1, "user_id": 1, "role": "OWNER"}
     ]
 
