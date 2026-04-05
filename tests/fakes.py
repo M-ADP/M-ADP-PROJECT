@@ -310,12 +310,14 @@ class FakeProjectResourceClient:
     async def get_usage(
         self,
         project: Project,
+        user_id: int,
         days: int = 7,
         interval_minutes: int = 60,
     ) -> ProjectResourceSnapshotData:
         self._record(
             "get_usage",
             project=project,
+            user_id=user_id,
             days=days,
             interval_minutes=interval_minutes,
         )

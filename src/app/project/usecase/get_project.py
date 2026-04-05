@@ -47,6 +47,7 @@ class GetProjectUseCase(BaseUseCase):
 
             usage = await self.project_resource_client.get_usage(
                 project=project,
+                user_id=user_id,
                 days=7,
                 interval_minutes=60,
             )

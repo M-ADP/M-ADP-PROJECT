@@ -93,6 +93,7 @@ class ProjectResourceClientImpl(ProjectResourceClient):
     async def get_usage(
         self,
         project: Project,
+        user_id: int,
         days: int = 7,
         interval_minutes: int = 60,
     ) -> ProjectResourceSnapshotData:
@@ -101,6 +102,7 @@ class ProjectResourceClientImpl(ProjectResourceClient):
                 self.base_url + ProjectResourceAPIUrls.GET_PROJECT_RESOURCES.format(
                     project_id=project.id
                 ),
+                headers={"X-User-Id": str(user_id)},
             )
         except Exception as e:
             raise ResourceServerException() from e

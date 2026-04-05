@@ -21,6 +21,7 @@ class FakeProjectResourceClientImpl(ProjectResourceClient):
     async def get_usage(
         self,
         project: Project,
+        user_id: int,
         days: int = 7,
         interval_minutes: int = 60,
     ) -> ProjectResourceSnapshotData:
