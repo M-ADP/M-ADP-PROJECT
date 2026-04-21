@@ -28,7 +28,7 @@ from src.core.client.project_resource import (
     ResourceSnapshotData,
 )
 from src.core.client.user import UserInfo
-from src.core.exceptions import ApplicationServerException
+from src.core.exceptions import ApplicationServerException, DnsServerException
 
 from tests.fakes import (
     FakeApplicationClient,
@@ -59,6 +59,19 @@ async def test_create_project_raises_when_project_limit_exceeded() -> None:
         await usecase(build_project_create("new"), user_id=1, role="OWNER")
 
     assert resource_client.calls == []
+
+
+async def test_create_project_allows_admin_when_project_limit_exceeded() -> None:
+    projects = [make_project(i, user_id=1) for i in range(1, 4)]
+    uow = FakeUnitOfWork(project_repo=FakeProjectRepository(projects))
+    resource_client = FakeProjectResourceClient()
+    usecase = CreateProjectUseCase(uow=uow, project_resource_client=resource_client)
+
+    created = await usecase(build_project_create("admin-new"), user_id=1, role="ADMIN")
+
+    assert created.name == "admin-new"
+    assert len(uow.project.projects) == 4
+    assert resource_client.calls[0][0] == "create"
 
 
 async def test_create_project_raises_when_project_name_exists() -> None:
@@ -172,7 +185,7 @@ async def test_delete_project_raises_when_app_deployment_delete_fails() -> None:
     assert dns_client.delete_requests == []
 
 
-async def test_delete_project_raises_when_dns_delete_fails() -> None:
+async def test_delete_project_continues_when_dns_delete_fails() -> None:
     project = make_project(1, user_id=1)
     members = [make_member(1, 1, role="OWNER")]
     deployment_client = FakeApplicationClient({})
@@ -189,10 +202,10 @@ async def test_delete_project_raises_when_dns_delete_fails() -> None:
         dns_client=dns_client,
     )
 
-    with pytest.raises(ProjectDeletionFailed):
-        await usecase(project_id=1, user_id=1, role="OWNER")
+    deleted = await usecase(project_id=1, user_id=1, role="OWNER")
 
-    assert 1 in uow.project.projects
+    assert deleted.id == 1
+    assert 1 not in uow.project.projects
     assert deployment_client.delete_requests == [
         {"project_id": 1, "user_id": 1, "role": "OWNER"}
     ]
