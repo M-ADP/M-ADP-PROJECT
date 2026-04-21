@@ -88,9 +88,7 @@ class DeleteProjectUseCase(BaseUseCase):
                     project_id,
                     str(exc),
                 )
-                # DNS 삭제 실패가 전체 프로젝트 삭제를 막아야 하는지는 정책에 따라 다를 수 있습니다.
-                # 여기서는 앱 배포 삭제와 마찬가지로 실패 시 예외를 던지도록 합니다.
-                raise ProjectDeletionFailed() from exc
+                # DNS cleanup is best-effort and must not block project deletion.
 
             logger.info(
                 "[DeleteProjectUseCase] 프로젝트 DB 삭제 시작: project_id=%s",
