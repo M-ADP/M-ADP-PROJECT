@@ -35,7 +35,7 @@ class CreateProjectUseCase(BaseUseCase):
     ) -> Project:
         async with self.uow:
             project_count = await self.uow.project.count_by_user(user_id)
-            if project_count >= ProjectConfig.LIMIT:
+            if role.upper() != "ADMIN" and project_count >= ProjectConfig.LIMIT:
                 raise ProjectLimitExceeded()
 
             if await self.uow.project.exists_by_name(user_id, request.name):
