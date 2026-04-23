@@ -1,7 +1,15 @@
+from datetime import datetime, timezone
+
 import pytest
 
 from src.app.project.exceptions import (
+    CannotCancelInvitation,
     DiskCannotBeReduced,
+    InvitationExpired,
+    InvitationNotFound,
+    InvitationTargetMismatch,
+    MemberInvitationAlreadyExists,
+    OnlyOwnerCanAddMembers,
     OnlyOwnerCanDeleteProject,
     OnlyOwnerCanGetResourceLimit,
     OnlyOwnerCanUpdateProjectName,
@@ -11,13 +19,31 @@ from src.app.project.exceptions import (
     ProjectNameAlreadyExists,
     ProjectNotFound,
 )
-from src.app.project.schemas import ProjectCreate, ProjectNameUpdate, ProjectResourceUpdate
+from src.app.project.schemas import (
+    ProjectCreate,
+    ProjectMemberInvite,
+    ProjectNameUpdate,
+    ProjectResourceUpdate,
+)
+from src.app.project.usecase.accept_project_member_invitation import (
+    AcceptProjectMemberInvitationUseCase,
+)
+from src.app.project.usecase.cancel_project_member_invitation import (
+    CancelProjectMemberInvitationUseCase,
+)
 from src.app.project.usecase.check_project_available import CheckProjectAvailableUseCase
 from src.app.project.usecase.create_project import CreateProjectUseCase
 from src.app.project.usecase.delete_project import DeleteProjectUseCase
 from src.app.project.usecase.get_project import GetProjectUseCase
 from src.app.project.usecase.get_project_resource_limit import GetProjectResourceLimitUseCase
+from src.app.project.usecase.invite_project_member import InviteProjectMemberUseCase
+from src.app.project.usecase.list_project_member_invitations import (
+    ListProjectMemberInvitationsUseCase,
+)
 from src.app.project.usecase.list_project_members import ListProjectMembersUseCase
+from src.app.project.usecase.resend_project_member_invitation import (
+    ResendProjectMemberInvitationUseCase,
+)
 from src.app.project.usecase.list_projects import ListProjectsUseCase
 from src.app.project.usecase.update_project_name import UpdateProjectNameUseCase
 from src.app.project.usecase.update_project_resource import UpdateProjectResourceUseCase
@@ -33,11 +59,14 @@ from src.core.exceptions import ApplicationServerException, DnsServerException
 from tests.fakes import (
     FakeApplicationClient,
     FakeDnsClient,
+    FakeProjectInvitationEmailClient,
+    FakeProjectInvitationRepository,
     FakeProjectMemberRepository,
     FakeProjectRepository,
     FakeProjectResourceClient,
     FakeUnitOfWork,
     FakeUserClient,
+    make_invitation,
     make_member,
     make_project,
 )
@@ -622,3 +651,245 @@ async def test_list_project_members_success_with_pagination_and_fallback_user_in
     assert result.items[0].username == "Owner"
     assert result.items[1].username == "Member1"
     assert result.items[1].profile_image is None
+
+
+async def test_invite_project_member_creates_pending_invitation_and_sends_email_without_membership() -> None:
+    project = make_project(1, user_id=1, name="backend")
+    members = [make_member(1, 1, role="OWNER")]
+    invitation_repo = FakeProjectInvitationRepository()
+    email_client = FakeProjectInvitationEmailClient()
+    uow = FakeUnitOfWork(
+        project_repo=FakeProjectRepository([project]),
+        project_member_repo=FakeProjectMemberRepository(members),
+        project_invitation_repo=invitation_repo,
+    )
+    usecase = InviteProjectMemberUseCase(
+        uow=uow,
+        user_client=FakeUserClient(
+            [UserInfo(user_id=2, username="Member", email="member@example.com")]
+        ),
+        email_client=email_client,
+    )
+
+    result = await usecase(
+        project_id=1,
+        request=ProjectMemberInvite(user_id=2),
+        user_id=1,
+    )
+
+    assert result.project_id == 1
+    assert result.invitee_user_id == 2
+    assert result.invitee_email == "member@example.com"
+    assert result.status == "PENDING"
+    assert result.expires_at > result.created_at
+    assert (1, 2) not in uow.project_member.members
+    saved = next(iter(invitation_repo.invitations.values()))
+    assert saved.token_hash
+    assert "invite-token" not in saved.token_hash
+    sent_url = email_client.sent[0]["invite_url"]
+    assert sent_url.startswith(
+        "http://localhost:8000/projects/1/member-invitations/"
+    )
+    assert sent_url.endswith("/accept")
+    assert saved.token_hash not in sent_url
+    assert email_client.sent == [
+        {
+            "to_email": "member@example.com",
+            "project_name": "backend",
+            "inviter_user_id": 1,
+            "invite_url": sent_url,
+        }
+    ]
+
+
+async def test_invite_project_member_raises_when_pending_invitation_exists() -> None:
+    project = make_project(1, user_id=1)
+    members = [make_member(1, 1, role="OWNER")]
+    invitation = make_invitation(1, 2)
+    uow = FakeUnitOfWork(
+        project_repo=FakeProjectRepository([project]),
+        project_member_repo=FakeProjectMemberRepository(members),
+        project_invitation_repo=FakeProjectInvitationRepository([invitation]),
+    )
+    usecase = InviteProjectMemberUseCase(
+        uow=uow,
+        user_client=FakeUserClient(
+            [UserInfo(user_id=2, username="Member", email="member@example.com")]
+        ),
+        email_client=FakeProjectInvitationEmailClient(),
+    )
+
+    with pytest.raises(MemberInvitationAlreadyExists):
+        await usecase(
+            project_id=1,
+            request=ProjectMemberInvite(user_id=2),
+            user_id=1,
+        )
+
+
+async def test_accept_project_member_invitation_adds_member_for_invitee() -> None:
+    project = make_project(1, user_id=1)
+    invitation = make_invitation(1, 2, token="accept-me")
+    invitation_repo = FakeProjectInvitationRepository([invitation])
+    uow = FakeUnitOfWork(
+        project_repo=FakeProjectRepository([project]),
+        project_invitation_repo=invitation_repo,
+    )
+    usecase = AcceptProjectMemberInvitationUseCase(
+        uow=uow,
+        user_client=FakeUserClient([UserInfo(user_id=2, username="Member")]),
+    )
+
+    result = await usecase(project_id=1, token="accept-me", user_id=2)
+
+    assert result.user_id == 2
+    assert result.username == "Member"
+    assert result.role == "MEMBER"
+    assert (1, 2) in uow.project_member.members
+    assert invitation_repo.invitations[invitation.id].status == "ACCEPTED"
+    assert invitation_repo.invitations[invitation.id].responded_at is not None
+
+
+async def test_accept_project_member_invitation_rejects_different_user() -> None:
+    project = make_project(1, user_id=1)
+    invitation = make_invitation(1, 2, token="accept-me")
+    uow = FakeUnitOfWork(
+        project_repo=FakeProjectRepository([project]),
+        project_invitation_repo=FakeProjectInvitationRepository([invitation]),
+    )
+    usecase = AcceptProjectMemberInvitationUseCase(
+        uow=uow,
+        user_client=FakeUserClient([UserInfo(user_id=99, username="Other")]),
+    )
+
+    with pytest.raises(InvitationTargetMismatch):
+        await usecase(project_id=1, token="accept-me", user_id=99)
+
+    assert (1, 99) not in uow.project_member.members
+
+
+async def test_accept_project_member_invitation_raises_when_token_not_found() -> None:
+    project = make_project(1, user_id=1)
+    usecase = AcceptProjectMemberInvitationUseCase(
+        uow=FakeUnitOfWork(project_repo=FakeProjectRepository([project])),
+        user_client=FakeUserClient([UserInfo(user_id=2, username="Member")]),
+    )
+
+    with pytest.raises(InvitationNotFound):
+        await usecase(project_id=1, token="missing", user_id=2)
+
+
+async def test_accept_project_member_invitation_rejects_expired_invitation() -> None:
+    from datetime import timedelta
+
+    project = make_project(1, user_id=1)
+    invitation = make_invitation(
+        1,
+        2,
+        token="expired-token",
+        expires_at=datetime.now(timezone.utc) - timedelta(minutes=1),
+    )
+    invitation_repo = FakeProjectInvitationRepository([invitation])
+    uow = FakeUnitOfWork(
+        project_repo=FakeProjectRepository([project]),
+        project_invitation_repo=invitation_repo,
+    )
+    usecase = AcceptProjectMemberInvitationUseCase(
+        uow=uow,
+        user_client=FakeUserClient([UserInfo(user_id=2, username="Member")]),
+    )
+
+    with pytest.raises(InvitationExpired):
+        await usecase(project_id=1, token="expired-token", user_id=2)
+
+    assert (1, 2) not in uow.project_member.members
+    assert invitation_repo.invitations[invitation.id].status == "EXPIRED"
+
+
+async def test_list_project_member_invitations_returns_pending_by_default_for_owner() -> None:
+    project = make_project(1, user_id=1)
+    invitations = [
+        make_invitation(1, 2, invitation_id=10, status="PENDING"),
+        make_invitation(1, 3, invitation_id=11, status="ACCEPTED"),
+    ]
+    uow = FakeUnitOfWork(
+        project_repo=FakeProjectRepository([project]),
+        project_member_repo=FakeProjectMemberRepository([make_member(1, 1, role="OWNER")]),
+        project_invitation_repo=FakeProjectInvitationRepository(invitations),
+    )
+    usecase = ListProjectMemberInvitationsUseCase(uow=uow)
+
+    result = await usecase(project_id=1, user_id=1)
+
+    assert len(result.items) == 1
+    assert result.items[0].id == 10
+    assert result.items[0].status == "PENDING"
+    assert result.has_next is False
+
+
+async def test_list_project_member_invitations_rejects_non_owner() -> None:
+    project = make_project(1, user_id=1)
+    uow = FakeUnitOfWork(
+        project_repo=FakeProjectRepository([project]),
+        project_member_repo=FakeProjectMemberRepository([make_member(1, 2, role="MEMBER")]),
+    )
+    usecase = ListProjectMemberInvitationsUseCase(uow=uow)
+
+    with pytest.raises(OnlyOwnerCanAddMembers):
+        await usecase(project_id=1, user_id=2)
+
+
+async def test_cancel_project_member_invitation_marks_pending_invitation_canceled() -> None:
+    project = make_project(1, user_id=1)
+    invitation = make_invitation(1, 2, invitation_id=10, status="PENDING")
+    invitation_repo = FakeProjectInvitationRepository([invitation])
+    uow = FakeUnitOfWork(
+        project_repo=FakeProjectRepository([project]),
+        project_member_repo=FakeProjectMemberRepository([make_member(1, 1, role="OWNER")]),
+        project_invitation_repo=invitation_repo,
+    )
+    usecase = CancelProjectMemberInvitationUseCase(uow=uow)
+
+    result = await usecase(project_id=1, invitation_id=10, user_id=1)
+
+    assert result.status == "CANCELED"
+    assert invitation_repo.invitations[10].status == "CANCELED"
+    assert invitation_repo.invitations[10].responded_at is not None
+
+
+async def test_cancel_project_member_invitation_rejects_non_pending_invitation() -> None:
+    project = make_project(1, user_id=1)
+    invitation = make_invitation(1, 2, invitation_id=10, status="ACCEPTED")
+    uow = FakeUnitOfWork(
+        project_repo=FakeProjectRepository([project]),
+        project_member_repo=FakeProjectMemberRepository([make_member(1, 1, role="OWNER")]),
+        project_invitation_repo=FakeProjectInvitationRepository([invitation]),
+    )
+    usecase = CancelProjectMemberInvitationUseCase(uow=uow)
+
+    with pytest.raises(CannotCancelInvitation):
+        await usecase(project_id=1, invitation_id=10, user_id=1)
+
+
+async def test_resend_project_member_invitation_rotates_token_and_sends_email() -> None:
+    project = make_project(1, user_id=1, name="backend")
+    invitation = make_invitation(1, 2, invitation_id=10, status="PENDING")
+    old_hash = invitation.token_hash
+    old_expires_at = invitation.expires_at
+    invitation_repo = FakeProjectInvitationRepository([invitation])
+    email_client = FakeProjectInvitationEmailClient()
+    uow = FakeUnitOfWork(
+        project_repo=FakeProjectRepository([project]),
+        project_member_repo=FakeProjectMemberRepository([make_member(1, 1, role="OWNER")]),
+        project_invitation_repo=invitation_repo,
+    )
+    usecase = ResendProjectMemberInvitationUseCase(uow=uow, email_client=email_client)
+
+    result = await usecase(project_id=1, invitation_id=10, user_id=1)
+
+    assert result.status == "PENDING"
+    assert invitation_repo.invitations[10].token_hash != old_hash
+    assert result.expires_at > old_expires_at
+    assert email_client.sent[0]["to_email"] == "member@example.com"
+    assert email_client.sent[0]["project_name"] == "backend"
+    assert old_hash not in email_client.sent[0]["invite_url"]

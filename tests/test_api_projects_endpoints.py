@@ -3,14 +3,18 @@ from datetime import datetime, timezone
 import pytest
 
 from src.api.routers.routes.projects import (
-    add_project_member_endpoint,
+    accept_project_member_invitation_endpoint,
+    cancel_project_member_invitation_endpoint,
     create_project_endpoint,
     delete_project_endpoint,
     get_project_resource_limit_endpoint,
     get_project_endpoint,
+    invite_project_member_endpoint,
+    list_project_member_invitations_endpoint,
     list_project_members_endpoint,
     list_projects_endpoint,
     remove_project_member_endpoint,
+    resend_project_member_invitation_endpoint,
     router,
     transfer_project_ownership_endpoint,
     update_project_name_endpoint,
@@ -21,7 +25,8 @@ from src.app.project.schemas import (
     ProjectCreate,
     ProjectDetailResponse,
     ProjectListItemResponse,
-    ProjectMemberAdd,
+    ProjectMemberInvitationResponse,
+    ProjectMemberInvite,
     ProjectMemberResponse,
     ProjectNameUpdate,
     ProjectOwnerTransfer,
@@ -246,7 +251,37 @@ async def test_list_project_members_endpoint_contract() -> None:
     ]
 
 
-async def test_add_project_member_endpoint_contract() -> None:
+async def test_invite_project_member_endpoint_contract() -> None:
+    created = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    invitation = ProjectMemberInvitationResponse(
+        id=10,
+        project_id=1,
+        invitee_user_id=2,
+        invitee_email="member@gmail.com",
+        status="PENDING",
+        created_at=created,
+        expires_at=created,
+        responded_at=None,
+    )
+    usecase = AsyncUseCaseStub(invitation)
+    payload = ProjectMemberInvite(user_id=2)
+
+    response = await invite_project_member_endpoint(
+        project_id=1,
+        payload=payload,
+        user=UserInfo(user_id=1, role="OWNER"),
+        usecase=usecase,
+    )
+
+    assert response.message == "멤버 초대 메일을 발송했습니다."
+    assert response.data.invitee_user_id == 2
+    assert response.data.status == "PENDING"
+    assert usecase.calls == [
+        ((), {"project_id": 1, "request": payload, "user_id": 1})
+    ]
+
+
+async def test_accept_project_member_invitation_endpoint_contract() -> None:
     joined = datetime(2026, 1, 1, tzinfo=timezone.utc)
     member = ProjectMemberResponse(
         user_id=2,
@@ -256,19 +291,118 @@ async def test_add_project_member_endpoint_contract() -> None:
         joined_at=joined,
     )
     usecase = AsyncUseCaseStub(member)
-    payload = ProjectMemberAdd(user_id=2)
 
-    response = await add_project_member_endpoint(
+    response = await accept_project_member_invitation_endpoint(
         project_id=1,
-        payload=payload,
+        token="invite-token",
+        user=UserInfo(user_id=2, role="MEMBER"),
+        usecase=usecase,
+    )
+
+    assert response.message == "프로젝트 초대를 승인했습니다."
+    assert response.data.user_id == 2
+    assert usecase.calls == [
+        ((), {"project_id": 1, "token": "invite-token", "user_id": 2})
+    ]
+
+
+async def test_list_project_member_invitations_endpoint_contract() -> None:
+    created = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    page = CursorPage(
+        items=[
+            ProjectMemberInvitationResponse(
+                id=10,
+                project_id=1,
+                invitee_user_id=2,
+                invitee_email="member@gmail.com",
+                status="PENDING",
+                created_at=created,
+                expires_at=created,
+                responded_at=None,
+            )
+        ],
+        has_next=False,
+    )
+    usecase = AsyncUseCaseStub(page)
+
+    response = await list_project_member_invitations_endpoint(
+        project_id=1,
+        status="PENDING",
+        cursor=None,
+        limit=20,
         user=UserInfo(user_id=1, role="OWNER"),
         usecase=usecase,
     )
 
-    assert response.message == "멤버가 추가되었습니다."
-    assert response.data.user_id == 2
+    assert response.message == "프로젝트 초대 목록을 조회했습니다."
+    assert response.data.items[0].id == 10
     assert usecase.calls == [
-        ((), {"project_id": 1, "request": payload, "user_id": 1})
+        (
+            (),
+            {
+                "project_id": 1,
+                "user_id": 1,
+                "status": "PENDING",
+                "limit": 20,
+                "cursor": None,
+            },
+        )
+    ]
+
+
+async def test_cancel_project_member_invitation_endpoint_contract() -> None:
+    created = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    invitation = ProjectMemberInvitationResponse(
+        id=10,
+        project_id=1,
+        invitee_user_id=2,
+        invitee_email="member@gmail.com",
+        status="CANCELED",
+        created_at=created,
+        expires_at=created,
+        responded_at=created,
+    )
+    usecase = AsyncUseCaseStub(invitation)
+
+    response = await cancel_project_member_invitation_endpoint(
+        project_id=1,
+        invitation_id=10,
+        user=UserInfo(user_id=1, role="OWNER"),
+        usecase=usecase,
+    )
+
+    assert response.message == "프로젝트 초대를 취소했습니다."
+    assert response.data.status == "CANCELED"
+    assert usecase.calls == [
+        ((), {"project_id": 1, "invitation_id": 10, "user_id": 1})
+    ]
+
+
+async def test_resend_project_member_invitation_endpoint_contract() -> None:
+    created = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    invitation = ProjectMemberInvitationResponse(
+        id=10,
+        project_id=1,
+        invitee_user_id=2,
+        invitee_email="member@gmail.com",
+        status="PENDING",
+        created_at=created,
+        expires_at=created,
+        responded_at=None,
+    )
+    usecase = AsyncUseCaseStub(invitation)
+
+    response = await resend_project_member_invitation_endpoint(
+        project_id=1,
+        invitation_id=10,
+        user=UserInfo(user_id=1, role="OWNER"),
+        usecase=usecase,
+    )
+
+    assert response.message == "프로젝트 초대 메일을 재발송했습니다."
+    assert response.data.id == 10
+    assert usecase.calls == [
+        ((), {"project_id": 1, "invitation_id": 10, "user_id": 1})
     ]
 
 

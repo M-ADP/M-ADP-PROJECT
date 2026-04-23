@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from src.core.client.application import ApplicationItemData, DeploymentSummaryItem
@@ -11,7 +11,8 @@ from src.core.client.project_resource import (
     ResourceSnapshotData,
 )
 from src.core.client.user import UserInfo
-from src.core.domain.project import Project, ProjectMember
+from src.app.project.invitation_security import hash_invitation_token
+from src.core.domain.project import Project, ProjectInvitation, ProjectMember
 
 
 def make_project(
@@ -47,6 +48,35 @@ def make_member(
         user_id=user_id,
         role=role,
         joined_at=joined_at or datetime(2024, 1, 1, tzinfo=timezone.utc),
+    )
+
+
+def make_invitation(
+    project_id: int,
+    invitee_user_id: int,
+    *,
+    invitation_id: int | None = None,
+    inviter_user_id: int = 1,
+    invitee_email: str = "member@example.com",
+    token: str = "invite-token",
+    token_hash: str | None = None,
+    status: str = "PENDING",
+    created_at: datetime | None = None,
+    expires_at: datetime | None = None,
+    responded_at: datetime | None = None,
+) -> ProjectInvitation:
+    created = created_at or datetime.now(timezone.utc)
+    return ProjectInvitation(
+        id=invitation_id or abs(hash(f"i-{project_id}-{invitee_user_id}")),
+        project_id=project_id,
+        inviter_user_id=inviter_user_id,
+        invitee_user_id=invitee_user_id,
+        invitee_email=invitee_email,
+        token_hash=token_hash or hash_invitation_token(token),
+        status=status,
+        created_at=created,
+        expires_at=expires_at or created + timedelta(days=7),
+        responded_at=responded_at,
     )
 
 
@@ -235,15 +265,111 @@ class FakeProjectMemberRepository:
         return member
 
 
+class FakeProjectInvitationRepository:
+    def __init__(self, invitations: list[ProjectInvitation] | None = None) -> None:
+        self.invitations: dict[int, ProjectInvitation] = {
+            invitation.id: invitation for invitation in (invitations or [])
+        }
+
+    async def get_pending_by_project_and_user(
+        self,
+        project_id: int,
+        invitee_user_id: int,
+    ) -> ProjectInvitation | None:
+        for invitation in self.invitations.values():
+            if (
+                invitation.project_id == project_id
+                and invitation.invitee_user_id == invitee_user_id
+                and invitation.status == "PENDING"
+            ):
+                return invitation
+        return None
+
+    async def get_pending_by_token_hash(
+        self,
+        project_id: int,
+        token_hash: str,
+    ) -> ProjectInvitation | None:
+        for invitation in self.invitations.values():
+            if (
+                invitation.project_id == project_id
+                and invitation.token_hash == token_hash
+                and invitation.status == "PENDING"
+            ):
+                return invitation
+        return None
+
+    async def get_by_id(
+        self,
+        project_id: int,
+        invitation_id: int,
+    ) -> ProjectInvitation | None:
+        invitation = self.invitations.get(invitation_id)
+        if invitation is None or invitation.project_id != project_id:
+            return None
+        return invitation
+
+    async def list_by_project(
+        self,
+        project_id: int,
+        status: str | None,
+        limit: int,
+        cursor: int | None = None,
+    ) -> list[ProjectInvitation]:
+        invitations = [
+            invitation
+            for invitation in self.invitations.values()
+            if invitation.project_id == project_id
+            and (status is None or invitation.status == status)
+        ]
+        invitations.sort(key=lambda invitation: invitation.id)
+        if cursor is not None:
+            invitations = [
+                invitation for invitation in invitations if invitation.id > cursor
+            ]
+        return invitations[:limit]
+
+    async def insert(self, invitation: ProjectInvitation) -> ProjectInvitation:
+        self.invitations[invitation.id] = invitation
+        return invitation
+
+    async def update_status(
+        self,
+        invitation_id: int,
+        status: str,
+    ) -> ProjectInvitation | None:
+        invitation = self.invitations.get(invitation_id)
+        if invitation is None:
+            return None
+        invitation.status = status
+        invitation.responded_at = datetime.now(timezone.utc)
+        return invitation
+
+    async def rotate_token(
+        self,
+        invitation_id: int,
+        token_hash: str,
+        expires_at: datetime,
+    ) -> ProjectInvitation | None:
+        invitation = self.invitations.get(invitation_id)
+        if invitation is None or invitation.status != "PENDING":
+            return None
+        invitation.token_hash = token_hash
+        invitation.expires_at = expires_at
+        return invitation
+
+
 class FakeUnitOfWork:
     def __init__(
         self,
         *,
         project_repo: FakeProjectRepository | None = None,
         project_member_repo: FakeProjectMemberRepository | None = None,
+        project_invitation_repo: FakeProjectInvitationRepository | None = None,
     ) -> None:
         self.project = project_repo or FakeProjectRepository()
         self.project_member = project_member_repo or FakeProjectMemberRepository()
+        self.project_invitation = project_invitation_repo or FakeProjectInvitationRepository()
         self.enter_count = 0
         self.exit_count = 0
         self.last_exception: BaseException | None = None
@@ -368,6 +494,28 @@ class FakeUserClient:
         return user_id in self.users
 
 
+class FakeProjectInvitationEmailClient:
+    def __init__(self) -> None:
+        self.sent: list[dict[str, Any]] = []
+
+    async def send_project_invitation(
+        self,
+        *,
+        to_email: str,
+        project_name: str,
+        inviter_user_id: int,
+        invite_url: str,
+    ) -> None:
+        self.sent.append(
+            {
+                "to_email": to_email,
+                "project_name": project_name,
+                "inviter_user_id": inviter_user_id,
+                "invite_url": invite_url,
+            }
+        )
+
+
 class FakeDnsClient:
     def __init__(self, *, delete_error: Exception | None = None) -> None:
         self.delete_requests: list[dict[str, Any]] = []
@@ -384,4 +532,3 @@ class FakeDnsClient:
         )
         if self.delete_error is not None:
             raise self.delete_error
-
