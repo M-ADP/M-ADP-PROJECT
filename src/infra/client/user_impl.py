@@ -34,6 +34,7 @@ class UserClientImpl(UserClient):
                 user_id=str(payload.get("user_id")),
                 username=str(payload.get("nickname")),
                 profile_image=payload.get("profile") or None,
+                email=payload.get("email") or None,
             )
         except Exception:
             return None

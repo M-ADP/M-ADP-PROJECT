@@ -7,6 +7,7 @@ class UserInfo:
     user_id: int
     username: str
     profile_image: str | None = None
+    email: str | None = None
 
 
 class UserClient(ABC):

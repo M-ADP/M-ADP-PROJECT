@@ -129,6 +129,78 @@ class UserNotFound(AppException):
         )
 
 
+class MemberInvitationAlreadyExists(AppException):
+    def __init__(self) -> None:
+        super().__init__(
+            "이미 대기 중인 프로젝트 초대가 있습니다.",
+            code="MEMBER_INVITATION_ALREADY_EXISTS",
+            status_code=400,
+        )
+
+
+class InvitationNotFound(AppException):
+    def __init__(self) -> None:
+        super().__init__(
+            "초대를 찾을 수 없습니다.",
+            code="INVITATION_NOT_FOUND",
+            status_code=404,
+        )
+
+
+class InvitationTargetMismatch(AppException):
+    def __init__(self) -> None:
+        super().__init__(
+            "초대 대상 사용자만 초대를 승인할 수 있습니다.",
+            code="INVITATION_TARGET_MISMATCH",
+            status_code=403,
+        )
+
+
+class InvitationExpired(AppException):
+    def __init__(self) -> None:
+        super().__init__(
+            "만료된 초대입니다.",
+            code="INVITATION_EXPIRED",
+            status_code=400,
+        )
+
+
+class CannotCancelInvitation(AppException):
+    def __init__(self) -> None:
+        super().__init__(
+            "대기 중인 초대만 취소할 수 있습니다.",
+            code="CANNOT_CANCEL_INVITATION",
+            status_code=400,
+        )
+
+
+class CannotResendInvitation(AppException):
+    def __init__(self) -> None:
+        super().__init__(
+            "대기 중인 초대만 재발송할 수 있습니다.",
+            code="CANNOT_RESEND_INVITATION",
+            status_code=400,
+        )
+
+
+class UserEmailNotFound(AppException):
+    def __init__(self) -> None:
+        super().__init__(
+            "사용자의 인증된 이메일을 찾을 수 없습니다.",
+            code="USER_EMAIL_NOT_FOUND",
+            status_code=400,
+        )
+
+
+class ProjectInvitationEmailSendFailed(AppException):
+    def __init__(self) -> None:
+        super().__init__(
+            "프로젝트 초대 메일 발송에 실패했습니다.",
+            code="PROJECT_INVITATION_EMAIL_SEND_FAILED",
+            status_code=500,
+        )
+
+
 class OnlyOwnerCanTransferOwnership(AppException):
     def __init__(self) -> None:
         super().__init__(
