@@ -5,7 +5,8 @@ from src.app.project.schemas import (
     ProjectCreate,
     ProjectDetailResponse,
     ProjectListItemResponse,
-    ProjectMemberAdd,
+    ProjectMemberInvitationResponse,
+    ProjectMemberInvite,
     ProjectMemberResponse,
     ProjectNameUpdate,
     ProjectOwnerResponse,
@@ -22,8 +23,12 @@ from src.app.project.usecase import (
     GetProjectUseCase,
     UpdateProjectResourceUseCase,
     ListProjectMembersUseCase,
-    AddProjectMemberUseCase,
+    AcceptProjectMemberInvitationUseCase,
+    CancelProjectMemberInvitationUseCase,
+    InviteProjectMemberUseCase,
+    ListProjectMemberInvitationsUseCase,
     RemoveProjectMemberUseCase,
+    ResendProjectMemberInvitationUseCase,
     TransferProjectOwnershipUseCase,
     CheckProjectAvailableUseCase,
     CheckProjectOwnerUseCase,
@@ -231,23 +236,137 @@ async def list_project_members_endpoint(
 
 @router.post(
     "/{project_id}/members",
-    response_model=SuccessResponse[ProjectMemberResponse],
+    response_model=SuccessResponse[ProjectMemberInvitationResponse],
     status_code=201,
 )
-async def add_project_member_endpoint(
+async def invite_project_member_endpoint(
     project_id: int,
-    payload: ProjectMemberAdd,
+    payload: ProjectMemberInvite,
     user: UserInfo = Depends(get_user_info),
-    usecase: AddProjectMemberUseCase = Depends(AddProjectMemberUseCase),
-) -> SuccessResponse[ProjectMemberResponse]:
-    member = await usecase(
+    usecase: InviteProjectMemberUseCase = Depends(InviteProjectMemberUseCase),
+) -> SuccessResponse[ProjectMemberInvitationResponse]:
+    invitation = await usecase(
         project_id=project_id,
         request=payload,
         user_id=user.user_id,
     )
     return SuccessResponse(
-        message="멤버가 추가되었습니다.",
+        message="멤버 초대 메일을 발송했습니다.",
+        data=invitation,
+    )
+
+
+add_project_member_endpoint = invite_project_member_endpoint
+
+
+@router.get(
+    "/{project_id}/member-invitations",
+    response_model=SuccessResponse[CursorPage[ProjectMemberInvitationResponse]],
+    status_code=200,
+)
+async def list_project_member_invitations_endpoint(
+    project_id: int,
+    status: str | None = Query(
+        "PENDING",
+        description="조회할 초대 상태. 기본값은 PENDING",
+    ),
+    cursor: int | None = Query(
+        None,
+        description="다음 페이지 커서(id). 지정하면 해당 커서 이후부터 조회",
+    ),
+    limit: int = Query(
+        20,
+        ge=1,
+        le=100,
+        description="한 번에 가져올 초대 수 (1~100, 기본 20)",
+    ),
+    user: UserInfo = Depends(get_user_info),
+    usecase: ListProjectMemberInvitationsUseCase = Depends(
+        ListProjectMemberInvitationsUseCase
+    ),
+) -> SuccessResponse[CursorPage[ProjectMemberInvitationResponse]]:
+    invitations = await usecase(
+        project_id=project_id,
+        user_id=user.user_id,
+        status=status,
+        limit=limit,
+        cursor=cursor,
+    )
+    return SuccessResponse(
+        message="프로젝트 초대 목록을 조회했습니다.",
+        data=invitations,
+    )
+
+
+@router.post(
+    "/{project_id}/member-invitations/{token}/accept",
+    response_model=SuccessResponse[ProjectMemberResponse],
+    status_code=200,
+)
+async def accept_project_member_invitation_endpoint(
+    project_id: int,
+    token: str,
+    user: UserInfo = Depends(get_user_info),
+    usecase: AcceptProjectMemberInvitationUseCase = Depends(
+        AcceptProjectMemberInvitationUseCase
+    ),
+) -> SuccessResponse[ProjectMemberResponse]:
+    member = await usecase(
+        project_id=project_id,
+        token=token,
+        user_id=user.user_id,
+    )
+    return SuccessResponse(
+        message="프로젝트 초대를 승인했습니다.",
         data=member,
+    )
+
+
+@router.delete(
+    "/{project_id}/member-invitations/{invitation_id}",
+    response_model=SuccessResponse[ProjectMemberInvitationResponse],
+    status_code=200,
+)
+async def cancel_project_member_invitation_endpoint(
+    project_id: int,
+    invitation_id: int,
+    user: UserInfo = Depends(get_user_info),
+    usecase: CancelProjectMemberInvitationUseCase = Depends(
+        CancelProjectMemberInvitationUseCase
+    ),
+) -> SuccessResponse[ProjectMemberInvitationResponse]:
+    invitation = await usecase(
+        project_id=project_id,
+        invitation_id=invitation_id,
+        user_id=user.user_id,
+    )
+    return SuccessResponse(
+        message="프로젝트 초대를 취소했습니다.",
+        data=invitation,
+    )
+
+
+@router.post(
+    "/{project_id}/member-invitations/{invitation_id}/resend",
+    response_model=SuccessResponse[ProjectMemberInvitationResponse],
+    status_code=200,
+)
+async def resend_project_member_invitation_endpoint(
+    project_id: int,
+    invitation_id: int,
+    user: UserInfo = Depends(get_user_info),
+    usecase: ResendProjectMemberInvitationUseCase = Depends(
+        ResendProjectMemberInvitationUseCase
+    ),
+) -> SuccessResponse[ProjectMemberInvitationResponse]:
+    invitation = await usecase(
+        project_id=project_id,
+        invitation_id=invitation_id,
+        user_id=user.user_id,
+    )
+    return SuccessResponse(
+        message="프로젝트 초대 메일을 재발송했습니다.",
+        data=invitation,
     )
 
 

@@ -212,6 +212,30 @@ class ProjectMemberAdd(BaseModel):
     )
 
 
+class ProjectMemberInvite(BaseModel):
+    user_id: int = Field(
+        ...,
+        description="초대할 사용자의 ID",
+        examples=[2],
+    )
+
+
+class ProjectMemberInvitationResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int = Field(..., description="초대 식별자")
+    project_id: int = Field(..., description="프로젝트 식별자")
+    invitee_user_id: int = Field(..., description="초대 대상 사용자 식별자")
+    invitee_email: str = Field(..., description="초대 대상 이메일 주소")
+    status: Literal["PENDING", "ACCEPTED", "REJECTED", "CANCELED", "EXPIRED"] = Field(
+        ...,
+        description="초대 상태",
+    )
+    created_at: datetime = Field(..., description="초대 생성 일시")
+    expires_at: datetime = Field(..., description="초대 만료 일시")
+    responded_at: datetime | None = Field(None, description="초대 응답 일시")
+
+
 class ProjectOwnerTransfer(BaseModel):
     target_user_id: int = Field(
         ...,
