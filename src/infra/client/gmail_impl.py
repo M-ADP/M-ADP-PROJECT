@@ -1,10 +1,13 @@
 import asyncio
+import logging
 import smtplib
 from email.mime.text import MIMEText
 
 from src.app.project.exceptions import ProjectInvitationEmailSendFailed
 from src.common.config.gmail import GmailConfig
 from src.core.client.email import ProjectInvitationEmailClient
+
+logger = logging.getLogger(__name__)
 
 
 class GmailProjectInvitationEmailClient(ProjectInvitationEmailClient):
@@ -22,8 +25,24 @@ class GmailProjectInvitationEmailClient(ProjectInvitationEmailClient):
         invite_url: str,
     ) -> None:
         if not self.config.username or not self.config.password:
+            logger.error(
+                "project invitation email send failed: gmail credentials missing smtp_host=%s smtp_port=%s to_email=%s project_name=%s inviter_user_id=%s",
+                self.config.smtp_host,
+                self.config.smtp_port,
+                to_email,
+                project_name,
+                inviter_user_id,
+            )
             raise ProjectInvitationEmailSendFailed()
 
+        logger.info(
+            "project invitation email send requested: smtp_host=%s smtp_port=%s to_email=%s project_name=%s inviter_user_id=%s",
+            self.config.smtp_host,
+            self.config.smtp_port,
+            to_email,
+            project_name,
+            inviter_user_id,
+        )
         await asyncio.to_thread(
             self._send,
             to_email=to_email,
@@ -66,4 +85,12 @@ class GmailProjectInvitationEmailClient(ProjectInvitationEmailClient):
                 smtp.login(self.config.username, self.config.password)
                 smtp.sendmail(sender, [to_email], message.as_string())
         except Exception as exc:
+            logger.exception(
+                "project invitation email send failed: smtp request failed smtp_host=%s smtp_port=%s to_email=%s project_name=%s inviter_user_id=%s",
+                self.config.smtp_host,
+                self.config.smtp_port,
+                to_email,
+                project_name,
+                inviter_user_id,
+            )
             raise ProjectInvitationEmailSendFailed() from exc

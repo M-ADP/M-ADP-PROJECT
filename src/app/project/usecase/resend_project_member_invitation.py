@@ -1,3 +1,4 @@
+import logging
 import secrets
 from datetime import datetime, timedelta, timezone
 
@@ -17,6 +18,8 @@ from src.core.client.email import ProjectInvitationEmailClient
 from src.core.uow import UnitOfWork
 from src.dependencies.client.email import get_project_invitation_email_client
 from src.dependencies.uow import get_uow
+
+logger = logging.getLogger(__name__)
 
 
 class ResendProjectMemberInvitationUseCase(BaseUseCase):
@@ -41,10 +44,22 @@ class ResendProjectMemberInvitationUseCase(BaseUseCase):
         async with self.uow:
             project = await self.uow.project.get_by_id(project_id)
             if project is None:
+                logger.info(
+                    "project invitation resend failed: project not found project_id=%s requester_user_id=%s invitation_id=%s",
+                    project_id,
+                    user_id,
+                    invitation_id,
+                )
                 raise ProjectNotFound()
 
             is_owner = await self.uow.project_member.is_owner(project_id, user_id)
             if not is_owner:
+                logger.info(
+                    "project invitation resend denied: requester is not owner project_id=%s requester_user_id=%s invitation_id=%s",
+                    project_id,
+                    user_id,
+                    invitation_id,
+                )
                 raise OnlyOwnerCanAddMembers()
 
             invitation = await self.uow.project_invitation.get_by_id(
@@ -52,8 +67,21 @@ class ResendProjectMemberInvitationUseCase(BaseUseCase):
                 invitation_id,
             )
             if invitation is None:
+                logger.info(
+                    "project invitation resend failed: invitation not found project_id=%s requester_user_id=%s invitation_id=%s",
+                    project_id,
+                    user_id,
+                    invitation_id,
+                )
                 raise InvitationNotFound()
             if invitation.status != "PENDING":
+                logger.info(
+                    "project invitation resend denied: invitation is not pending project_id=%s requester_user_id=%s invitation_id=%s status=%s",
+                    project_id,
+                    user_id,
+                    invitation_id,
+                    invitation.status,
+                )
                 raise CannotResendInvitation()
 
             token = secrets.token_urlsafe(32)
@@ -67,13 +95,35 @@ class ResendProjectMemberInvitationUseCase(BaseUseCase):
                 expires_at,
             )
             if updated is None:
+                logger.info(
+                    "project invitation resend failed: token rotation failed project_id=%s requester_user_id=%s invitation_id=%s",
+                    project_id,
+                    user_id,
+                    invitation_id,
+                )
                 raise CannotResendInvitation()
+            logger.info(
+                "project invitation token rotated: project_id=%s invitation_id=%s requester_user_id=%s invitee_user_id=%s expires_at=%s",
+                project_id,
+                invitation_id,
+                user_id,
+                updated.invitee_user_id,
+                updated.expires_at.isoformat(),
+            )
 
             await self.email_client.send_project_invitation(
                 to_email=updated.invitee_email,
                 project_name=project.name,
                 inviter_user_id=user_id,
                 invite_url=self._build_accept_url(project_id, token),
+            )
+            logger.info(
+                "project invitation email resent: project_id=%s invitation_id=%s requester_user_id=%s invitee_user_id=%s invitee_email=%s",
+                project_id,
+                invitation_id,
+                user_id,
+                updated.invitee_user_id,
+                updated.invitee_email,
             )
 
             return ProjectMemberInvitationResponse.model_validate(updated)
