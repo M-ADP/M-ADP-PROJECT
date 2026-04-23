@@ -145,7 +145,7 @@ class InviteProjectMemberUseCase(BaseUseCase):
                 to_email=saved.invitee_email,
                 project_name=project.name,
                 inviter_user_id=user_id,
-                invite_url=self._build_accept_url(project_id, token),
+                invite_url=self._build_invitation_url(project_id, token),
             )
             logger.info(
                 "project invitation email sent: project_id=%s invitation_id=%s invitee_user_id=%s invitee_email=%s",
@@ -157,9 +157,9 @@ class InviteProjectMemberUseCase(BaseUseCase):
 
             return ProjectMemberInvitationResponse.model_validate(saved)
 
-    def _build_accept_url(self, project_id: int, token: str) -> str:
+    def _build_invitation_url(self, project_id: int, token: str) -> str:
         config = get_gmail_config()
         return (
-            f"{config.public_base_url.rstrip('/')}"
-            f"/projects/{project_id}/member-invitations/{token}/accept"
+            f"{config.frontend_base_url.rstrip('/')}"
+            f"/projects/{project_id}/member-invitations/{token}"
         )

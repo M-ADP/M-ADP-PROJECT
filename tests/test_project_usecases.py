@@ -688,9 +688,9 @@ async def test_invite_project_member_creates_pending_invitation_and_sends_email_
     assert "invite-token" not in saved.token_hash
     sent_url = email_client.sent[0]["invite_url"]
     assert sent_url.startswith(
-        "http://localhost:8000/projects/1/member-invitations/"
+        "http://localhost:3000/projects/1/member-invitations/"
     )
-    assert sent_url.endswith("/accept")
+    assert not sent_url.endswith("/accept")
     assert saved.token_hash not in sent_url
     assert email_client.sent == [
         {
@@ -893,3 +893,7 @@ async def test_resend_project_member_invitation_rotates_token_and_sends_email() 
     assert email_client.sent[0]["to_email"] == "member@example.com"
     assert email_client.sent[0]["project_name"] == "backend"
     assert old_hash not in email_client.sent[0]["invite_url"]
+    assert email_client.sent[0]["invite_url"].startswith(
+        "http://localhost:3000/projects/1/member-invitations/"
+    )
+    assert not email_client.sent[0]["invite_url"].endswith("/accept")

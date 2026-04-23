@@ -20,6 +20,7 @@ class GmailConfig(BaseSettings):
     password: str = ""
     sender_email: str = ""
     public_base_url: str = "http://localhost:8000"
+    frontend_base_url: str = "http://localhost:3000"
     invitation_token_secret: str = "local-dev-invitation-token-secret"
     invitation_ttl_hours: int = 168
 
