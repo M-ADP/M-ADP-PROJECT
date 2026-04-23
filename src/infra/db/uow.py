@@ -6,7 +6,9 @@ from src.core.uow import UnitOfWork
 from src.core.repository import (
     ProjectRepository,
     ProjectMemberRepository,
+    ProjectInvitationRepository,
 )
+from src.infra.db.project.invitation_repository import ProjectInvitationRepositoryImpl
 from src.infra.db.project.repository import ProjectRepositoryImpl
 from src.infra.db.project.member_repository import ProjectMemberRepositoryImpl
 
@@ -17,6 +19,7 @@ class SQLAlchemyUnitOfWork(UnitOfWork):
         self._session = session
         self._project_repository: ProjectRepository | None = None
         self._project_member_repository: ProjectMemberRepository | None = None
+        self._project_invitation_repository: ProjectInvitationRepository | None = None
 
     async def __aenter__(self) -> Self:
         await self._session.begin()
@@ -55,4 +58,12 @@ class SQLAlchemyUnitOfWork(UnitOfWork):
             self._project_member_repository = ProjectMemberRepositoryImpl(self._session)
         return self._project_member_repository
 
+    @property
+    def project_invitation(self) -> ProjectInvitationRepository:
+        """프로젝트 초대 Repository"""
+        if self._project_invitation_repository is None:
+            self._project_invitation_repository = ProjectInvitationRepositoryImpl(
+                self._session
+            )
+        return self._project_invitation_repository
 

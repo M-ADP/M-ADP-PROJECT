@@ -25,3 +25,17 @@ class ProjectMember:
     user_id: int = 0
     role: Literal["OWNER", "MEMBER"] = "MEMBER"
     joined_at: datetime = field(default_factory=datetime.now)
+
+
+@dataclass
+class ProjectInvitation:
+    id: int = field(default_factory=IdGenerator.generate_sonyflake_id)
+    project_id: int = 0
+    inviter_user_id: int = 0
+    invitee_user_id: int = 0
+    invitee_email: str = ""
+    token_hash: str = ""
+    status: Literal["PENDING", "ACCEPTED", "REJECTED", "CANCELED", "EXPIRED"] = "PENDING"
+    created_at: datetime = field(default_factory=datetime.now)
+    expires_at: datetime = field(default_factory=datetime.now)
+    responded_at: datetime | None = None

@@ -54,6 +54,156 @@ _MIGRATIONS: list[tuple[str, list[str]]] = [
             "ALTER TABLE project_member MODIFY COLUMN user_id BIGINT NOT NULL",
         ],
     ),
+    (
+        "004_project_invitation",
+        [
+            """
+            CREATE TABLE IF NOT EXISTS project_invitation (
+                id BIGINT NOT NULL PRIMARY KEY,
+                project_id BIGINT NOT NULL,
+                inviter_user_id BIGINT NOT NULL,
+                invitee_user_id BIGINT NOT NULL,
+                invitee_email VARCHAR(255) NOT NULL,
+                token_hash VARCHAR(255) NOT NULL,
+                status VARCHAR(16) NOT NULL DEFAULT 'PENDING',
+                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                expires_at DATETIME NOT NULL,
+                responded_at DATETIME NULL,
+                CONSTRAINT fk_project_invitation_project
+                    FOREIGN KEY (project_id) REFERENCES project(id)
+                    ON DELETE CASCADE
+            )
+            """,
+            """
+            SET @column_exists = (
+                SELECT COUNT(*)
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'project_invitation'
+                  AND COLUMN_NAME = 'token_hash'
+            )
+            """,
+            """
+            SET @sql = IF(
+                @column_exists = 0,
+                'ALTER TABLE project_invitation ADD COLUMN token_hash VARCHAR(255) NULL',
+                'SELECT 1'
+            )
+            """,
+            "PREPARE stmt FROM @sql",
+            "EXECUTE stmt",
+            "DEALLOCATE PREPARE stmt",
+            """
+            SET @column_exists = (
+                SELECT COUNT(*)
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'project_invitation'
+                  AND COLUMN_NAME = 'expires_at'
+            )
+            """,
+            """
+            SET @sql = IF(
+                @column_exists = 0,
+                'ALTER TABLE project_invitation ADD COLUMN expires_at DATETIME NULL',
+                'SELECT 1'
+            )
+            """,
+            "PREPARE stmt FROM @sql",
+            "EXECUTE stmt",
+            "DEALLOCATE PREPARE stmt",
+            """
+            UPDATE project_invitation
+            SET token_hash = SHA2(CONCAT('expired:', id, ':', UUID()), 256),
+                status = 'EXPIRED',
+                responded_at = COALESCE(responded_at, CURRENT_TIMESTAMP)
+            WHERE token_hash IS NULL OR token_hash = ''
+            """,
+            """
+            UPDATE project_invitation
+            SET expires_at = COALESCE(expires_at, created_at, CURRENT_TIMESTAMP)
+            WHERE expires_at IS NULL
+            """,
+            "ALTER TABLE project_invitation MODIFY COLUMN token_hash VARCHAR(255) NOT NULL",
+            "ALTER TABLE project_invitation MODIFY COLUMN expires_at DATETIME NOT NULL",
+            """
+            SET @index_exists = (
+                SELECT COUNT(*)
+                FROM information_schema.STATISTICS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'project_invitation'
+                  AND INDEX_NAME = 'ix_project_invitation_project_id'
+            )
+            """,
+            """
+            SET @sql = IF(
+                @index_exists = 0,
+                'CREATE INDEX ix_project_invitation_project_id ON project_invitation (project_id)',
+                'SELECT 1'
+            )
+            """,
+            "PREPARE stmt FROM @sql",
+            "EXECUTE stmt",
+            "DEALLOCATE PREPARE stmt",
+            """
+            SET @index_exists = (
+                SELECT COUNT(*)
+                FROM information_schema.STATISTICS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'project_invitation'
+                  AND INDEX_NAME = 'ix_project_invitation_invitee_user_id'
+            )
+            """,
+            """
+            SET @sql = IF(
+                @index_exists = 0,
+                'CREATE INDEX ix_project_invitation_invitee_user_id ON project_invitation (invitee_user_id)',
+                'SELECT 1'
+            )
+            """,
+            "PREPARE stmt FROM @sql",
+            "EXECUTE stmt",
+            "DEALLOCATE PREPARE stmt",
+            """
+            SET @index_exists = (
+                SELECT COUNT(*)
+                FROM information_schema.STATISTICS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'project_invitation'
+                  AND INDEX_NAME = 'uq_project_invitation_token_hash'
+            )
+            """,
+            """
+            SET @sql = IF(
+                @index_exists = 0,
+                'CREATE UNIQUE INDEX uq_project_invitation_token_hash ON project_invitation (token_hash)',
+                'SELECT 1'
+            )
+            """,
+            "PREPARE stmt FROM @sql",
+            "EXECUTE stmt",
+            "DEALLOCATE PREPARE stmt",
+            """
+            SET @index_exists = (
+                SELECT COUNT(*)
+                FROM information_schema.STATISTICS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'project_invitation'
+                  AND INDEX_NAME = 'uq_project_invitation_status'
+            )
+            """,
+            """
+            SET @sql = IF(
+                @index_exists = 0,
+                'CREATE UNIQUE INDEX uq_project_invitation_status ON project_invitation (project_id, invitee_user_id, status)',
+                'SELECT 1'
+            )
+            """,
+            "PREPARE stmt FROM @sql",
+            "EXECUTE stmt",
+            "DEALLOCATE PREPARE stmt",
+        ],
+    ),
 ]
 
 
