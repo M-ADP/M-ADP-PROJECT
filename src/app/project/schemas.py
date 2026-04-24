@@ -204,6 +204,31 @@ class ProjectDetailResponse(BaseModel):
 # ===== Project Member Schemas =====
 
 
+class ProjectUniqueUsersResponse(BaseModel):
+    project_id: int = Field(
+        ...,
+        description="조회한 프로젝트 ID",
+    )
+    dau: int = Field(
+        ...,
+        ge=0,
+        description="일간 활성 사용자 수 (Daily Active Users)",
+    )
+    wau: int = Field(
+        ...,
+        ge=0,
+        description="주간 활성 사용자 수 (Weekly Active Users)",
+    )
+    mau: int = Field(
+        ...,
+        ge=0,
+        description="월간 활성 사용자 수 (Monthly Active Users)",
+    )
+
+
+# ===== Project Member Schemas =====
+
+
 class ProjectMemberAdd(BaseModel):
     user_id: int = Field(
         ...,

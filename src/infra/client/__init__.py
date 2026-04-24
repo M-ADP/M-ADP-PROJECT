@@ -6,6 +6,7 @@ from src.infra.client.user_impl import UserClientImpl
 from src.infra.client.fake_user_impl import FakeUserClientImpl
 from src.infra.client.dns_impl import DnsClientImpl
 from src.infra.client.gmail_impl import GmailProjectInvitationEmailClient
+from src.infra.client.monitoring_impl import MonitoringClientImpl
 
 __all__ = [
     "ProjectResourceClientImpl",
@@ -16,4 +17,5 @@ __all__ = [
     "FakeUserClientImpl",
     "DnsClientImpl",
     "GmailProjectInvitationEmailClient",
+    "MonitoringClientImpl",
 ]

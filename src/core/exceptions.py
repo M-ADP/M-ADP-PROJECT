@@ -25,6 +25,12 @@ class DnsServerException(Exception):
         self.message = message
 
 
+class MonitoringServerException(Exception):
+    def __init__(self, message: str = "모니터링 서버와 통신 중 오류가 발생했습니다.") -> None:
+        super().__init__(message)
+        self.message = message
+
+
 class AppException(Exception):
     def __init__(
         self,
