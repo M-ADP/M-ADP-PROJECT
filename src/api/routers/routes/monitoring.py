@@ -5,11 +5,11 @@ from src.app.project.usecase.get_project_unique_users import GetProjectUniqueUse
 from src.common.schemas import SuccessResponse
 from src.dependencies.auth import UserInfo, get_user_info
 
-router = APIRouter(prefix="/monitoring", tags=["monitoring"])
+router = APIRouter(prefix="/project/monitoring", tags=["monitoring"])
 
 
 @router.get(
-    "/project/{project_id}/users",
+    "/{project_id}/users",
     response_model=SuccessResponse[ProjectUniqueUsersResponse],
     status_code=200,
 )
