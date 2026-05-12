@@ -1,3 +1,4 @@
+import logging
 from enum import Enum
 
 from src.core.domain.project import Project
@@ -15,6 +16,8 @@ from src.infra.client.schemas import (
     ExternalProjectCreate,
     ExternalResourceUpdate,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class ProjectResourceAPIUrls(str, Enum):
@@ -38,8 +41,10 @@ class ProjectResourceClientImpl(ProjectResourceClient):
         try:
             response = await coro
         except Exception as e:
+            logger.error(f"리소스 서버 연결 실패: {self.base_url}, error: {e}")
             raise ResourceServerException() from e
         if not response.ok:
+            logger.error(f"리소스 서버 응답 오류: {self.base_url}, status: {response.status}")
             raise ResourceServerException(
                 f"리소스 서버 응답 오류: {response.status}"
             )
@@ -103,10 +108,12 @@ class ProjectResourceClientImpl(ProjectResourceClient):
                 ),
             )
         except Exception as e:
+            logger.error(f"리소스 서버 연결 실패: {self.base_url}, error: {e}")
             raise ResourceServerException() from e
 
         try:
             if response.status != 200:
+                logger.error(f"리소스 서버 응답 오류: {self.base_url}, status: {response.status}")
                 raise ResourceServerException(
                     f"리소스 서버 응답 오류: {response.status}"
                 )
@@ -141,6 +148,7 @@ class ProjectResourceClientImpl(ProjectResourceClient):
         except ResourceServerException:
             raise
         except Exception as e:
+            logger.error(f"리소스 서버 응답 처리 오류: {self.base_url}, error: {e}")
             raise ResourceServerException() from e
         finally:
             response.release()
