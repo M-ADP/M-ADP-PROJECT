@@ -1,3 +1,4 @@
+import logging
 from enum import Enum
 
 from src.core.client.http import HttpClient
@@ -5,6 +6,8 @@ from src.core.client.project_monitoring import ProjectMonitoringClient, UniqueUs
 from src.core.exceptions import MonitoringServerException
 from src.common.config.monitoring_server import MonitoringServerConfig
 from src.infra.client.asyncio_http import AioHttpClient
+
+logger = logging.getLogger(__name__)
 
 
 class MonitoringAPIUrls(str, Enum):
@@ -29,10 +32,12 @@ class MonitoringClientImpl(ProjectMonitoringClient):
                 ),
             )
         except Exception as e:
+            logger.error(f"모니터링 서버 연결 실패: {self.base_url}, error: {e}")
             raise MonitoringServerException() from e
 
         try:
             if response.status != 200:
+                logger.error(f"모니터링 서버 응답 오류: {self.base_url}, status: {response.status}")
                 raise MonitoringServerException(
                     f"모니터링 서버 응답 오류: {response.status}"
                 )
@@ -46,6 +51,7 @@ class MonitoringClientImpl(ProjectMonitoringClient):
         except MonitoringServerException:
             raise
         except Exception as e:
+            logger.error(f"모니터링 서버 응답 처리 오류: {self.base_url}, error: {e}")
             raise MonitoringServerException() from e
         finally:
             response.release()
