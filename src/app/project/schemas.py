@@ -3,7 +3,10 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, constr
 
+from src.common.config.resource_limit import get_resource_limit_config
 from src.core.client.application import ApplicationHealthStatus
+
+_limits = get_resource_limit_config()
 
 class ProjectMemberRole(str):
     OWNER = "OWNER"
@@ -19,20 +22,20 @@ class ProjectCreate(BaseModel):
     max_cpu: float = Field(
         0.1,
         ge=0.1,
-        le=4.0,
+        le=_limits.max_cpu,
         description="vCPU 기준 (기본 0.1v)",
     )
     max_memory: float = Field(
         0.5,
         ge=0.5,
-        le=1.0,
-        description="GB 단위 (512MB ~ 1024MB, 기본 0.5GB)",
+        le=_limits.max_memory,
+        description=f"GB 단위 (512MB ~ {int(_limits.max_memory * 1024)}MB, 기본 0.5GB)",
     )
     max_disk: float = Field(
         2.0,
         ge=2.0,
-        le=50.0,
-        description="GB 단위 (2GB ~ 50GB, 기본 2GB)",
+        le=_limits.max_disk,
+        description=f"GB 단위 (2GB ~ {int(_limits.max_disk)}GB, 기본 2GB)",
     )
 
 
@@ -58,20 +61,20 @@ class ProjectResourceUpdate(BaseModel):
     max_cpu: float | None = Field(
         None,
         ge=0.1,
-        le=4.0,
+        le=_limits.max_cpu,
         description="vCPU 기준 (0.1v ~ 4v)",
     )
     max_memory: float | None = Field(
         None,
         ge=0.5,
-        le=1.0,
-        description="GB 단위 (512MB ~ 1024MB)",
+        le=_limits.max_memory,
+        description=f"GB 단위 (512MB ~ {int(_limits.max_memory * 1024)}MB)",
     )
     max_disk: float | None = Field(
         None,
         ge=2.0,
-        le=50.0,
-        description="GB 단위 (2GB ~ 50GB, 늘리기만 가능)",
+        le=_limits.max_disk,
+        description=f"GB 단위 (2GB ~ {int(_limits.max_disk)}GB, 늘리기만 가능)",
     )
 
 

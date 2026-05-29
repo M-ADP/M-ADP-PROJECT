@@ -48,23 +48,12 @@ class ProjectResourceClientImpl(ProjectResourceClient):
         try:
             response = await coro
         except Exception as e:
-            logger.exception(
-                "[ProjectResourceClient] %s 요청 예외 발생: project_id=%s, url=%s",
-                operation,
-                project_id,
-                url,
-            )
+            logger.error(f"리소스 서버 연결 실패: {self.base_url}, error: {e}")
             raise ResourceServerException() from e
-
-        try:
-            status = getattr(response, "status", None)
-            ok = getattr(response, "ok", status is not None and 200 <= status < 400)
-            logger.info(
-                "[ProjectResourceClient] %s 응답: status=%s, project_id=%s, url=%s",
-                operation,
-                status,
-                project_id,
-                url,
+        if not response.ok:
+            logger.error(f"리소스 서버 응답 오류: {self.base_url}, status: {response.status}")
+            raise ResourceServerException(
+                f"리소스 서버 응답 오류: {response.status}"
             )
             if not ok:
                 body = ""
@@ -189,11 +178,7 @@ class ProjectResourceClientImpl(ProjectResourceClient):
         try:
             response = await self.http_client.get(url)
         except Exception as e:
-            logger.exception(
-                "[ProjectResourceClient] get_usage 요청 예외 발생: project_id=%s, url=%s",
-                project.id,
-                url,
-            )
+            logger.error(f"리소스 서버 연결 실패: {self.base_url}, error: {e}")
             raise ResourceServerException() from e
 
         try:
@@ -204,16 +189,7 @@ class ProjectResourceClientImpl(ProjectResourceClient):
                 url,
             )
             if response.status != 200:
-                body = ""
-                if hasattr(response, "text"):
-                    body = await response.text()
-                logger.warning(
-                    "[ProjectResourceClient] get_usage 비정상 응답: status=%s, project_id=%s, url=%s, body=%s",
-                    response.status,
-                    project.id,
-                    url,
-                    body[:500],
-                )
+                logger.error(f"리소스 서버 응답 오류: {self.base_url}, status: {response.status}")
                 raise ResourceServerException(
                     f"리소스 서버 응답 오류: {response.status}"
                 )
@@ -253,11 +229,7 @@ class ProjectResourceClientImpl(ProjectResourceClient):
         except ResourceServerException:
             raise
         except Exception as e:
-            logger.exception(
-                "[ProjectResourceClient] get_usage 응답 처리 예외 발생: project_id=%s, url=%s",
-                project.id,
-                url,
-            )
+            logger.error(f"리소스 서버 응답 처리 오류: {self.base_url}, error: {e}")
             raise ResourceServerException() from e
         finally:
             response.release()
