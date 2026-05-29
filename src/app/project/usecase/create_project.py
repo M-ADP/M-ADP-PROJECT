@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import Depends
 
 from src.app.project.schemas import ProjectCreate
@@ -14,6 +16,8 @@ from src.core.client.project_resource import ProjectResourceClient
 from src.dependencies.uow import get_uow
 from src.dependencies.client.project_resource import get_project_resource_client
 from src.common.config.settings import ProjectConfig
+
+logger = logging.getLogger(__name__)
 
 
 class CreateProjectUseCase(BaseUseCase):
@@ -65,5 +69,11 @@ class CreateProjectUseCase(BaseUseCase):
                     project=project,
                 )
             except ResourceServerException as e:
+                logger.warning(
+                    "[CreateProjectUseCase] 프로젝트 리소스 생성 실패: project_id=%s, user_id=%s, result=%s",
+                    project.id,
+                    user_id,
+                    str(e),
+                )
                 raise ProjectCreationFailed() from e
             return project
