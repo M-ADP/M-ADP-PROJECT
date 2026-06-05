@@ -16,7 +16,7 @@ class BaseEntity(DeclarativeBase):
 @lru_cache
 def get_engine():
     db_config = get_db_config()
-    return create_async_engine(db_config.url, echo=False, pool_pre_ping=True)
+    return create_async_engine(db_config.url, echo=False, pool_recycle=1800)
 
 
 @lru_cache
