@@ -50,23 +50,12 @@ class ProjectResourceClientImpl(ProjectResourceClient):
         except Exception as e:
             logger.error(f"리소스 서버 연결 실패: {self.base_url}, error: {e}")
             raise ResourceServerException() from e
-        if not response.ok:
-            logger.error(f"리소스 서버 응답 오류: {self.base_url}, status: {response.status}")
-            raise ResourceServerException(
-                f"리소스 서버 응답 오류: {response.status}"
-            )
+
+        try:
+            status = getattr(response, "status", None)
+            ok = getattr(response, "ok", status is not None and 200 <= status < 400)
             if not ok:
-                body = ""
-                if hasattr(response, "text"):
-                    body = await response.text()
-                logger.warning(
-                    "[ProjectResourceClient] %s 비정상 응답: status=%s, project_id=%s, url=%s, body=%s",
-                    operation,
-                    status,
-                    project_id,
-                    url,
-                    body[:500],
-                )
+                logger.error(f"리소스 서버 응답 오류: {self.base_url}, status: {status}")
                 raise ResourceServerException(
                     f"리소스 서버 응답 오류: {status}"
                 )
